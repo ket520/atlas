@@ -1,3 +1,2 @@
-2026/10/30-18:09:40.534 8d1c Reusing MANIFEST C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\Session Storage/MANIFEST-000001
-2026/10/30-18:09:40.534 8d1c Recovering log #3
-2026/10/30-18:09:40.536 8d1c Reusing old log C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\Session Storage/000003.log 
+2026/11/02-17:27:19.347 1070 Creating DB C:\atlas\data\palletways-portal-profile\Default\Session Storage since it was missing.
+2026/11/02-17:27:19.362 1070 Reusing MANIFEST C:\atlas\data\palletways-portal-profile\Default\Session Storage/MANIFEST-000001

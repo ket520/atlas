@@ -1,3 +1,17 @@
+html:has(body[data-page="Deliveries"]),
+html:has(body[data-page="Failed Deliveries"]),
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]),
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) :is(.rt, main, #v, .tracking-records-scroll) {
+  scrollbar-width: none;
+}
+
+html:has(body[data-page="Deliveries"])::-webkit-scrollbar,
+html:has(body[data-page="Failed Deliveries"])::-webkit-scrollbar,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"])::-webkit-scrollbar,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) :is(.rt, main, #v, .tracking-records-scroll)::-webkit-scrollbar {
+  display: none;
+}
+
 /* src/styles/deliveries.css */
 
 /* Atlas Guidance: current workflows and the retained source reference. */

@@ -35,6 +35,32 @@ class DashboardDataTests(unittest.TestCase):
                        ('sales_activity_orders_snapshot', json.dumps({'observedAt': self.today.isoformat()})))
             db.commit()
 
+    def test_depot_stay_threshold_and_oldest_first(self):
+        from datetime import timezone
+
+        now = datetime.now(timezone.utc)
+        for order, hours, verified in [
+            (1, 73, True),
+            (2, 71, True),
+            (3, 120, True),
+            (4, 100, False),
+        ]:
+            self.add(
+                order,
+                "Palletways",
+                palletwaysDepotStay={
+                    "verified": verified,
+                    "arrivedAt": (now - timedelta(hours=hours)).isoformat(),
+                    "checkedAt": now.isoformat(),
+                    "depot": "6",
+                },
+            )
+        result = delivery_data.query_records(dashboard_widget="palletways-depot-3days")
+        self.assertEqual(result["total"], 2)
+        self.assertEqual([row["order"] for row in result["deliveries"]], ["3", "1"])
+        widget = dashboard_data.snapshot()["widgets"]["palletways-depot-3days"]
+        self.assertEqual(widget["rows"][0]["palletwaysDepotStay"]["depot"], "6")
+
     def test_awaiting_dispatch_uses_ow_status_across_carriers_before_paging(self):
         self.add(1, 'AMZ', rawStatus='W', st='Scheduled')
         self.add(2, 'Own van', rawStatus=' w ', st='Unscheduled')

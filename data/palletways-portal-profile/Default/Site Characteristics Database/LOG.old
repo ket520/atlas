@@ -1,3 +1,5 @@
-2026/10/30-17:10:52.191 30f8 Reusing MANIFEST C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\Site Characteristics Database/MANIFEST-000001
-2026/10/30-17:10:52.197 30f8 Recovering log #3
-2026/10/30-17:10:52.197 30f8 Reusing old log C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\Site Characteristics Database/000003.log 
+2026/11/02-17:27:17.371 6a98 Log #3: 37 ops saved to Table #4 OK
+2026/11/02-17:27:17.375 6a98 Archiving C:\atlas\data\palletways-portal-profile\Default\Site Characteristics Database/000003.log: OK
+2026/11/02-17:27:17.375 6a98 Table #4: 37 entries OK
+2026/11/02-17:27:17.381 6a98 Archiving C:\atlas\data\palletways-portal-profile\Default\Site Characteristics Database/MANIFEST-000001: OK
+2026/11/02-17:27:17.391 6a98 **** Repaired leveldb C:\atlas\data\palletways-portal-profile\Default\Site Characteristics Database; recovered 1 files; 733 bytes. Some data may have been lost. ****

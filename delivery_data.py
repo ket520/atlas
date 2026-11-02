@@ -1188,6 +1188,7 @@ def archive(rows, observed_at=None):
                     "podImageUrl",
                     "podPhotos",
                     "bookingStatus",
+                    "palletwaysDepotStay",
                     "skuItems",
                     "completedAt",
                     "failedAt",
@@ -2210,6 +2211,10 @@ def query_records(
         order_by = f" ORDER BY CASE WHEN {expression} IS NULL OR {expression}='' THEN 1 ELSE 0 END, {expression} {sort_direction.upper()}, order_id DESC"
     else:
         order_by = " ORDER BY last_seen DESC, order_id DESC"
+    if dashboard_widget == "palletways-depot-3days":
+        order_by = (
+            " ORDER BY json_extract(payload, '$.palletwaysDepotStay.arrivedAt') ASC, order_id DESC"
+        )
     def load_page():
         with connect() as db:
             total = db.execute("SELECT COUNT(*) FROM deliveries" + where, values).fetchone()[0]
