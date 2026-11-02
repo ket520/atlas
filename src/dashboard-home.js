@@ -2,8 +2,8 @@ const DashboardHome = (() => {
   const definitions = [
     [
       'palletways-depot-3days',
-      'Palletways · At Depot 3+ Days',
-      'At delivery depot for 72+ hours',
+      'Palletways · At Depot 3> Days',
+      'At delivery depot for over 72 hours',
       'truck',
       'purple',
       'palletways',
@@ -725,7 +725,7 @@ const DashboardHome = (() => {
           active &&
           item.carrier === 'Palletways' &&
           item.palletwaysDepotStay?.verified &&
-          Date.now() - Date.parse(item.palletwaysDepotStay.arrivedAt) >= 72 * 3600000
+          Date.now() - Date.parse(item.palletwaysDepotStay.arrivedAt) > 72 * 3600000
         );
       if (key === 'palletways-next-day')
         return (

@@ -462,7 +462,7 @@ function deliveryMatchesFilters(delivery) {
       delivery.carrier !== 'Palletways' ||
       ['Delivered', 'Cancelled', 'Return'].includes(delivery.st) ||
       !stay?.verified ||
-      !(Date.now() - Date.parse(stay.arrivedAt) >= 72 * 3600000)
+      !(Date.now() - Date.parse(stay.arrivedAt) > 72 * 3600000)
     )
       return false;
   }
@@ -964,7 +964,7 @@ function deliveryListRow(delivery, related = false) {
     `
     }
     <td>${esc(delivery.carrier ? carName(delivery.carrier) : '\u2014')}${delivery.deliveryMethodRaw ? `<small class="tracking-cell-line mut">${esc(delivery.deliveryMethodRaw)}</small>` : ''}</td>
-    <td class="tracking-status-cell" title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && delivery.relatedKind === 'Credit/Refund' ? esc(delivery.rawStatus || '\u2014') : related && !delivery.st ? '\u2014' : stat(delivery.st, carrierStatusLabel(delivery))}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
+    <td class="tracking-status-cell" title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && delivery.relatedKind === 'Credit/Refund' ? esc(delivery.rawStatus || '\u2014') : related && !delivery.st ? '\u2014' : stat(delivery.st, carrierStatusLabel(delivery))}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${depotDelayLabel(delivery) ? `<small class="tracking-cell-line status-followup-warning">${esc(depotDelayLabel(delivery))}</small>` : ''}${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
     ${
       fsrc === 'Palletways'
         ? `

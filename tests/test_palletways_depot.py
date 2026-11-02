@@ -44,6 +44,54 @@ class DepotStayTests(unittest.TestCase):
         result = depot_stay({"DeliveryDepot": "6"}, [self.event(), departed, self.event(hours=10)])
         self.assertEqual(result["arrivedAt"], "2026-10-30T14:29:00+00:00")
 
+    def test_alternate_arrivals_require_destination_evidence(self):
+        generic = self.event(text="Scanned at Depot 6")
+        self.assertTrue(depot_stay({"DeliveryDepot": "6"}, [generic])["verified"])
+        route = self.event("JIN", "GDEP", "550", "Left hub Fradley on vehicle TRUCK[6]", -1)
+        inbound = self.event("BAY", "SCN", "700", "Inbound/Receive Scan")
+        repeated = self.event("BAY", "SCN", "700", "Inbound/Receive Scan", 24)
+        self.assertTrue(depot_stay({"DeliveryDepot": "6"}, [route, inbound])["verified"])
+        self.assertEqual(
+            depot_stay({"DeliveryDepot": "6"}, [route, inbound, repeated])["arrivedAt"],
+            "2026-10-30T04:29:00+00:00",
+        )
+        self.assertFalse(depot_stay({"DeliveryDepot": "7"}, [route, inbound])["verified"])
+        self.assertFalse(depot_stay({"DeliveryDepot": "6"}, [inbound])["verified"])
+
+    def test_only_destination_delivery_loading_closes_stay(self):
+        cases = [
+            ("300", "Scanned onto vehicle at depot 6 trunk run"),
+            ("800", "Scanned onto vehicle at depot 41 C&D"),
+            ("800", "Scanned onto vehicle C&D"),
+            ("800", "Scanned onto vehicle at depot 6 trunk run"),
+        ]
+        for code, text in cases:
+            with self.subTest(code=code, text=text):
+                result = depot_stay(
+                    {"DeliveryDepot": "6"},
+                    [self.event(), self.event("VL", "SCN", code, text, 4)],
+                )
+                self.assertTrue(result["verified"])
+                self.assertEqual(result["departedAt"], "")
+
+    def test_loading_closes_before_later_delivery_confirmation(self):
+        loading = self.event("VL", "SCN", "800", "Scanned onto vehicle at depot 6 C&D", 4)
+        result = depot_stay({"DeliveryDepot": "6"}, [self.event(), loading])
+        self.assertFalse(result["verified"])
+        self.assertEqual(result["departedAt"], "2026-10-30T08:29:00+00:00")
+        later = self.event("VP", "DAR", "", "Driver arrived", 8)
+        completed = self.event("POD", "POD", "", "Clean POD", 9)
+        result = depot_stay({"DeliveryDepot": "6"}, [self.event(), loading, later, completed])
+        self.assertEqual(result["departedAt"], "2026-10-30T08:29:00+00:00")
+
+    def test_fallback_does_not_invent_departure_time(self):
+        result = depot_stay(
+            {"DeliveryDepot": "6"},
+            [self.event(), self.event("VP", "DAR", "", "Driver arrived", 8)],
+        )
+        self.assertFalse(result["verified"])
+        self.assertEqual(result["departedAt"], "")
+
     def test_completion_and_unknown_scan(self):
         self.assertFalse(
             depot_stay(
@@ -51,7 +99,7 @@ class DepotStayTests(unittest.TestCase):
             )["verified"]
         )
         self.assertFalse(
-            depot_stay({"DeliveryDepot": "6"}, [self.event(text="Scanned at Depot 6")])["verified"]
+            depot_stay({"DeliveryDepot": "6"}, [self.event(text="Scan completed")])["verified"]
         )
         self.assertFalse(
             depot_stay({"DeliveryDepot": "6"}, [dict(self.event(), date="invalid")])["verified"]

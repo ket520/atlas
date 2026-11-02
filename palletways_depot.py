@@ -28,7 +28,10 @@ def event_time(event):
 def depot_stay(consignment, events):
     depot = depot_number(consignment.get("DeliveryDepot"))
     arrival = None
+    departed_at = None
+    closed_reason = ""
     last_event = ""
+    routed_to_destination = False
     if not depot:
         return {"verified": False, "reason": "Delivery depot unavailable"}
     ordered = sorted(
@@ -43,23 +46,44 @@ def depot_stay(consignment, events):
         last_event = text or last_event
         scan_depot = re.search(r"\bdepot\s+(\d+)\b", text, re.I)
         matches = scan_depot and depot_number(scan_depot[1]) == depot
-        if group == "VU" and kind == "SCN" and code == "700":
-            if matches and re.search(r"\bscanned off\b.*\btrunk\b", text, re.I):
-                arrival = arrival or at
-            elif scan_depot and not matches:
-                arrival = None
-        elif (group == "VL" and kind == "SCN") or (group == "VP" and kind == "DAR"):
+        if group == "JIN" and kind == "GDEP":
+            route = re.search(r"\[(\d+)\]\s*$", text)
+            routed_to_destination = bool(route and depot_number(route[1]) == depot)
             arrival = None
+        elif group == "VU" and kind == "SCN" and code == "700":
+            if matches:
+                if arrival is None:
+                    departed_at = None
+                    closed_reason = ""
+                arrival = arrival or at
+            elif scan_depot:
+                arrival = None
+        elif group == "BAY" and kind == "SCN" and code == "700":
+            if matches or (routed_to_destination and text.strip().lower() == "inbound/receive scan"):
+                if arrival is None:
+                    departed_at = None
+                    closed_reason = ""
+                arrival = arrival or at
+        elif group == "VL" and kind == "SCN" and code == "800":
+            if matches and re.search(r"\bC\s*&\s*D\b", text, re.I):
+                arrival = None
+                departed_at = departed_at or at
+                closed_reason = "Loaded for delivery at destination depot"
+        elif group == "VP" and kind == "DAR":
+            arrival = None
+            closed_reason = closed_reason or "Driver arrival confirms shipment is no longer at depot"
         elif (group == "POD" and kind == "POD") or re.search(
             r"\b(cancelled|canceled|return to sender|returned to sender|job complete)\b", text, re.I
         ):
             arrival = None
+            closed_reason = closed_reason or "Shipment completed, cancelled or returned"
     return {
         "verified": bool(arrival),
         "depot": depot,
         "arrivedAt": arrival.isoformat() if arrival else "",
         "lastEvent": last_event,
-        "reason": "" if arrival else "No confirmed current delivery-depot stay",
+        "departedAt": departed_at.isoformat() if departed_at else "",
+        "reason": "" if arrival else closed_reason or "No confirmed current delivery-depot stay",
     }
 
 

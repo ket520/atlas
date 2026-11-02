@@ -784,6 +784,15 @@ const amazonStatusLabel = (value) =>
         .replace(/_/g, ' ')
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+const depotDelayLabel = (delivery) => {
+  const stay = delivery?.palletwaysDepotStay;
+  const active = !['Delivered', 'Cancelled', 'Return'].includes(delivery?.st);
+  const overdue = Date.now() - Date.parse(stay?.arrivedAt) > 72 * 3600000;
+  return delivery?.carrier === 'Palletways' && stay?.verified && active && overdue
+    ? 'At Depot 3> Days'
+    : '';
+};
+
 const carrierStatusLabel = (delivery) => {
   if (
     page === 'Deliveries' &&
@@ -1276,7 +1285,7 @@ function dashboardWidgetControls(key = dashboardWidgetFilter) {
   if (key === 'palletways-depot-3days')
     return {
       carrier: 'Palletways',
-      conditions: 'Confirmed delivery depot arrival · 72+ hours · No recorded departure',
+      conditions: 'Confirmed delivery depot arrival · Over 72 hours · No recorded departure',
     };
   if (key === 'charge-pending')
     return {
@@ -1872,7 +1881,7 @@ const DeliveryFilters = (() => {
               ? `${label} (${levelCounts.facets.filter((item) => trackingMatchesScope(item, value)).reduce((sum, item) => sum + item.count, 0)})`
               : 'All categories',
           ]),
-          ...(fsrc === 'Palletways' ? [['palletways-depot-3days', 'At Depot 3+ Days']] : []),
+          ...(fsrc === 'Palletways' ? [['palletways-depot-3days', 'At Depot 3> Days']] : []),
         ],
         {
           ariaLabel: 'Filter categories',

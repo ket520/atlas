@@ -28,7 +28,7 @@ def widget_condition(key):
     uk_day = datetime.now(ZoneInfo('Europe/London')).date()
     conditions = {
         "palletways-depot-3days": (
-            f"{carrier}='Palletways' AND {status} NOT IN ('Delivered','Cancelled','Return') AND json_extract(payload, '$.palletwaysDepotStay.verified')=1 AND julianday('now')-julianday(json_extract(payload, '$.palletwaysDepotStay.arrivedAt'))>=3",
+            f"{carrier}='Palletways' AND {status} NOT IN ('Delivered','Cancelled','Return') AND json_extract(payload, '$.palletwaysDepotStay.verified')=1 AND julianday('now')-julianday(json_extract(payload, '$.palletwaysDepotStay.arrivedAt'))>3",
             [],
         ),
         "awaiting-dispatch": (
