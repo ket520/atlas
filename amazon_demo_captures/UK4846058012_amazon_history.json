@@ -1,0 +1,76 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4846058012",
+  "shipment_status": "Delivered",
+  "reference": "601477-603867",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.4 kg",
+  "total_charge": "£3.31",
+  "events_count": 7,
+  "events": [
+    {
+      "date": "2026-09-20",
+      "time": "02:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-20T02:09:00+08:00",
+      "description": "Package delivered",
+      "location": "Nottingham, Nottinghamshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-20",
+      "time": "01:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-20T01:09:00+08:00",
+      "description": "Out for delivery",
+      "location": "Derby, Kegworth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-19",
+      "time": "18:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-19T18:48:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Derby, Kegworth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-19",
+      "time": "08:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-19T08:29:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-19",
+      "time": "01:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-19T01:58:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-19",
+      "time": "01:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-19T01:58:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-18",
+      "time": "16:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-18T16:41:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4871716237",
+  "shipment_status": "Delivered",
+  "reference": "604254-606645",
+  "shipping_speed": "One day",
+  "package_size": "Manifested 40 x 30 x 15 cm",
+  "package_weight": "7.13 kg",
+  "total_charge": "£6.41",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-09-25",
+      "time": "23:52",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T23:52:00+08:00",
+      "description": "Package delivered",
+      "location": "Barrow-Upon-Humber, North Lincolnshire, GB",
+      "note": "Package was left with neighbour"
+    },
+    {
+      "date": "2026-09-25",
+      "time": "18:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T18:49:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "18:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T18:49:00+08:00",
+      "description": "Out for delivery",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "13:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T13:18:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "08:55",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T08:55:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "08:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T08:24:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "03:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T03:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "00:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T00:21:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "00:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T00:21:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "21:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T21:10:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

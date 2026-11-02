@@ -1,0 +1,76 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "JK863180393GB",
+  "shipment_status": "Delivered",
+  "reference": "603653-606046",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.5 kg",
+  "total_charge": "£3.31",
+  "events_count": 7,
+  "events": [
+    {
+      "date": "2026-09-28",
+      "time": "19:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T19:17:00+08:00",
+      "description": "Package delivered",
+      "location": "Pembroke Dock, Pembrokeshire, GB",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "17:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T17:00:00+08:00",
+      "description": "Out for delivery",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-25",
+      "time": "01:16",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T01:16:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "19:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T19:11:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "01:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T01:33:00+08:00",
+      "description": "Package arrived at the final hub/delivery station",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "01:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T01:33:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "17:42",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T17:42:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

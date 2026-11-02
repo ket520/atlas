@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4817320744",
+  "shipment_status": "Delivered",
+  "reference": "598695-601083",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.02 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-09-14",
+      "time": "02:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T02:11:00+08:00",
+      "description": "Package delivered",
+      "location": "Etchingham, East Sussex, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-09-14",
+      "time": "00:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T00:38:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "00:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T00:38:00+08:00",
+      "description": "Out for delivery",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-13",
+      "time": "23:35",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T23:35:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-13",
+      "time": "02:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T02:08:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "19:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T19:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "19:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T19:47:00+08:00",
+      "description": "Out for delivery",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "18:16",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T18:16:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "AYLESFORD, South East England, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "07:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T07:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "02:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T02:29:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "02:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T02:29:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-11",
+      "time": "17:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-11T17:05:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

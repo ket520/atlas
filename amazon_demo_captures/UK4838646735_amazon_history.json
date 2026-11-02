@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4838646735",
+  "shipment_status": "Delivered",
+  "reference": "600888-603276",
+  "shipping_speed": "One day",
+  "package_size": "Manifested 40 x 30 x 15 cm",
+  "package_weight": "0.65 kg",
+  "total_charge": "£5.91",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-09-25",
+      "time": "01:40",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-25T01:40:00+08:00",
+      "description": "Package delivered",
+      "location": "Beccles, Suffolk, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-09-24",
+      "time": "18:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T18:27:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "18:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T18:27:00+08:00",
+      "description": "Out for delivery",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "16:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T16:05:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "11:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T11:38:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-24",
+      "time": "06:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-24T06:58:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "06:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T06:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Neasden, London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "16:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T16:47:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Neasden, London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "11:46",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T11:46:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "11:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T11:07:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "07:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T07:38:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "04:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T04:54:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "04:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T04:54:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "21:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T21:56:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

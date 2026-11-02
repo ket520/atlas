@@ -1,0 +1,102 @@
+/* Failed Deliveries page: shared table and liquid primitives are in tracking.css. */
+.failed-scope-sections {
+  --failed-liquid: #fbe5e5;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab {
+  background: #fffafa;
+  border-color: #ddbbbb;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab:hover {
+  background: #fff0f0;
+  border-color: #d89494;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab.on,
+.failed-scope-sections .scope-liquid {
+  background: var(--failed-liquid);
+  border-color: #d89494;
+  box-shadow:
+    inset 0 1px 0 #ffffff55,
+    0 3px 12px #c86a6a17;}
+
+.failed-scope-sections .scope-liquid::before,
+.failed-scope-sections .scope-liquid::after {
+  background: #e9aaaa88;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab.on
+  span:not(.scope-option-label) {
+  background: #d8949420;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab:focus-visible {
+  outline-color: #d89494;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-scope-section
+  > .fx-tabs
+  .fx-tab.liquid-arriving {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;}
+
+.failed-table-wrap .failed-table {
+  --tracking-columns: minmax(90px, 8fr) minmax(120px, 8fr) minmax(200px, 16fr) minmax(140px, 8fr) minmax(90px, 7fr) minmax(110px, 8fr) minmax(110px, 8fr) minmax(150px, 12fr) minmax(120px, 9fr) minmax(130px, 10fr);
+  min-width: 1260px;}
+
+.failed-table-wrap .failed-table thead th {
+  background: #fbe5e5;
+  color: #914646;
+  box-shadow:
+    inset 0 1px 0 #d89494,
+    inset 0 -1px 0 #d89494;}
+
+.failed-table-wrap .failed-table thead th:first-child {
+  border-left-color: #d89494;}
+
+.failed-table-wrap .failed-table thead th:last-child {
+  border-right-color: #d89494;}
+
+.failed-table-wrap .failed-table tbody tr:hover,
+.failed-table-wrap .failed-table tbody tr:hover td {
+  background: #fff7d6;}
+
+.failed-table-wrap .tracking-scroll-thumb,
+.failed-table-wrap .tracking-scroll-overlay:hover .tracking-scroll-thumb {
+  background: #e9aaaa;}
+
+.failed-table-wrap .tracking-scroll-overlay:focus-visible {
+  outline-color: #e9aaaa;}
+
+.delivery-scope-row.failed-scope-sections .tracking-courier-card {
+  background: #fffafa;
+  border-color: #ddbbbb;}
+
+.delivery-scope-row.failed-scope-sections .tracking-courier-card:hover,
+.delivery-scope-row.failed-scope-sections .tracking-courier-card.on {
+  background: #fbe5e5;
+  border-color: #d89494;
+  box-shadow:
+    inset 0 1px 0 #ffffff55,
+    0 3px 12px #c86a6a17;}
+
+.delivery-scope-row.failed-scope-sections .tracking-courier-card:focus-visible {
+  outline-color: #d89494;}
+
+.delivery-scope-row.failed-scope-sections
+  .tracking-courier-card.liquid-arriving {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;}

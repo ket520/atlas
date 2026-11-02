@@ -1,0 +1,94 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4862694798",
+  "shipment_status": "Delivered",
+  "reference": "603269-605661",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "1.5 kg",
+  "total_charge": "£3.31",
+  "events_count": 9,
+  "events": [
+    {
+      "date": "2026-09-23",
+      "time": "23:35",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T23:35:00+08:00",
+      "description": "Package delivered",
+      "location": "Redruth, Cornwall, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-09-23",
+      "time": "19:30",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T19:30:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "PLYMOUTH, Devon, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "19:30",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T19:30:00+08:00",
+      "description": "Out for delivery",
+      "location": "REDRUTH, Cornwall, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "11:16",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T11:16:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PLYMOUTH, Devon, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "11:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T11:09:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDRUTH, Cornwall, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "05:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T05:27:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "01:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T01:18:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "01:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T01:18:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "18:39",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T18:39:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4854355086",
+  "shipment_status": "Delivered",
+  "reference": "602299-604690",
+  "shipping_speed": "One day",
+  "package_size": "Manifested 40 x 30 x 15 cm",
+  "package_weight": "0.05 kg",
+  "total_charge": "£6.91",
+  "events_count": 9,
+  "events": [
+    {
+      "date": "2026-09-21",
+      "time": "20:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T20:31:00+08:00",
+      "description": "Package delivered",
+      "location": "Hull, East Riding Of Yorkshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-21",
+      "time": "17:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T17:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "17:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T17:47:00+08:00",
+      "description": "Out for delivery",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "16:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T16:28:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "14:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T14:24:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "14:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T14:24:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Hull, North Ferriby, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "05:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T05:18:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "05:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T05:18:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-20",
+      "time": "20:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-20T20:25:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4892336536",
+  "shipment_status": "Delivered",
+  "reference": "606000-608393",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.28 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-10-02",
+      "time": "23:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T23:18:00+08:00",
+      "description": "Package delivered",
+      "location": "Chesterfield, Derbyshire, GB",
+      "note": "Package was left near the rear door"
+    },
+    {
+      "date": "2026-10-02",
+      "time": "19:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T19:48:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "19:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T19:48:00+08:00",
+      "description": "Out for delivery",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "07:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T07:21:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "02:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T02:41:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "20:02",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T20:02:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "20:02",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T20:02:00+08:00",
+      "description": "Out for delivery",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "13:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T13:28:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Sheffield, South yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "08:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T08:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "05:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T05:15:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "05:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T05:15:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "18:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T18:24:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

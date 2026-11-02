@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4983748732",
+  "shipment_status": "Delivered",
+  "reference": "615121-617477",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.4 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-21",
+      "time": "22:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T22:27:00+08:00",
+      "description": "Package delivered",
+      "location": "Manchester, Whitefield, Greater Manchester, GB",
+      "note": "Package was left with the mail room clerk"
+    },
+    {
+      "date": "2026-10-21",
+      "time": "17:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T17:29:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "17:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T17:29:00+08:00",
+      "description": "Out for delivery",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "07:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T07:38:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "02:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T02:14:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "18:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T18:58:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "18:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T18:58:00+08:00",
+      "description": "Out for delivery",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "15:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T15:25:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Manchester, Bolton, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "10:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T10:23:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "07:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T07:44:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "03:30",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T03:30:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "01:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T01:07:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "01:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T01:07:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "16:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T16:38:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4937131366",
+  "shipment_status": "Delivered",
+  "reference": "610558-612923",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.2 kg",
+  "total_charge": "£3.31",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-10-09",
+      "time": "21:52",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T21:52:00+08:00",
+      "description": "Package delivered",
+      "location": "Yeovil, Somerset, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-09",
+      "time": "17:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T17:54:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "17:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T17:54:00+08:00",
+      "description": "Out for delivery",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "13:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T13:56:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "08:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T08:27:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "07:35",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T07:35:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "03:55",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T03:55:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "00:32",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T00:32:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "00:32",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T00:32:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-08",
+      "time": "22:22",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-08T22:22:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

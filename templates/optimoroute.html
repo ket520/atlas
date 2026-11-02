@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/assets/DeliDesk.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OptimoRoute data · Delivery Desk</title>
+    <link rel="stylesheet" href="/static/css/general.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="/static/css/tracking.css">
+  <link rel="stylesheet" href="/static/css/failed-deliveries.css">
+  
+  
+</head>
+<body data-provider="OptimoRoute">
+  <main class="pw-page">
+    <nav class="source-nav" aria-label="Delivery Desk pages">
+      <a class="btn" href="./dashboard.html">Dashboard</a>
+      <a class="btn" href="./deliveries.html">Tracking</a>
+      <a class="btn" href="./failed-deliveries.html">Failed Deliveries</a>
+    </nav>
+    <div class="workflow-intro"><div><span class="eyebrow">OWN VAN DELIVERIES</span><h1>OptimoRoute deliveries</h1><p>Track deliveries, check arrival estimates and review proof of delivery.</p></div></div>
+    <form id="pw-form" class="card pw-controls">
+      <div class="or-filters"><label>Show<select id="or-scope"><option value="all">All deliveries</option><option value="day">One delivery date</option><option value="dates">Date range</option></select></label><label>Delivery date<input id="or-day" type="date" aria-describedby="or-date-help"></label><div id="or-dates" hidden><label>From<input id="or-from" type="date"></label><label>To<input id="or-to" type="date"></label></div><label>Status<select id="or-status"><option value="">All statuses</option></select></label><label>Driver on this page<select id="or-driver"><option value="">All drivers</option></select></label></div>
+      <p id="or-date-help" class="mut">Pick a delivery date to see only that day's orders, or select All deliveries to clear it.</p>
+      <p class="mut">25 deliveries at a time. The next batch loads when you need it.</p>
+      <div class="row"><button class="btn pr" id="pw-fetch" type="submit">Refresh deliveries</button><button class="btn" id="pw-stop" type="button" disabled>Stop</button><button class="btn" id="pw-export" type="button" disabled>Export loaded JSON</button><button class="btn" id="or-csv" type="button" disabled>Export page CSV</button></div>
+    </form>
+    <p id="or-coverage" class="mut"></p><p id="pw-status" role="status" aria-live="polite">Ready to sync.</p><p id="or-synced" class="mut">Last synced: never</p>
+    <div id="or-loading" class="or-loading" hidden><div class="or-loading-label">Loading deliveries…</div><div class="or-loading-track" role="progressbar" aria-label="Loading deliveries"><span></span></div></div>
+    <section class="card pw-results" aria-label="Fetched data">
+      <div class="pw-toolbar"><h2>Deliveries <span id="pw-count">0</span></h2><label>Search this page <input id="pw-search" type="search" placeholder="Order, driver, route, status…" disabled></label></div>
+      <div id="pw-records"><p class="mut">Loading deliveries...</p></div><div class="or-pagination"><span id="or-page">Page 1 | 25 records per page</span><div><button id="or-prev" class="btn" type="button" disabled>Previous</button><button id="or-next" class="btn pr" type="button" disabled>Next 25 &rarr;</button></div></div>
+    </section>
+    <section class="card or-operations">
+      <div class="pw-toolbar"><h2>Live tracking</h2><label class="or-toggle"><input id="op-auto" type="checkbox"> Auto refresh every 30 seconds</label></div>
+      <p id="op-live-status" class="mut" role="status">Auto refresh updates the current 25 orders only.</p>
+      <div class="or-metrics"><div><span>Late / overdue</span><strong id="op-late">0</strong></div><div><span>Completed without POD</span><strong id="op-missing">0</strong></div><div><span>Mobile events received</span><strong id="op-event-count">0</strong></div></div>
+      <p class="mut">Indicators cover the current page. Missing POD means no photo, signature or note was recorded; it does not indicate a required proof was missed.</p>
+      <div class="or-action-row"><label>Route date<input id="op-date" type="date" required></label><button id="op-load" class="btn pr" type="button">Load routes and dispatch</button></div>
+      <p id="op-status" role="status" class="mut">Choose a date to inspect its routes.</p><div id="op-dispatch" class="or-dispatch"></div>
+
+      <div class="or-route-layout"><div><label>Driver route<select id="op-route"><option value="">Load routes first</option></select></label><div id="op-route-summary"></div><div id="op-stops" class="or-table-wrap"></div></div><div id="op-map" class="or-map"><p>Load a driver route to view its path and stops.</p></div></div>
+      <details><summary>Recent driver events</summary><div id="op-events">No live events received.</div></details>
+    </section>
+    <section class="card or-operations or-activity" aria-labelledby="activity-title">
+      <h2 id="activity-title">Delivery log</h2>
+      <p class="mut">Search an Order ID to review scheduled, in-progress, failed, completed and other recorded activity across delivery attempts.</p>
+      <form id="activity-form" class="or-action-row">
+        <label for="activity-order">Order ID<input id="activity-order" type="search" placeholder="Enter an Order ID" maxlength="200" required></label>
+        <button id="activity-search" class="btn pr" type="submit">Find delivery log</button>
+        <button id="activity-export" class="btn" type="button" disabled>Export log CSV</button>
+      </form>
+      <p id="activity-status" class="mut" role="status" aria-live="polite">Enter an Order ID to view its activity.</p>
+      <div id="activity-warnings" class="or-note" hidden></div>
+      <div id="activity-results" hidden>
+        <div id="activity-summary" class="or-metrics"></div>
+        <div class="or-action-row"><label>Status / activity<select id="activity-filter"><option value="">All activity</option></select></label><label>Display order<select id="activity-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label></div>
+        <p id="activity-count" class="mut"></p>
+        <ol id="activity-timeline" class="or-timeline" aria-label="Order activity timeline"></ol>
+        <p id="activity-notice" class="mut"></p>
+      </div>
+    </section>
+    <details class="card pw-raw"><summary>Full backend responses</summary><p class="mut">Includes metadata and fields outside the record list.</p><pre id="pw-raw">[]</pre></details>
+  </main>
+  <dialog id="or-detail" aria-labelledby="or-detail-title"><div class="or-detail-head"><h2 id="or-detail-title">Delivery details</h2><button id="or-close" class="btn" type="button">Close</button></div><div id="or-detail-body"></div></dialog>
+  <script src="/static/js/optimoroute.js"></script>
+  <script src="/static/js/optimoroute-operations.js"></script>
+  <script src="/static/js/order-activity.js"></script>
+  <script src="/src/horizontal-scroll.js" defer></script>
+</body>
+</html>
+
+

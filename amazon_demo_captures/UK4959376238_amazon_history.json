@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4959376238",
+  "shipment_status": "Delivered",
+  "reference": "612796-615158",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "2.4 kg",
+  "total_charge": "£3.59",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-10-15",
+      "time": "20:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T20:20:00+08:00",
+      "description": "Package delivered",
+      "location": "Sutton, City Of London, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-15",
+      "time": "18:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T18:06:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "CROYDON, London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "18:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T18:06:00+08:00",
+      "description": "Out for delivery",
+      "location": "CROYDON, London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "16:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T16:58:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "CROYDON, London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "08:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T08:21:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Rochester, Medway, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-14",
+      "time": "22:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-14T22:31:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Rochester, Medway, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-14",
+      "time": "06:36",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-14T06:36:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-14",
+      "time": "01:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-14T01:18:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-14",
+      "time": "01:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-14T01:18:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-13",
+      "time": "21:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-13T21:57:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

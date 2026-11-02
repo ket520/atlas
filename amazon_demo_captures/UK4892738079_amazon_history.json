@@ -1,0 +1,85 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4892738079",
+  "shipment_status": "Delivered",
+  "reference": "606077-608469",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.07 kg",
+  "total_charge": "£3.31",
+  "events_count": 8,
+  "events": [
+    {
+      "date": "2026-10-02",
+      "time": "02:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T02:20:00+08:00",
+      "description": "Package delivered",
+      "location": "Uxbridge, Middlesex, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-02",
+      "time": "01:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T01:14:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "West Drayton, Middx, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "01:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T01:14:00+08:00",
+      "description": "Out for delivery",
+      "location": "West Drayton, Middx, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "00:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T00:11:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "West Drayton, Middx, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "10:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T10:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "05:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T05:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "05:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T05:23:00+08:00",
+      "description": "Package picked up",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "20:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T20:05:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

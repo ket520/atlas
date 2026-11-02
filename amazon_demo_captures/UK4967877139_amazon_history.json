@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4967877139",
+  "shipment_status": "Delivered",
+  "reference": "613835-616192",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.28 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-18",
+      "time": "01:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T01:05:00+08:00",
+      "description": "Package delivered",
+      "location": "Huddersfield, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-17",
+      "time": "18:42",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T18:42:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "18:42",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T18:42:00+08:00",
+      "description": "Out for delivery",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "08:52",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T08:52:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "03:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T03:13:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "19:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T19:09:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "19:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T19:09:00+08:00",
+      "description": "Out for delivery",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "16:02",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T16:02:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Greater Manchester, Rochdale, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "12:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T12:49:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "11:39",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T11:39:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "08:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T08:09:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "03:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T03:45:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "03:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T03:45:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "20:43",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T20:43:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

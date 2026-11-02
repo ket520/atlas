@@ -1,0 +1,35 @@
+from playwright.sync_api import sync_playwright, expect
+from browser_responsive_tables import serve
+with sync_playwright() as pw:
+    browser=pw.chromium.launch()
+    page=browser.new_page(viewport={'width':1440,'height':900},reduced_motion='no-preference')
+    page.add_init_script("sessionStorage.setItem('deliverydesk-started','1')")
+    page.route('https://deliverydesk.test/**',serve)
+    page.route('https://fonts.googleapis.com/**',lambda route:route.abort())
+    errors=[]
+    page.on('pageerror',lambda error:errors.append(str(error)))
+    page.add_init_script("localStorage.setItem('deliverydesk-widget-tour-v1','seen')")
+    page.goto('https://deliverydesk.test/pages/dashboard.html')
+    page.locator('[data-dash-customize]').click()
+    page.evaluate('document.getAnimations().filter(a=>a.effect.getTiming().iterations!==Infinity).forEach(a=>a.finish())')
+    page.locator('[data-picker-filter="1x3"]').click()
+    page.locator('[data-picker-remove="cancelled"]').click(force=True)
+    page.evaluate("window.menu=document.querySelector('.dash-editor'); window.tile=document.querySelector('[data-picker-key=returns]'); window.menuAnimations=menu.getAnimations()")
+    page.locator('[data-dash-reset]').click()
+    assert page.evaluate("menu===document.querySelector('.dash-editor') && tile===document.querySelector('[data-picker-key=returns]')")
+    assert page.evaluate('menu.getAnimations().every(a=>menuAnimations.includes(a))')
+    expect(page.locator('[data-picker-filter="1x3"]')).to_have_attribute('aria-pressed','true')
+    expect(page.locator('[data-dash-widget]')).to_have_count(9)
+    expect(page.locator('[data-dash-widget="awaiting-dispatch"]')).to_have_count(1)
+    expect(page.locator('[data-dash-widget="returns"]')).to_have_count(0)
+    expect(page.locator('[data-dash-widget]').last).to_have_attribute('data-dash-widget', 'order-identifier')
+    expect(page.locator('.dash-widget-tall')).to_have_count(0)
+    expect(page.locator('.app')).to_have_class('app cl')
+    page.locator('[data-dash-customize]').click()
+    expect(page.locator('.dash-editor')).to_have_count(0)
+    page.locator('[data-dash-reset]').click()
+    expect(page.locator('[data-dash-widget]')).to_have_count(9)
+    assert not errors,errors
+    browser.close()
+    print('PASS: reset keeps gallery and tiles mounted, preserves filter and sidebar state, does not replay menu animation, and restores defaults')
+

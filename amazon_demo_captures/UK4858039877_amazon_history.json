@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4858039877",
+  "shipment_status": "Delivered",
+  "reference": "602493-604884",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.18 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-09-23",
+      "time": "23:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T23:05:00+08:00",
+      "description": "Package delivered",
+      "location": "Gotham, Nottinghamshire, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-09-23",
+      "time": "19:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T19:00:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "19:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T19:00:00+08:00",
+      "description": "Out for delivery",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "15:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T15:48:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-23",
+      "time": "01:34",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-23T01:34:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. Coalville, Leicestershire, UK"
+    },
+    {
+      "date": "2026-09-22",
+      "time": "18:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T18:41:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "18:39",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T18:39:00+08:00",
+      "description": "Out for delivery",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "16:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T16:17:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Coalville, Leicestershire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "07:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T07:33:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "00:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T00:56:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-22",
+      "time": "00:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-22T00:56:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-21",
+      "time": "16:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-21T16:56:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

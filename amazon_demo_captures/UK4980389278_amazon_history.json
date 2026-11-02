@@ -1,0 +1,130 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4980389278",
+  "shipment_status": "Delivered",
+  "reference": "614990-617346",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.2 kg",
+  "total_charge": "£3.31",
+  "events_count": 13,
+  "events": [
+    {
+      "date": "2026-10-20",
+      "time": "23:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T23:44:00+08:00",
+      "description": "Package delivered",
+      "location": "Morley, Leeds, West Yorkshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-20",
+      "time": "18:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T18:11:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "18:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T18:11:00+08:00",
+      "description": "Out for delivery",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "08:26",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T08:26:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "18:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T18:33:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "18:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T18:33:00+08:00",
+      "description": "Out for delivery",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "13:36",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T13:36:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Leeds, Wakefield, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "12:26",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T12:26:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "11:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T11:41:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "07:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T07:13:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "01:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T01:13:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-19",
+      "time": "01:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-19T01:13:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-18",
+      "time": "22:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T22:11:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

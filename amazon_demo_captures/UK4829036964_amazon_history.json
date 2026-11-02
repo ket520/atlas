@@ -1,0 +1,85 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4829036964",
+  "shipment_status": "Delivered",
+  "reference": "599586-601974",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.35 kg",
+  "total_charge": "£3.31",
+  "events_count": 8,
+  "events": [
+    {
+      "date": "2026-09-15",
+      "time": "18:40",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T18:40:00+08:00",
+      "description": "Package delivered",
+      "location": "Hartlepool, Durham, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-15",
+      "time": "17:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T17:10:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Leeds, West Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "17:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T17:10:00+08:00",
+      "description": "Out for delivery",
+      "location": "Leeds, West Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "14:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T14:27:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Leeds, West Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "07:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T07:56:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "03:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T03:13:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "03:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T03:13:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "17:04",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T17:04:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

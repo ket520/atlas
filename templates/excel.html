@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="/assets/DeliDesk.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OW Excel ? Delivery Desk</title>
+    <link rel="stylesheet" href="/static/css/general.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="/static/css/tracking.css">
+  <link rel="stylesheet" href="/static/css/failed-deliveries.css">
+  
+</head>
+<body data-sheet="sales_activity">
+  <main class="pw-page sheet-page">
+    <nav class="source-nav" aria-label="Delivery Desk pages">
+      <a class="btn" href="./dashboard.html">Dashboard</a>
+      <a class="btn" href="./deliveries.html">Tracking</a>
+      <a class="btn" href="./failed-deliveries.html">Failed Deliveries</a>
+    </nav>
+    <div class="workflow-intro"><div><span class="eyebrow">GOOGLE SHEETS</span><h1>OW Excel</h1><p>All rows and columns from the Sales Activity tab. Refresh to load the latest sheet values.</p></div></div>
+    <section class="card pw-results" aria-labelledby="sheet-title">
+      <div class="pw-toolbar"><h2 id="sheet-title">Sales Activity <span id="sheet-count">0 rows</span></h2><div class="row"><button id="sheet-refresh" class="btn pr" type="button">Refresh sheet</button><button id="sheet-export" class="btn" type="button" disabled>Export full CSV</button></div></div>
+      <label for="sheet-search">Search all columns</label><input id="sheet-search" type="search" placeholder="Order ID, customer, status or any cell value?" disabled>
+      <p id="sheet-status" class="mut" role="status" aria-live="polite">Loading spreadsheet?</p>
+      <p id="sheet-synced" class="mut"></p>
+      <div id="sheet-table" class="sheet-table-wrap" tabindex="0" aria-label="Sales Activity spreadsheet"></div>
+      <div class="sheet-pagination"><button id="sheet-prev" class="btn" type="button" disabled>Previous</button><span id="sheet-page"></span><button id="sheet-next" class="btn" type="button" disabled>Next</button><label>Rows per page <select id="sheet-size"><option value="100">100</option><option value="250">250</option><option value="all">All rows</option></select></label></div>
+    </section>
+  </main>
+  <script src="/static/js/data-explorer.js"></script>
+  <script src="/src/horizontal-scroll.js" defer></script>
+</body>
+</html>
+

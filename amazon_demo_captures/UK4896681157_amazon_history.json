@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4896681157",
+  "shipment_status": "Delivered",
+  "reference": "606325-608717",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.2 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-10-03",
+      "time": "00:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-03T00:44:00+08:00",
+      "description": "Package delivered",
+      "location": "Peterborough, Cambridgeshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-02",
+      "time": "22:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T22:06:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "22:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T22:06:00+08:00",
+      "description": "Out for delivery",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "07:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T07:05:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "22:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T22:59:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. PETERBOROUGH, PETERBOROUGH, UK"
+    },
+    {
+      "date": "2026-10-01",
+      "time": "22:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T22:09:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "22:09",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T22:09:00+08:00",
+      "description": "Out for delivery",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "15:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T15:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "09:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T09:49:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "05:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T05:33:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "05:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T05:33:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "17:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T17:05:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+/* Collection Notes records and navigation, available before SPA navigation. */
+.collection-delete-confirm { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 26px; border: 1px solid #e2e4ef; border-radius: 18px; background: #fff; color: var(--atlas-slate); box-shadow: 0 24px 80px #171c3540; }
+.collection-delete-confirm::backdrop { background: #171c3566; backdrop-filter: blur(3px); }
+.collection-delete-warning { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 14px; border-radius: 14px; background: #fff0ed; color: #ba3c36; }
+.collection-delete-confirm h2 { margin: 0 0 10px; font-size: 22px; color: var(--atlas-space); }
+.collection-delete-confirm p { margin: 0; font-size: 14px; line-height: 1.65; color: #626b82; }
+.collection-delete-confirm strong { color: var(--atlas-slate); }
+.collection-delete-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.collection-delete-confirm-actions button { padding: 10px 16px; border: 1px solid #d9ddec; border-radius: 9px; background: #f4f5fa; color: var(--atlas-slate); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.collection-delete-confirm-actions button:hover { background: #e9ebf5; }
+.collection-delete-confirm-actions .collection-confirm-delete { background: #b73339; border-color: #b73339; color: #fff; }
+.collection-delete-confirm-actions .collection-confirm-delete:hover { background: #97272c; border-color: #97272c; }
+.collection-delete-confirm-actions button:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 3px; }
+body[data-page="Collective Note"] .collection-note-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  margin-left: auto; padding: 8px 10px; border: 1px solid var(--atlas-indigo);
+  border-radius: 8px; background: var(--atlas-indigo); color: #fff;
+  font-size: 11px; font-weight: 800; line-height: 1.35; text-decoration: none;
+}
+body[data-page="Collective Note"] .collection-note-link svg { flex: none; }
+body[data-page="Collective Note"] .collection-note-link:hover {
+  background: var(--atlas-slate); border-color: var(--atlas-slate);
+  color: var(--atlas-cyan); text-decoration: none;
+}
+body[data-page="Collective Note"] .collection-note-link:focus-visible {
+  outline: 2px solid var(--atlas-indigo); outline-offset: 2px;
+}
+body[data-page="Collective Note"] .collection-record-actions {
+  display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 6px;
+  width: 100%; min-width: 0;
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-open-note {
+  margin-left: 0; max-width: 100%; height: auto; white-space: nowrap; flex: none;
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-delete-note {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 30px; width: 30px; height: 30px; margin-left: auto; padding: 0;
+  border: 1px solid #f2b6bd; border-radius: 8px; background: #fff1f2;
+  color: #a01d30; cursor: pointer;
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-delete-note:hover { background: #ffe0e4; }
+body[data-page="Collective Note"] .collection-record-actions .collection-delete-note:disabled { opacity: .6; cursor: wait; }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(1) { width: calc((100% - 310px) * .09); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(2) { width: calc((100% - 310px) * .17); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(3) { width: calc((100% - 310px) * .14); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(4) { width: calc((100% - 310px) * .28); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(5) { width: calc((100% - 310px) * .10); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(6) { width: calc((100% - 310px) * .11); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(7) { width: calc((100% - 310px) * .11); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(8) { width: 310px; }
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: none; padding: 8px; border: 1px solid var(--atlas-indigo); border-radius: 8px; background: #eef0ff; color: var(--atlas-indigo); font: inherit; font-size: 11px; font-weight: 700; line-height: 1.35; white-space: nowrap; cursor: pointer; }
+.collection-record-download:disabled { opacity: .6; cursor: wait; }
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download:hover { background: var(--atlas-slate); border-color: var(--atlas-slate); color: var(--atlas-cyan); }
+.collection-record-download:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 2px; }
+@container (max-width: 400px) {
+  body[data-page="Collective Note"] .collection-record-actions { gap: 4px; }
+  body[data-page="Collective Note"] .collection-record-actions :is(.collection-open-note, .collection-record-download) { gap: 3px; padding: 6px 4px; font-size: 10px; }
+  body[data-page="Collective Note"] .collection-record-actions :is(.collection-open-note, .collection-record-download) svg { width: 12px; height: 12px; }
+  body[data-page="Collective Note"] .collection-record-actions .collection-delete-note { flex-basis: 24px; width: 24px; height: 26px; }
+}
+.collection-records-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.collection-records-toolbar .delivery-search { width: min(100%, 460px); min-width: 0; }
+.collection-records-toolbar input { min-width: 0; width: 100%; }
+#collection-records-count { color: var(--mut); font-size: 12px; white-space: nowrap; }
+.collection-records-toolbar .delivery-search { flex: 1 1 300px; }
+.collection-records-toolbar .collection-date-select { flex: 0 0 145px; width: 145px; min-width: 0; margin-left: auto; }
+.collection-records-toolbar > .collection-note-link { flex: none; margin-left: 0; white-space: nowrap; }
+.collection-date-select .ui-select-trigger { width: 100%; min-width: 0; height: 36px; }
+.collection-date-select .ui-select-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.collection-date-menu[popover] { position: fixed; right: auto; bottom: auto; margin: 0; min-width: 0; max-width: calc(100vw - 24px); box-sizing: border-box; }
+.collection-date-menu:not(:popover-open) { display: none; }
+@media (max-width: 560px) { .collection-records-toolbar { flex-wrap: wrap; gap: 8px; } }
+@media screen {
+  body[data-page="Collective Note"] .collection-records-table thead th {
+    background: var(--atlas-slate); color: #fff; border-color: var(--atlas-space);
+  }
+  body[data-page="Collective Note"] .collection-records-table tbody tr:nth-child(even) td { background: #f3f4fd; }
+  body[data-page="Collective Note"] .collection-records-table tbody tr:hover td { background: #eaf9fb; }
+}
+
+@container (max-width: 960px) {
+.collection-records-table td:nth-child(1)::before { content: "Order No";}
+
+.collection-records-table td:nth-child(2)::before { content: "Order Reference No";}
+
+.collection-records-table td:nth-child(3)::before { content: "Date Created";}
+
+.collection-records-table td:nth-child(4)::before { content: "Customer";}
+
+.collection-records-table td:nth-child(5)::before { content: "Postcode";}
+
+.collection-records-table td:nth-child(6)::before { content: "Collection Date";}
+
+.collection-records-table td:nth-child(7)::before { content: "Items";}
+.collection-records-table td:nth-child(8)::before { content: "Actions";}
+
+}

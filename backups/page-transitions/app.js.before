@@ -1,0 +1,484 @@
+const pageRenderers = () => ({
+  Dashboard: vDash,
+  Deliveries: vDel,
+  'Failed Deliveries': vFail,
+  Integrations: vIntegrations,
+  Settings: vSettings,
+});
+
+const sidebarLink = target => `
+  <a
+    href="${PAGE_URL[target]}"
+    class="${target === page ? 'on' : ''}"
+    data-page-target="${target}"
+    ${target === page ? 'aria-current="page"' : ''}
+  >
+    ${ico(target, 20)}${PAGE_LABELS[target] || target}
+  </a>`;
+
+function renderSidebar() {
+  $('#side').innerHTML = `
+    <button class="sidebar-close" data-app-action="toggle-sidebar" aria-label="Close navigation">
+      ${ico('x', 22)}
+    </button>
+    <div class="side-logo" aria-label="Delivery Desk"><span class="side-logo-wordmark">Delivery<span>Desk</span></span></div>
+    <div class="side-main">
+      ${sidebarLink('Dashboard')}
+      ${sidebarLink('Deliveries')}
+      ${sidebarLink('Failed Deliveries')}
+    </div>
+    <div class="side-bottom">
+      ${sidebarLink('Integrations')}
+      ${sidebarLink('Settings')}
+    </div>`;
+}
+
+function R() {
+  document.title = `${PAGE_LABELS[page] || page} · Delivery Desk`;
+  document.body.dataset.page = page;
+  renderSidebar();
+
+  const app = $('.app');
+  const mobile = matchMedia('(max-width:760px)').matches;
+  $('.mn')?.setAttribute(
+    'aria-expanded',
+    String(mobile ? app.classList.contains('mobile-open') : !app.classList.contains('cl')),
+  );
+
+  const renderer = pageRenderers()[page];
+  $('#v').innerHTML = renderer();
+  DashboardListAutoScroll.attach();
+
+  if (page === 'Deliveries') {
+    if (document.body.dataset.live === 'true' && liveReady) loadTrackingPage(true);
+    else rows();
+  }
+  if (page === 'Failed Deliveries') {
+    if (document.body.dataset.live === 'true' && liveReady) loadFailedPage(true);
+    else failedRows();
+  }
+  if (page === 'Dashboard') {
+    dres();
+  }
+
+  drawer();
+  fitBrand();
+}
+
+function fitBrand() {
+  const brand = $('.sd .brand');
+  if (!brand) return;
+
+  let size = 24;
+  brand.style.fontSize = `${size}px`;
+  while (brand.scrollWidth > brand.clientWidth && size > 12) {
+    size -= 0.5;
+    brand.style.fontSize = `${size}px`;
+  }
+}
+
+function toggleSidebar() {
+  const app = $('.app');
+  const mobile = matchMedia('(max-width:760px)').matches;
+  app.classList.toggle(mobile ? 'mobile-open' : 'cl');
+  $('.mn')?.setAttribute(
+    'aria-expanded',
+    String(mobile ? app.classList.contains('mobile-open') : !app.classList.contains('cl')),
+  );
+}
+
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-dashboard-search]')) {
+    const input = $('#dq');
+    if (input) { dq = input.value; input.focus(); dres(); }
+    return;
+  }
+  const dashboardMore = event.target.closest('[data-dashboard-more]');
+  if (dashboardMore) {
+    loadDashboardMore(dashboardMore.dataset.dashboardMore);
+    return;
+  }
+  const dashboardPrev = event.target.closest('[data-dashboard-prev]');
+  if (dashboardPrev) {
+    loadDashboardMore(dashboardPrev.dataset.dashboardPrev, -1);
+    return;
+  }
+  if (event.target.closest('[data-tracking-today]')) {
+    go('Deliveries', '', 'today');
+    return;
+  }
+  const navLink = event.target.closest('[data-page-target]');
+  if (navLink) {
+    event.preventDefault();
+    go(navLink.dataset.pageTarget);
+    return;
+  }
+
+  if (event.target.closest('[data-app-action="toggle-sidebar"]')) {
+    toggleSidebar();
+  }
+});
+
+if (document.fonts?.ready) document.fonts.ready.then(fitBrand);
+
+document.addEventListener('click', event => {
+  const dateSort = event.target.closest('[data-table-date-sort]');
+  if (dateSort) {
+    toggleTableDateSort(dateSort.dataset.tableDateSort);
+    return;
+  }
+  const todayRow = event.target.closest('[data-today-delivery]');
+  if (todayRow) {
+    const id = todayRow.dataset.todayDelivery;
+    todayRow.classList.add('is-opening');
+    todayRow.setAttribute('aria-busy', 'true');
+    requestAnimationFrame(() => setTimeout(() => {
+      const failed = Boolean(todayRow.closest('.db-list-card:last-child'));
+      go(failed ? 'Failed Deliveries' : 'Deliveries', '', failed ? '' : 'today');
+      dashboardSelectedId = id;
+      op(id);
+      if (failed) failedRows();
+      else rows();
+    }, 0));
+    return;
+  }
+  const podButton = event.target.closest('[data-view-pod]');
+  if (podButton) {
+    op(podButton.dataset.viewPod);
+    return;
+  }
+  if (event.target.closest('[data-tracking-more]')) {
+    if (document.body.dataset.live === 'true') loadTrackingPage(false);
+    return;
+  }
+  if (event.target.closest('[data-tracking-prev]')) {
+    if (document.body.dataset.live === 'true') {
+      loadTrackingPage(false, Math.max(0, trackingOffset - DELIVERY_PAGE_SIZE));
+    }
+    return;
+  }
+  if (event.target.closest('[data-failed-more]')) {
+    if (document.body.dataset.live === 'true') loadFailedPage(false);
+    return;
+  }
+  if (event.target.closest('[data-failed-prev]')) {
+    if (document.body.dataset.live === 'true') {
+      loadFailedPage(false, Math.max(0, failedOffset - DELIVERY_PAGE_SIZE));
+    }
+    return;
+  }
+  if (event.target.closest('[data-failed-clear-filters]')) {
+    fadeClearFilter(event.target.closest('[data-failed-clear-filters]'));
+    failedCarrier = '';
+    failedDateFrom = '';
+    failedDateTo = '';
+    failedScheduledFrom = '';
+    failedScheduledTo = '';
+    closeFailedDateFilter();
+    R();
+    return;
+  }
+  const clearFailedDates = event.target.closest('[data-failed-clear-dates]');
+  if (clearFailedDates) {
+    const scheduled = clearFailedDates.dataset.failedClearDates === 'scheduled';
+    if (scheduled) {
+      failedScheduledFrom = '';
+      failedScheduledTo = '';
+    } else {
+      failedDateFrom = '';
+      failedDateTo = '';
+    }
+    const menu = clearFailedDates.closest('[data-failed-date-filter]');
+    menu.querySelectorAll('input[type="date"]').forEach(input => { input.value = ''; });
+    const label = menu.querySelector('.ui-select-label');
+    if (label) label.textContent = scheduled ? failedScheduledLabel() : failedDateLabel();
+    closeFailedDateFilter();
+    syncFailedClearButton();
+    if (document.body.dataset.live === 'true') loadFailedPage(true);
+    else failedRows();
+    return;
+  }
+  const failedDateTrigger = event.target.closest('[data-failed-toggle-date]');
+  if (failedDateTrigger) {
+    const menu = failedDateTrigger.closest('[data-failed-date-filter]').querySelector('.ui-date-menu');
+    const opening = menu.hidden;
+    DeliveryFilters.closeAll();
+    UiSelect.closeAll();
+    closeFailedDateFilter();
+    menu.hidden = !opening;
+    failedDateTrigger.setAttribute('aria-expanded', String(opening));
+    return;
+  }
+  const failedTab = event.target.closest('[data-failed-method]');
+  if (failedTab) {
+    if (failedCarrier === failedTab.dataset.failedMethod) return;
+    const from = ScopeLiquid.capture();
+    failedCarrier = failedTab.dataset.failedMethod;
+    document.querySelectorAll('[data-failed-method]').forEach(tab => {
+      const active = tab.dataset.failedMethod === failedCarrier;
+      tab.classList.toggle('on', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+    syncFailedClearButton();
+    if (document.body.dataset.live === 'true') loadFailedPage(true);
+    else failedRows();
+    ScopeLiquid.move(from);
+    return;
+  }
+  if (DeliveryFilters.handleClick(event)) return;
+  if (UiSelect.handleClick(event)) return;
+
+  if (!event.target.closest('[data-ui-select-id]')) UiSelect.closeAll();
+  if (!event.target.closest('[data-date-filter]')) DeliveryFilters.closeAll();
+  if (!event.target.closest('[data-failed-date-filter]')) closeFailedDateFilter();
+
+  if (!event.target.closest('.fx-menu')) {
+    document.querySelectorAll('.fx-menu').forEach(menu => {
+      menu.hidden = true;
+    });
+  }
+
+  const deliveryRow = event.target.closest('.delivery-list-row[data-delivery-id]');
+  if (deliveryRow && !event.target.closest('button, a, input, select, textarea')) {
+    op(deliveryRow.dataset.deliveryId);
+  }
+  const trackingRow = event.target.closest('.tracking-row[data-delivery-id]');
+  if (trackingRow && !event.target.closest('button, a, input, select, textarea')) {
+    op(trackingRow.dataset.deliveryId);
+  }
+});
+
+document.addEventListener('input', event => {
+  if (event.target.matches('[data-dashboard-failed-search]')) filterDashboardFailedOrders(event.target.value);
+  if (event.target.matches('#failed-search')) {
+    failedSearch = event.target.value;
+    if (document.body.dataset.live === 'true') {
+      clearTimeout(failedSearchTimer);
+      failedSearchTimer = setTimeout(() => loadFailedPage(true), 250);
+    } else failedRows();
+  }
+  DeliveryFilters.handleInput(event);
+});
+
+document.addEventListener('change', event => {
+  if (event.target.closest('[data-failed-date-filter] input[type="date"]')) {
+    const menu = event.target.closest('[data-failed-date-filter]');
+    const scheduled = menu.querySelector('#fsbtn') !== null;
+    if (scheduled) {
+      failedScheduledFrom = document.querySelector('#failed-scheduled-from')?.value || '';
+      failedScheduledTo = document.querySelector('#failed-scheduled-to')?.value || '';
+    } else {
+      failedDateFrom = document.querySelector('#failed-date-from')?.value || '';
+      failedDateTo = document.querySelector('#failed-date-to')?.value || '';
+    }
+    const label = menu.querySelector('.ui-select-label');
+    if (label) label.textContent = scheduled ? failedScheduledLabel() : failedDateLabel();
+    syncFailedClearButton();
+    if (document.body.dataset.live === 'true') loadFailedPage(true);
+    else failedRows();
+    return;
+  }
+  DeliveryFilters.handleChange(event);
+});
+
+document.addEventListener('popstate', () => {
+  page = Object.entries(PAGE_URL)
+    .find(([, url]) => location.pathname.endsWith(url))?.[0] || 'Dashboard';
+  trackingScope = page === 'Deliveries' && new URLSearchParams(location.search).get('view') === 'today'
+    ? 'today' : '';
+  sel = null;
+  R();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    const trackingRow = event.target.closest('.tracking-row[data-delivery-id]');
+    if (trackingRow && event.target === trackingRow) {
+      op(trackingRow.dataset.deliveryId);
+      return;
+    }
+    const deliveryRow = event.target.closest('.delivery-list-row[data-delivery-id]');
+    if (deliveryRow) {
+      op(deliveryRow.dataset.deliveryId);
+      return;
+    }
+  }
+
+  if (event.key !== 'Escape') return;
+
+  if (UiSelect.hasOpenMenu() || DeliveryFilters.hasOpenMenu()) {
+    UiSelect.closeAll();
+    DeliveryFilters.closeAll();
+    closeFailedDateFilter();
+    return;
+  }
+  if (document.querySelector('[data-failed-date-filter] .ui-date-menu:not([hidden])')) {
+    closeFailedDateFilter();
+    return;
+  }
+
+  if (sel) {
+    sel = null;
+    drawer();
+    return;
+  }
+
+});
+
+R();
+if (document.body.dataset.live === 'true') {
+  const status = document.createElement('div');
+  status.className = 'live-data-status';
+  const sourceButton = document.createElement('button');
+  sourceButton.type = 'button';
+  sourceButton.className = 'source-info-button';
+  sourceButton.textContent = 'Data sources';
+  sourceButton.setAttribute('aria-expanded', 'false');
+  sourceButton.setAttribute('aria-controls', 'source-info-panel');
+  const sourcePanel = document.createElement('div');
+  sourcePanel.id = 'source-info-panel';
+  sourcePanel.className = 'source-info-panel';
+  sourcePanel.hidden = true;
+  sourceButton.addEventListener('click', () => {
+    sourcePanel.hidden = !sourcePanel.hidden;
+    sourceButton.setAttribute('aria-expanded', String(!sourcePanel.hidden));
+  });
+  const dismissSourceInfo = () => {
+    sourcePanel.hidden = true;
+    sourceButton.setAttribute('aria-expanded', 'false');
+  };
+  document.addEventListener('click', event => {
+    if (!sourceButton.contains(event.target)) dismissSourceInfo();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !sourcePanel.hidden) {
+      dismissSourceInfo();
+      sourceButton.focus();
+    }
+  });
+  const showSourceInfo = entries => {
+    const heading = document.createElement('h2');
+    heading.textContent = 'Data sources';
+    const sections = entries.map(([label, description]) => {
+      const section = document.createElement('section');
+      section.className = 'source-info-entry';
+      const title = document.createElement('strong');
+      title.textContent = label;
+      const detail = document.createElement('p');
+      detail.textContent = description;
+      section.append(title, detail);
+      return section;
+    });
+    sourcePanel.replaceChildren(heading, ...sections);
+  };
+  status.append(sourceButton, sourcePanel);
+  const headerActions = document.querySelector('.hd .hr');
+  headerActions?.prepend(status);
+  const refreshLive = async () => {
+    if (refreshLive.inFlight) return;
+    refreshLive.inFlight = true;
+    liveSummaryError = false;
+    if (!liveReady) showSourceInfo([['Loading', 'Checking OW and carrier updates.']]);
+    try {
+      const result = await DeliveryApi.summary();
+      if ((result.failedTotal || 0) > 0 && !(result.failedPreview || []).length) {
+        try {
+          const failedPage = await DeliveryApi.list({ issues: 1, dashboard_scope: 'failed', limit: DELIVERY_PAGE_SIZE });
+          result.failedPreview = (failedPage.deliveries || []).filter(delivery =>
+            ['Failed', 'Rejected'].includes(trackingStatus(delivery.st)));
+          if (!result.failedPreview.length) result.failedPreviewError = 'The failed-delivery request returned no failed records.';
+        } catch (previewError) {
+          result.failedPreviewError = previewError.message;
+        }
+      }
+      const sourceTimes = result.sourceUpdatedAt || {};
+      const formatTime = value => value
+        ? new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+        : result.syncing ? 'Refreshing…' : 'Not recorded';
+      const updated = (key, message, unavailable = false) => `${message} Last updated: ${formatTime(sourceTimes[key] || (unavailable ? null : result.syncedAt))}.`;
+      const lastSync = formatTime(sourceTimes.ow || result.syncedAt);
+      const selectedDelivery = sel ? get(sel) : null;
+      DeliveryStore.hydrate({ deliveries: [...(result.today || []), ...(result.failedPreview || [])], activity: [], integrations: [
+        ['OptimoRoute', formatTime(sourceTimes.optimoroute), result.stale ? 'wn' : result.optimorouteUnavailable ? 'er' : 'ok', 'Tracking unavailable'],
+        ['Palletways', formatTime(sourceTimes.palletways), result.stale ? 'wn' : result.palletwaysUnavailable ? 'er' : 'ok', 'Updates unavailable'],
+        ['Courier Issues', formatTime(sourceTimes.courierIssues), result.stale ? 'wn' : result.courierIssuesUnavailable ? 'er' : 'ok', 'Updates unavailable'],
+        ['XDP', 'Not connected', 'er', 'Not connected'],
+      ] });
+      if (selectedDelivery) {
+        const refreshedSelection = get(sel);
+        if (refreshedSelection) {
+          Object.assign(refreshedSelection, { ...selectedDelivery, ...refreshedSelection });
+        } else {
+          DeliveryStore.add(selectedDelivery);
+        }
+      }
+      D = DeliveryStore.deliveries();
+      S = DeliveryStore.integrations();
+      const previousSync = liveSummary?.syncedAt;
+      const previousTotal = liveSummary?.total;
+      const previousFailedTotal = liveSummary?.failedTotal;
+      const previousTodayTotal = liveSummary?.todayTotal;
+      const wasReady = liveReady;
+      liveSummary = result;
+      dashboardOffsets.ongoing = 0;
+      dashboardOffsets.failed = 0;
+      liveReady = true;
+      const sourceWarnings = [
+        result.palletwaysUnavailable && ['Palletways', 'Unavailable'],
+        result.courierIssuesUnavailable && ['Courier Issues', 'Unavailable'],
+        result.optimorouteUnavailable && ['OptimoRoute', 'Unavailable'],
+      ].filter(Boolean);
+      const unverified = result.unverifiedCarriers;
+      const totalUnverified = unverified
+        ? Object.values(unverified).reduce((sum, count) => sum + Number(count || 0), 0)
+        : result.statuses?.['Status unverified'] || 0;
+      const entries = [
+        ['Auto-refresh', 'Every 5 minutes while this page is open.'],
+        ['OW', updated('ow', result.stale ? 'Unavailable; showing saved orders.' : `${result.imported ?? 0} rows read.`, result.stale)],
+        ['Status', `Carrier status when available; OW otherwise. OW alone does not confirm delivery. Last updated: ${lastSync}.`],
+        ['OptimoRoute', updated('optimoroute', result.optimorouteUnavailable ? 'Unavailable.' : `${result.optimorouteMatched ?? 0} of today's own-van stops matched.`, result.optimorouteUnavailable)],
+        ['Palletways', updated('palletways', result.palletwaysUnavailable ? 'Unavailable.' : `${result.palletwaysMatched ?? 0} orders matched.`, result.palletwaysUnavailable)],
+        ['Courier Issues', updated('courierIssues', result.courierIssuesUnavailable ? 'Unavailable.' : `${result.courierIssuesMatched ?? 0} orders have issue notes.`, result.courierIssuesUnavailable)],
+        ['XDP', 'Not connected; showing OW status. No XDP refresh.'],
+        ['OW status only', `${totalUnverified} orders. Last updated: ${lastSync}.`],
+      ];
+      showSourceInfo([
+        ...entries,
+        ...sourceWarnings,
+      ]);
+      sourceButton.textContent = 'Data sources';
+      if (!wasReady || result.syncedAt !== previousSync || result.total !== previousTotal
+        || result.failedTotal !== previousFailedTotal || result.todayTotal !== previousTodayTotal) R();
+      if (result.syncing) setTimeout(refreshLive, 5000);
+    } catch (error) {
+      liveSummaryError = true;
+      if (page === 'Dashboard') R();
+      sourceButton.textContent = 'Data sources unavailable';
+      showSourceInfo([['Delivery data unavailable', error.message]]);
+      if (page === 'Deliveries') {
+        const list = $('#tb');
+        if (list) list.innerHTML = `<tr><td colspan="10" class="tracking-empty">${esc(`Delivery data unavailable: ${error.message}`)}</td></tr>`;
+      }
+      if (page === 'Failed Deliveries') {
+        const list = $('#failed-list');
+        if (list) list.innerHTML = `<tr><td colspan="11" class="tracking-empty">${esc(`Delivery data unavailable: ${error.message}`)}</td></tr>`;
+      }
+    } finally {
+      refreshLive.inFlight = false;
+    }
+  };
+  refreshLive();
+  setInterval(refreshLive, 5 * 60 * 1000);
+}
+setInterval(() => {
+  if (page !== 'Dashboard') return;
+  const dateLabel = document.querySelector('#db-current-date');
+  if (!dateLabel) return;
+  if (dateLabel.dateTime !== localDateKey()) {
+    R();
+    return;
+  }
+  const clock = document.querySelector('#db-current-time');
+  if (clock) clock.textContent = localClockLabel();
+}, 30000);
+

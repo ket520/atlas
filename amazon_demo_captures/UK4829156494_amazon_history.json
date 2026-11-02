@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4829156494",
+  "shipment_status": "Delivered",
+  "reference": "599713-602101",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "3.5 kg",
+  "total_charge": "£3.59",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-09-15",
+      "time": "22:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T22:10:00+08:00",
+      "description": "Package delivered",
+      "location": "Bury St Edmunds, England, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-09-15",
+      "time": "19:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T19:06:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "IPSWICH, Suffolk, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "19:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T19:06:00+08:00",
+      "description": "Out for delivery",
+      "location": "IPSWICH, Suffolk, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "16:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T16:33:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "IPSWICH, Suffolk, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "12:37",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T12:37:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "10:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T10:41:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "07:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T07:57:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:46",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:46:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:46",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:46:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "17:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T17:57:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

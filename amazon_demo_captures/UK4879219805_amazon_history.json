@@ -1,0 +1,157 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4879219805",
+  "shipment_status": "Delivered",
+  "reference": "604890-607283",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.3 kg",
+  "total_charge": "£3.31",
+  "events_count": 16,
+  "events": [
+    {
+      "date": "2026-09-30",
+      "time": "18:51",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T18:51:00+08:00",
+      "description": "Package delivered",
+      "location": "Birmingham, England, GB",
+      "note": "Package was left behind the wheelie bin"
+    },
+    {
+      "date": "2026-09-30",
+      "time": "17:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T17:14:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "17:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T17:14:00+08:00",
+      "description": "Out for delivery",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "15:51",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T15:51:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "08:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T08:50:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "03:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T03:11:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "00:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T00:24:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "11:19",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T11:19:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "20:52",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T20:52:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "17:12",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T17:12:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "14:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T14:25:00+08:00",
+      "description": "Return initiated",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "14:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T14:25:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "14:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T14:24:00+08:00",
+      "description": "Return initiated",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "14:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T14:24:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "12:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T12:27:00+08:00",
+      "description": "Package picked up",
+      "location": "PETERBOROUGH, PETERBOROUGH, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-26",
+      "time": "17:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-26T17:11:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

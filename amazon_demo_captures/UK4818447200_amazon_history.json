@@ -1,0 +1,175 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4818447200",
+  "shipment_status": "Delivered",
+  "reference": "598943-601331",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "9 kg",
+  "total_charge": "£4.42",
+  "events_count": 18,
+  "events": [
+    {
+      "date": "2026-09-14",
+      "time": "20:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T20:20:00+08:00",
+      "description": "Package delivered",
+      "location": "Bermondsey, England, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-14",
+      "time": "17:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T17:25:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "17:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T17:25:00+08:00",
+      "description": "Out for delivery",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "08:43",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T08:43:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-13",
+      "time": "21:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T21:15:00+08:00",
+      "description": "Second delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. Erith, Bexley, UK"
+    },
+    {
+      "date": "2026-09-13",
+      "time": "18:01",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T18:01:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-13",
+      "time": "18:01",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T18:01:00+08:00",
+      "description": "Out for delivery",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-13",
+      "time": "07:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-13T07:54:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "21:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T21:49:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "There was pet interference. Erith, Bexley, UK"
+    },
+    {
+      "date": "2026-09-12",
+      "time": "17:55",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T17:55:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "17:55",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T17:55:00+08:00",
+      "description": "Out for delivery",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "15:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T15:20:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "12:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T12:18:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "10:36",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T10:36:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "06:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T06:59:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "01:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T01:00:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-12",
+      "time": "01:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-12T01:00:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-11",
+      "time": "23:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-11T23:07:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

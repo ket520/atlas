@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4901414583",
+  "shipment_status": "Delivered",
+  "reference": "606928-609312",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.07 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-04",
+      "time": "22:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-04T22:47:00+08:00",
+      "description": "Package delivered",
+      "location": "London, London, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-04",
+      "time": "19:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-04T19:33:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-04",
+      "time": "19:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-04T19:33:00+08:00",
+      "description": "Out for delivery",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-04",
+      "time": "09:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-04T09:24:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-03",
+      "time": "04:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-03T04:47:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. Erith, Bexley, UK"
+    },
+    {
+      "date": "2026-10-02",
+      "time": "19:42",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T19:42:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "19:42",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T19:42:00+08:00",
+      "description": "Out for delivery",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "12:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T12:10:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Erith, Bexley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "07:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T07:56:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "06:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T06:33:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "03:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T03:45:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "01:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T01:59:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-02",
+      "time": "01:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T01:59:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "17:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T17:48:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

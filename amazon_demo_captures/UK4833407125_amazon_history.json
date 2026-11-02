@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4833407125",
+  "shipment_status": "Delivered",
+  "reference": "600212-602599",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "2.38 kg",
+  "total_charge": "£3.59",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-09-16",
+      "time": "22:26",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T22:26:00+08:00",
+      "description": "Package delivered",
+      "location": "Lincoln, Lincolnshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-16",
+      "time": "18:04",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T18:04:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "DONCASTER, South Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "17:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T17:56:00+08:00",
+      "description": "Out for delivery",
+      "location": "DONCASTER, South Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "13:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T13:13:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "DONCASTER, South Yorkshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "10:12",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T10:12:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "07:04",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T07:04:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LEEDS, Cheshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "03:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T03:11:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "01:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T01:08:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "01:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T01:08:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "17:52",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T17:52:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

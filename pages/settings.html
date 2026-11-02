@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+  <link rel="icon" type="image/png" href="/assets/Atlas.png">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Settings · Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+      <link rel="stylesheet" href="/static/css/general.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="stylesheet" href="/static/css/tracking.css">
+  <link rel="stylesheet" href="/static/css/failed-deliveries.css">
+  <link rel="stylesheet" href="/static/css/dashboard-home.css">
+  <link rel="stylesheet" href="/static/css/collection-records.css">
+    <link rel="stylesheet" href="/static/css/startup.css">
+</head>
+  <body data-page="Settings" data-live="true">
+  <script src="/src/startup.js"></script>
+    <div class="app">
+      <aside class="sd" id="side" aria-label="Sidebar"></aside>
+      <div class="rt">
+        <header class="hd">
+          <button
+            class="mn"
+            data-app-action="toggle-sidebar"
+            aria-label="Show or hide the sidebar"
+            aria-expanded="false"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M4 8h16M4 16h10" />
+            </svg>
+          </button>
+          <div class="row hr">
+            <div class="row" aria-label="Profile">
+              <span class="av">D</span>
+              <b>Delivery team</b>
+            </div>
+          </div>
+        </header>
+        <main>
+          <div id="v"></div>
+        </main>
+      </div>
+    </div>
+
+    <div id="dr"></div>
+    <div id="kl"></div>
+    <script src="/src/boot.js" defer></script>
+  </body>
+</html>

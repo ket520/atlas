@@ -1,0 +1,112 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4830010013",
+  "shipment_status": "Delivered",
+  "reference": "599948-602335",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.2 kg",
+  "total_charge": "£3.31",
+  "events_count": 11,
+  "events": [
+    {
+      "date": "2026-09-17",
+      "time": "01:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T01:57:00+08:00",
+      "description": "Package delivered",
+      "location": "Kettering, Northamptonshire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-16",
+      "time": "23:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T23:28:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "23:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T23:28:00+08:00",
+      "description": "Out for delivery",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "21:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T21:17:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "19:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T19:11:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "19:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T19:11:00+08:00",
+      "description": "Out for delivery",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "10:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T10:27:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Northampton, Northamptonshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "08:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T08:06:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:56:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:56:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "22:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T22:10:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

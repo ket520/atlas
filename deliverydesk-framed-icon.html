@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeliveryDesk Framed Animated Icon</title>
+<style>
+  :root{
+    --bg1:#071a10;
+    --bg2:#123c26;
+    --frame:#75e7a0;
+    --frame2:#26764b;
+    --inner1:#2c513c;
+    --inner2:#153423;
+    --green1:#9ff3c6;
+    --green2:#39c878;
+    --green3:#0e6b3e;
+    --yellow1:#fff0a8;
+    --yellow2:#ffd94c;
+    --yellow3:#d7a500;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    background:radial-gradient(circle at 50% 30%, #17442b 0%, var(--bg1) 58%, #04110a 100%);
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+  }
+  .wrap{
+    width:min(92vw,320px);
+    aspect-ratio:1;
+    display:grid;
+    place-items:center;
+  }
+  svg{
+    width:100%;
+    height:100%;
+    overflow:visible;
+    filter:drop-shadow(0 18px 28px rgba(3,30,14,.45));
+  }
+  .frame{animation:float 4.4s ease-in-out infinite}
+  .glyph{animation:appear .9s cubic-bezier(.2,.8,.2,1) both}
+  .route{stroke-dasharray:240;stroke-dashoffset:240;animation:draw 1.8s .25s ease forwards, pulseGlow 3.4s 1.8s ease-in-out infinite}
+  .parcel{transform-origin:128px 144px;animation:pop .8s .45s cubic-bezier(.2,.9,.2,1.15) both, bob 3.1s 1.1s ease-in-out infinite}
+  .pin{transform-origin:181px 88px;animation:pop .8s .75s cubic-bezier(.2,.9,.2,1.15) both, bob 3.2s 1.4s ease-in-out infinite}
+  .shine{animation:sweep 4.8s 1.2s linear infinite}
+  @keyframes appear{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.72)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes bob{50%{transform:translateY(-4px)}}
+  @keyframes float{50%{transform:translateY(-3px)}}
+  @keyframes sweep{0%{transform:translateX(-120px)}100%{transform:translateX(180px)}}
+  @keyframes pulseGlow{50%{filter:drop-shadow(0 0 8px rgba(255,218,82,.55))}}
+  @media (prefers-reduced-motion: reduce){
+    .frame,.glyph,.route,.parcel,.pin,.shine{animation:none !important}
+    .route{stroke-dashoffset:0}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg viewBox="0 0 256 256" role="img" aria-label="Green and yellow framed DeliveryDesk app icon">
+      <defs>
+        <linearGradient id="frameStroke" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#b3ffd1"/>
+          <stop offset=".45" stop-color="#39bb70"/>
+          <stop offset="1" stop-color="#125a35"/>
+        </linearGradient>
+        <linearGradient id="frameFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#123921"/>
+          <stop offset="1" stop-color="#081b12"/>
+        </linearGradient>
+        <linearGradient id="innerFill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#365f45"/>
+          <stop offset="1" stop-color="#193b29"/>
+        </linearGradient>
+        <linearGradient id="greenGlass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#b8ffd7"/>
+          <stop offset=".3" stop-color="#56db8e"/>
+          <stop offset=".7" stop-color="#1d9a58"/>
+          <stop offset="1" stop-color="#0b6336"/>
+        </linearGradient>
+        <linearGradient id="yellowGlass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#fff6b8"/>
+          <stop offset=".45" stop-color="#ffe15f"/>
+          <stop offset="1" stop-color="#d29b00"/>
+        </linearGradient>
+        <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0.26 0 1 0 0 0.75 0 0 1 0 1 0 0 0 0.8 0" result="glow"/>
+          <feMerge>
+            <feMergeNode in="glow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="innerShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feOffset dx="0" dy="2"/>
+          <feGaussianBlur stdDeviation="2.2" result="offset-blur"/>
+          <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+          <feFlood flood-color="#06180d" flood-opacity=".5" result="color"/>
+          <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+          <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+        </filter>
+        <clipPath id="clipFrame"><rect x="28" y="28" rx="38" ry="38" width="200" height="200"/></clipPath>
+      </defs>
+
+      <g class="frame">
+        <rect x="22" y="22" rx="44" ry="44" width="212" height="212" fill="url(#frameFill)" stroke="url(#frameStroke)" stroke-width="2.5"/>
+        <rect x="28" y="28" rx="38" ry="38" width="200" height="200" fill="none" stroke="#99f5ba" stroke-opacity=".28" stroke-width="1.5"/>
+        <rect x="40" y="40" rx="30" ry="30" width="176" height="176" fill="url(#innerFill)" stroke="#adeec2" stroke-opacity=".12" stroke-width="1.2" filter="url(#innerShadow)"/>
+        <path d="M52 50 H188 C202 50 212 59 215 72" fill="none" stroke="#bcffd2" stroke-opacity=".22" stroke-width="4" stroke-linecap="round"/>
+        <g clip-path="url(#clipFrame)" opacity=".75">
+          <ellipse cx="120" cy="52" rx="88" ry="28" fill="#b3ffd0" opacity=".06"/>
+          <path class="shine" d="M-120 0 L-75 0 L20 256 L-25 256 Z" fill="rgba(255,255,255,.07)"/>
+        </g>
+      </g>
+
+      <g class="glyph" filter="url(#softGlow)">
+        <!-- stylized D -->
+        <path d="M82 78 H122 C163 78 188 102 188 128 C188 154 163 178 122 178 H82 C77 178 74 174 74 169 V87 C74 82 77 78 82 78 Z M101 98 V158 H121 C147 158 166 145 166 128 C166 111 147 98 121 98 Z" fill="url(#greenGlass)"/>
+        <path d="M85 83 H121 C158 83 181 105 181 128" fill="none" stroke="#d9ffe8" stroke-opacity=".38" stroke-width="3.2" stroke-linecap="round"/>
+
+        <!-- route -->
+        <path class="route" d="M70 156 H98 Q114 156 126 168 Q145 187 168 176 Q179 171 188 159" fill="none" stroke="#705000" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+        <path class="route" d="M70 154 H98 Q114 154 126 166 Q145 185 168 174 Q179 169 188 157" fill="none" stroke="url(#yellowGlass)" stroke-width="10" stroke-linecap="round"/>
+
+        <!-- parcel -->
+        <g class="parcel">
+          <path d="M106 128 L128 116 L151 128 V154 L128 166 L106 154 Z" fill="#eca500"/>
+          <path d="M106 128 L128 140 V166 L106 154 Z" fill="url(#yellowGlass)"/>
+          <path d="M128 140 L151 128 V154 L128 166 Z" fill="#d08b00"/>
+          <path d="M106 128 L128 116 L151 128 L128 140 Z" fill="#fff0a2"/>
+          <path d="M120 120 L142 132 L137 135 L115 123 Z" fill="#ffcf1f" opacity=".9"/>
+        </g>
+
+        <!-- pin -->
+        <g class="pin">
+          <path d="M185 88 C176 88 170 94 170 103 C170 113 179 123 183 130 C184 132 186 132 187 130 C192 123 200 113 200 103 C200 94 194 88 185 88 Z" fill="url(#yellowGlass)"/>
+          <circle cx="185" cy="103" r="5.5" fill="#1d7f49" stroke="#fff2b0" stroke-width="1.8"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>

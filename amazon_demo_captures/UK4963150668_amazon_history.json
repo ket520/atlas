@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4963150668",
+  "shipment_status": "Delivered",
+  "reference": "613172-615533",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "2 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-10-17",
+      "time": "01:33",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T01:33:00+08:00",
+      "description": "Package delivered",
+      "location": "Birmingham, West Midlands, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-16",
+      "time": "19:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T19:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "19:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T19:47:00+08:00",
+      "description": "Out for delivery",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "07:51",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T07:51:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "01:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T01:27:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. Birmingham, Tyseley, UK"
+    },
+    {
+      "date": "2026-10-15",
+      "time": "19:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T19:45:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "19:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T19:45:00+08:00",
+      "description": "Out for delivery",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "12:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T12:24:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Birmingham, Tyseley, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "10:35",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T10:35:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "00:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T00:48:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "00:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T00:48:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-14",
+      "time": "18:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-14T18:59:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4946300266",
+  "shipment_status": "Delivered",
+  "reference": "611439-613804",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "2 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-10-15",
+      "time": "22:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T22:44:00+08:00",
+      "description": "Package delivered",
+      "location": "London, London, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-15",
+      "time": "19:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T19:15:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "19:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T19:15:00+08:00",
+      "description": "Out for delivery",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-15",
+      "time": "08:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-15T08:25:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "20:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T20:11:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "19:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T19:31:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "19:30",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T19:30:00+08:00",
+      "description": "Out for delivery",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "15:48",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T15:48:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Enfield, Middlesex, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "08:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T08:27:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "05:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T05:28:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-12",
+      "time": "05:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T05:28:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "22:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T22:20:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

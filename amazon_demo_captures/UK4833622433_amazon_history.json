@@ -1,0 +1,85 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4833622433",
+  "shipment_status": "Delivered",
+  "reference": "600299-602686",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.07 kg",
+  "total_charge": "£3.31",
+  "events_count": 8,
+  "events": [
+    {
+      "date": "2026-09-18",
+      "time": "02:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-18T02:18:00+08:00",
+      "description": "Package delivered",
+      "location": "Wilby, Eye, Suffolk, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-17",
+      "time": "23:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T23:38:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "23:38",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T23:38:00+08:00",
+      "description": "Out for delivery",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "20:30",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T20:30:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Norwich, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "12:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T12:21:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "08:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T08:07:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "08:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T08:07:00+08:00",
+      "description": "Package picked up",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "18:54",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T18:54:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

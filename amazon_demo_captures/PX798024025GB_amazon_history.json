@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "PX798024025GB",
+  "shipment_status": "Delivered",
+  "reference": "599944-602331",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.89 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-09-17",
+      "time": "22:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T22:31:00+08:00",
+      "description": "Package delivered",
+      "location": "West Mersea, Colchester, Essex, GB",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "17:46",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T17:46:00+08:00",
+      "description": "Out for delivery",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "10:16",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T10:16:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "10:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T10:14:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "03:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T03:47:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "",
+      "note": ""
+    },
+    {
+      "date": "2026-09-17",
+      "time": "01:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-17T01:10:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "07:12",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T07:12:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "02:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T02:29:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "09:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T09:44:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "06:04",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T06:04:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:50:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:50:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "02:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T02:50:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "22:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T22:08:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

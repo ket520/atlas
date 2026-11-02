@@ -1,0 +1,103 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4988694377",
+  "shipment_status": "Delivered",
+  "reference": "615950-618300",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.3 kg",
+  "total_charge": "£5.41",
+  "events_count": 10,
+  "events": [
+    {
+      "date": "2026-10-24",
+      "time": "02:34",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-24T02:34:00+08:00",
+      "description": "Package delivered",
+      "location": "Fortrose, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-23",
+      "time": "18:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-23T18:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "INVERNESS, Scottish Highlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-23",
+      "time": "18:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-23T18:44:00+08:00",
+      "description": "Out for delivery",
+      "location": "INVERNESS, Scottish Highlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-23",
+      "time": "07:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-23T07:57:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "INVERNESS, Scottish Highlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-22",
+      "time": "05:46",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-22T05:46:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "10:05",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T10:05:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "06:07",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T06:07:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "02:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T02:49:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-21",
+      "time": "02:49",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-21T02:49:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-20",
+      "time": "19:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-20T19:00:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

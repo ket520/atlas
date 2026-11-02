@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4829045376",
+  "shipment_status": "Delivered",
+  "reference": "599595-601983",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.4 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-09-16",
+      "time": "21:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T21:21:00+08:00",
+      "description": "Package delivered",
+      "location": "Wembley, GB",
+      "note": "Package was left with the mail room clerk"
+    },
+    {
+      "date": "2026-09-16",
+      "time": "18:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T18:15:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "18:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T18:14:00+08:00",
+      "description": "Out for delivery",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-16",
+      "time": "07:16",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-16T07:16:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "22:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T22:00:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. LONDON, Greater London, UK"
+    },
+    {
+      "date": "2026-09-15",
+      "time": "17:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T17:41:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "17:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T17:41:00+08:00",
+      "description": "Out for delivery",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "15:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T15:29:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "LONDON, Greater London, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "12:14",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T12:14:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "10:32",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T10:32:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "MILTON KEYNES, Buckinghamshire, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "07:58",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T07:58:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "03:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T03:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-15",
+      "time": "03:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-15T03:23:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-14",
+      "time": "17:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-14T17:08:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

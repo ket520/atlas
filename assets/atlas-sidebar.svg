@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="title desc">
+  <title id="title">ATLAS — animated app icon</title>
+  <desc id="desc">A glossy indigo rounded-square icon with a luminous cyan orbital ring around a geometric gradient letter A. The highlights and orbit glow animate subtly.</desc>
+  <defs>
+    <linearGradient id="plate" x1=".12" y1="0" x2=".9" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#273B87"/>
+      <stop offset=".36" stop-color="#162257"/>
+      <stop offset=".76" stop-color="#131A46"/>
+      <stop offset="1" stop-color="#0D1539"/>
+    </linearGradient>
+    <radialGradient id="plateGlow" cx="68%" cy="23%" r="81%">
+      <stop offset="0" stop-color="#354BA2" stop-opacity=".53"/>
+      <stop offset=".46" stop-color="#2D3580" stop-opacity=".11"/>
+      <stop offset="1" stop-color="#090F29" stop-opacity=".35"/>
+    </radialGradient>
+    <linearGradient id="frameGradient" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#6EE3EE"/>
+      <stop offset=".19" stop-color="#345DFF"/>
+      <stop offset=".5" stop-color="#6267E9"/>
+      <stop offset=".72" stop-color="#6769FC"/>
+      <stop offset="1" stop-color="#63E8F4"/>
+    </linearGradient>
+    <linearGradient id="orbitGradient" x1=".14" y1="1" x2=".9" y2=".1">
+      <stop offset="0" stop-color="#67EAF5"/>
+      <stop offset=".27" stop-color="#52DCFF"/>
+      <stop offset=".53" stop-color="#416EFF"/>
+      <stop offset=".78" stop-color="#43CAFF"/>
+      <stop offset="1" stop-color="#81FFFF"/>
+    </linearGradient>
+    <linearGradient id="aLeft" x1=".55" y1=".05" x2=".18" y2=".98">
+      <stop offset="0" stop-color="#F0E8FF"/>
+      <stop offset=".24" stop-color="#C9C7FF"/>
+      <stop offset=".48" stop-color="#879AFF"/>
+      <stop offset=".72" stop-color="#4778F8"/>
+      <stop offset=".87" stop-color="#55E2EF"/>
+      <stop offset="1" stop-color="#CABFFF"/>
+    </linearGradient>
+    <linearGradient id="aRight" x1=".33" y1="0" x2=".86" y2="1">
+      <stop offset="0" stop-color="#F4EEFF"/>
+      <stop offset=".19" stop-color="#C7BFFF"/>
+      <stop offset=".45" stop-color="#7386FF"/>
+      <stop offset=".68" stop-color="#6267E9"/>
+      <stop offset=".82" stop-color="#2E65F7"/>
+      <stop offset="1" stop-color="#74F1F6"/>
+    </linearGradient>
+    <linearGradient id="leftFacet" x1=".1" y1="1" x2=".95" y2="0">
+      <stop offset="0" stop-color="#B9C4FF"/>
+      <stop offset=".45" stop-color="#6DE5F4"/>
+      <stop offset="1" stop-color="#5A76EC"/>
+    </linearGradient>
+    <linearGradient id="rightFacet" x1="0" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#CED1FF"/>
+      <stop offset=".5" stop-color="#6675EA"/>
+      <stop offset="1" stop-color="#55EDF2"/>
+    </linearGradient>
+    <radialGradient id="planet" cx="28%" cy="17%" r="92%">
+      <stop offset="0" stop-color="#EFFFFF"/>
+      <stop offset=".32" stop-color="#B4FAFF"/>
+      <stop offset=".71" stop-color="#49D8FE"/>
+      <stop offset="1" stop-color="#3257DF"/>
+    </radialGradient>
+    <linearGradient id="topGlaze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B7B9FF" stop-opacity=".25"/>
+      <stop offset=".38" stop-color="#80BAFF" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#6EE3EE" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="outerAura" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="softGlow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="planetGlow" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="11"/>
+    </filter>
+    <filter id="innerShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#020B2B" flood-opacity=".53"/>
+    </filter>
+    <clipPath id="plateClip">
+      <rect x="98" y="98" width="828" height="828" rx="158"/>
+    </clipPath>
+    <clipPath id="aClip">
+      <path d="M505 221 C486 219 471 237 456 265 L198 749 Q184 778 211 763 L352 705 Q376 697 391 668 L499 466 Q512 443 524 442 C536 442 544 450 555 471 L639 663 Q651 691 678 706 L813 762 Q839 777 826 747 L560 263 C545 233 526 219 505 221Z"/>
+    </clipPath>
+    <style>
+      .border-glint {stroke-dasharray: 138 2700; animation: sweep 13s linear infinite;}
+      .orbit-glint {stroke-dasharray: 76 1350; animation: flow 7.5s linear infinite;}
+      .orbit-glow {animation: orbital-breathe 4.8s ease-in-out infinite;}
+      .planet-aura {animation: orbital-breathe 3.8s ease-in-out infinite; transform-origin: 807px 383px;}
+      .emblem {animation: emblem-breathe 6.5s ease-in-out infinite; transform-origin: 512px 522px;}
+      .sheen {animation: sheen 9s ease-in-out infinite;}
+      @keyframes sweep {to {stroke-dashoffset:-2840;}}
+      @keyframes flow {to {stroke-dashoffset:-1426;}}
+      @keyframes orbital-breathe {0%,100% {opacity:.5;} 50% {opacity:.91;}}
+      @keyframes emblem-breathe {0%,100% {filter: brightness(1);} 50% {filter: brightness(1.1);}}
+      @keyframes sheen {0%,20%,100%{opacity:0;transform:translateX(-150px)} 48%{opacity:.3} 64%{opacity:0;transform:translateX(180px)}}
+      @media (prefers-reduced-motion: reduce) { .border-glint,.orbit-glint,.orbit-glow,.planet-aura,.emblem,.sheen {animation:none!important;} }
+    </style>
+  </defs>
+
+  <!-- Everything outside this rounded app tile is fully transparent. -->
+  <rect x="101" y="100" width="822" height="826" rx="160" fill="#477BFF" opacity=".56" filter="url(#outerAura)"/>
+  <rect x="98" y="98" width="828" height="828" rx="158" fill="url(#plate)" filter="url(#innerShadow)"/>
+  <g clip-path="url(#plateClip)">
+    <rect x="98" y="98" width="828" height="828" fill="url(#plateGlow)"/>
+    <path d="M119 278 C193 128 527 94 877 153 L925 104 L100 103 Z" fill="url(#topGlaze)" opacity=".72"/>
+    <path d="M156 175 C315 99 611 109 853 155" fill="none" stroke="#B5C5FF" stroke-width="2" opacity=".11"/>
+    <path d="M178 764 C331 869 620 937 842 799" fill="none" stroke="#5066C3" stroke-width="2" opacity=".12"/>
+
+    <rect x="98" y="98" width="828" height="828" fill="#0C1236" opacity=".37"/>
+
+    <!-- Full orbital trajectory behind the letter. -->
+    <path id="orbitPath" d="M228 625 C281 510 675 292 802 352 C895 394 785 509 660 581 C486 683 318 714 244 667 C216 649 214 642 228 625 Z"
+          fill="none" stroke="#3564E4" stroke-width="13" stroke-linecap="round" opacity=".4"/>
+    <path d="M228 625 C281 510 675 292 802 352 C895 394 785 509 660 581 C486 683 318 714 244 667 C216 649 214 642 228 625 Z"
+          fill="none" stroke="url(#orbitGradient)" stroke-width="12" stroke-linecap="round" opacity=".74"/>
+
+    <!-- Luminous letter A: left folded ribbon and right beveled stroke. -->
+    <g class="emblem">
+      <path d="M505 221 C486 219 471 237 456 265 L198 749 Q184 778 211 763 L352 705 Q376 697 391 668 L499 466 Q512 443 524 442 C536 442 544 450 555 471 L639 663 Q651 691 678 706 L813 762 Q839 777 826 747 L560 263 C545 233 526 219 505 221Z"
+            fill="#07102D" opacity=".4" transform="translate(0 11)"/>
+      <path d="M505 221 C486 219 471 237 456 265 L198 749 Q184 778 211 763 L352 705 Q376 697 391 668 L499 466 Q512 443 524 442 C536 442 544 450 555 471 L639 663 Q651 691 678 706 L813 762 Q839 777 826 747 L560 263 C545 233 526 219 505 221Z"
+            fill="url(#aRight)" stroke="#B9D6FF" stroke-width="2.8" stroke-linejoin="round"/>
+      <!-- Left leg sheen and fold. -->
+      <path d="M507 222 C489 228 476 247 465 269 L211 752 L352 701 Q377 692 394 663 L508 455 Q518 437 530 431 C503 393 472 385 438 427 L326 635Z"
+            fill="url(#aLeft)"/>
+      <path d="M212 751 L353 700 Q375 690 394 661 L519 432 C498 442 477 461 459 495 L316 690 Z"
+            fill="url(#leftFacet)" opacity=".75"/>
+      <!-- Crisp angled panel on the inside of the right stroke. -->
+      <path d="M508 222 Q534 232 558 269 L826 752 Q831 765 816 758 L679 704 C652 689 642 663 631 642 L528 449 Q515 421 492 394 C529 405 560 433 575 464Z"
+            fill="url(#rightFacet)" opacity=".44"/>
+      <!-- Lavender cap on the upper A, subtle highlight. -->
+      <path d="M462 269 Q483 226 505 223 Q539 219 561 266 L653 438 C590 423 548 366 523 342 C507 329 482 327 461 357 L384 490Z"
+            fill="#ECE7FF" opacity=".12"/>
+      <path d="M465 264 C482 235 493 226 508 225 C534 226 545 247 559 270" fill="none" stroke="#F6F0FF" stroke-width="3" opacity=".56" stroke-linecap="round"/>
+      <path d="M202 750 L351 701 M676 704 L819 754" fill="none" stroke="#CCF9FF" stroke-width="2" opacity=".49"/>
+    </g>
+
+    <!-- Front orbital ribbon cuts across the emblem, like the supplied icon. -->
+    <path d="M810 375 C878 444 777 534 653 598 C482 686 306 718 236 663 C211 644 222 621 247 600"
+          fill="none" stroke="#3485FF" stroke-width="19" stroke-linecap="round" opacity=".3" filter="url(#softGlow)" class="orbit-glow"/>
+    <path d="M810 375 C878 444 777 534 653 598 C482 686 306 718 236 663 C211 644 222 621 247 600"
+          fill="none" stroke="url(#orbitGradient)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M810 375 C878 444 777 534 653 598 C482 686 306 718 236 663 C211 644 222 621 247 600"
+          fill="none" stroke="#E5FFFF" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+    <path d="M810 375 C878 444 777 534 653 598 C482 686 306 718 236 663 C211 644 222 621 247 600"
+          fill="none" stroke="#E7FFFF" stroke-width="6" stroke-linecap="round" opacity=".58" class="orbit-glint"/>
+
+    <!-- Planet on the upper-right orbit. -->
+    <g class="planet-aura">
+      <circle cx="807" cy="382" r="43" fill="#57F8FF" opacity=".45" filter="url(#planetGlow)"/>
+      <circle cx="807" cy="382" r="33" fill="none" stroke="#5FE6FF" stroke-width="6" opacity=".78"/>
+    </g>
+    <circle cx="807" cy="382" r="28" fill="url(#planet)" stroke="#D8FFFF" stroke-width="2"/>
+    <circle cx="798" cy="373" r="10" fill="#FFFFFF" opacity=".28" filter="url(#softGlow)"/>
+
+    <!-- A slow reflection passes over the plate, kept below the rim. -->
+    <path class="sheen" d="M155 119 L270 119 L750 922 L628 922Z" fill="#C9F9FF" opacity="0"/>
+  </g>
+
+  <!-- The brighter frame is what makes the icon readable on a Space #171C35 sidebar. -->
+  <rect x="104" y="104" width="816" height="816" rx="154" fill="none" stroke="#86BAFF" stroke-width="6" opacity=".14"/>
+  <rect x="98" y="98" width="828" height="828" rx="158" fill="none" stroke="url(#frameGradient)" stroke-width="10"/>
+  <rect x="98" y="98" width="828" height="828" rx="158" fill="none" stroke="#D4FFFF" stroke-width="2" opacity=".28"/>
+  <rect class="border-glint" x="98" y="98" width="828" height="828" rx="158" fill="none" stroke="#B4FAFF" stroke-width="9" stroke-linecap="round" opacity=".8"/>
+  <rect x="116" y="116" width="792" height="792" rx="145" fill="none" stroke="#A3B9FF" stroke-width="1.8" opacity=".14"/>
+</svg>

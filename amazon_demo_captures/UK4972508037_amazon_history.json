@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4972508037",
+  "shipment_status": "Delivered",
+  "reference": "614412-616767",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.18 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-18",
+      "time": "20:15",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T20:15:00+08:00",
+      "description": "Package delivered",
+      "location": "Bournemouth, Bournemouth, Christchurch And Poole, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-18",
+      "time": "18:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T18:57:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-18",
+      "time": "18:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T18:56:00+08:00",
+      "description": "Out for delivery",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-18",
+      "time": "07:27",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T07:27:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-18",
+      "time": "00:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-18T00:29:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "19:24",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T19:24:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "19:19",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T19:19:00+08:00",
+      "description": "Out for delivery",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "14:13",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T14:13:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Bournemouth, Bournemouth, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "09:41",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T09:41:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "06:45",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T06:45:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "04:10",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T04:10:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "01:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T01:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-17",
+      "time": "01:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-17T01:23:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-16",
+      "time": "22:43",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-16T22:43:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

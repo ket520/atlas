@@ -1,0 +1,112 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4883276715",
+  "shipment_status": "Delivered",
+  "reference": "605093-607484",
+  "shipping_speed": "One day",
+  "package_size": "Manifested 40 x 30 x 15 cm",
+  "package_weight": "5 kg",
+  "total_charge": "£5.91",
+  "events_count": 11,
+  "events": [
+    {
+      "date": "2026-09-29",
+      "time": "21:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T21:23:00+08:00",
+      "description": "Package delivered",
+      "location": "Pershore, Worcestershire, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-09-29",
+      "time": "18:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T18:25:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "18:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T18:25:00+08:00",
+      "description": "Out for delivery",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "07:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T07:50:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "18:40",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T18:40:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "18:40",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T18:40:00+08:00",
+      "description": "Out for delivery",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "10:08",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T10:08:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "GLOUCESTER, GLOUCESTER, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "06:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T06:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "01:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T01:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-28",
+      "time": "01:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-28T01:23:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-27",
+      "time": "18:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-27T18:44:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+from playwright.sync_api import sync_playwright, expect
+from browser_responsive_tables import serve
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
+    page = browser.new_page(viewport={'width': 1440, 'height': 900})
+    page.add_init_script("sessionStorage.setItem('deliverydesk-started','1')")
+    page.route('https://deliverydesk.test/**', serve)
+    page.route('https://fonts.googleapis.com/**', lambda route: route.abort())
+    page.route('**/api/collection-notes', lambda route: route.fulfill(json={'records': [
+        {'id': 'one', 'order': '663132', 'orderRef': 'REFERENCE-ABC', 'collectionOrder': 'NOT-THE-REFERENCE',
+         'createdAt': '2026-10-01T23:30:00+00:00', 'updatedAt': '2026-10-29T12:00:00+00:00', 'customer': 'Alice'},
+        {'id': 'two', 'order': '654171', 'orderRef': 'REFERENCE-XYZ', 'createdAt': '2026-10-03T12:00:00+00:00'}
+    ]}))
+    page.goto('https://deliverydesk.test/pages/collective-note.html')
+    rows = page.locator('#collection-records > tr')
+    expect(rows).to_have_count(2)
+    expect(page.locator('.collection-records-table th').nth(1)).to_have_text('Order Reference No')
+    expect(page.locator('.collection-records-table th').nth(2)).to_have_text('Date Created')
+    expect(rows.first.locator('td').nth(1)).to_contain_text('REFERENCE-ABC')
+    expect(rows.first.locator('td').nth(2)).to_have_text('02/10/2026')
+    search = page.locator('[data-collection-records-search]')
+    for value, order in [('663132', '663132'), ('reference-xyz', '654171'), ('  ABC  ', '663132')]:
+        search.fill(value)
+        expect(rows).to_have_count(1)
+        expect(rows.first.locator('td').first).to_contain_text(order)
+    search.fill('NOT-THE-REFERENCE')
+    expect(rows.first).to_contain_text('No collection notes match')
+    search.fill('')
+    expect(rows).to_have_count(2)
+    create = page.get_by_role('link', name='Create collection note')
+    assert create.evaluate('el=>el.previousElementSibling.classList.contains("collection-date-select")')
+    page.get_by_role('button', name='Filter by date created').click()
+    menu = page.get_by_role('dialog', name='Date created range')
+    expect(menu).to_be_visible()
+    assert abs(menu.bounding_box()['width'] - 260) < 1, menu.bounding_box()
+    page.get_by_label('Created from', exact=True).fill('2026-10-03')
+    page.get_by_label('Created to', exact=True).fill('2026-10-03')
+    expect(rows).to_have_count(1)
+    expect(rows.first).to_contain_text('654171')
+    page.keyboard.press('Escape')
+    expect(menu).not_to_be_visible()
+    expect(page.get_by_role('button', name='Filter by date created')).to_have_attribute('aria-expanded', 'false')
+    search.fill('ABC')
+    expect(rows.first).to_contain_text('No collection notes match')
+    page.get_by_role('button', name='Filter by date created').click()
+    page.get_by_role('button', name='Clear dates', exact=True).click()
+    expect(rows.first).to_contain_text('663132')
+    page.keyboard.press('Escape')
+    search.fill('')
+    expect(rows).to_have_count(2)
+    for width in [1440, 390]:
+        page.set_viewport_size({'width': width, 'height': 900})
+        expect(search).to_be_visible()
+        expect(page.get_by_role('link', name='Create collection note')).to_be_visible()
+    browser.close()
+    print('PASS: search and creation-date range combine; inclusive UK dates, clear, Escape, filter placement and desktop/mobile controls')

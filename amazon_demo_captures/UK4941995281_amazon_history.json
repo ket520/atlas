@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4941995281",
+  "shipment_status": "Delivered",
+  "reference": "611031-613396",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.77 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-12",
+      "time": "00:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-12T00:17:00+08:00",
+      "description": "Package delivered",
+      "location": "Kingsley, Cheshire, GB",
+      "note": "Package was left near the front door or porch"
+    },
+    {
+      "date": "2026-10-11",
+      "time": "23:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-11T23:17:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-11",
+      "time": "23:17",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-11T23:17:00+08:00",
+      "description": "Out for delivery",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-11",
+      "time": "22:23",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-11T22:23:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-11",
+      "time": "00:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-11T00:06:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "Additional directions are needed. Manchester, Warrington, UK"
+    },
+    {
+      "date": "2026-10-10",
+      "time": "17:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T17:47:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "17:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T17:47:00+08:00",
+      "description": "Out for delivery",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "12:00",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T12:00:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Manchester, Warrington, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "09:03",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T09:03:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "06:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T06:06:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Saint Helens, Merseyside, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "03:11",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T03:11:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "00:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T00:31:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-10",
+      "time": "00:31",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-10T00:31:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-09",
+      "time": "21:28",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-09T21:28:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

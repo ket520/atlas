@@ -1,0 +1,121 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK4892031176",
+  "shipment_status": "Delivered",
+  "reference": "605816-608209",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "0.17 kg",
+  "total_charge": "£3.31",
+  "events_count": 12,
+  "events": [
+    {
+      "date": "2026-10-02",
+      "time": "01:29",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-02T01:29:00+08:00",
+      "description": "Package delivered",
+      "location": "Bridgend, Vale Of Glamorgan, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-01",
+      "time": "19:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T19:06:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "19:06",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T19:06:00+08:00",
+      "description": "Out for delivery",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "07:19",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T07:19:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-01",
+      "time": "02:34",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-01T02:34:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "Additional directions are needed. CARDIFF, Wales, UK"
+    },
+    {
+      "date": "2026-09-30",
+      "time": "18:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T18:18:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "18:18",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T18:18:00+08:00",
+      "description": "Out for delivery",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "14:50",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T14:50:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "CARDIFF, Wales, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "07:53",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T07:53:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "05:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T05:20:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-30",
+      "time": "05:20",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-30T05:20:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-09-29",
+      "time": "16:39",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-09-29T16:39:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}
