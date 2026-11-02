@@ -1,12 +1,17 @@
-const $ = selector => document.querySelector(selector);
-const $$ = selector => [...document.querySelectorAll(selector)];
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 
-const esc = value => String(value).replace(/[&<>"]/g, char => ({
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-})[char]);
+const esc = (value) =>
+  String(value).replace(
+    /[&<>"]/g,
+    (char) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+      })[char],
+  );
 
 function toast(message, duration = 2200) {
   const element = document.createElement('div');
@@ -29,15 +34,20 @@ async function writeClipboard(text) {
   return new Promise((resolve, reject) => {
     const focused = document.activeElement;
     const selection = window.getSelection();
-    const ranges = selection ? Array.from({length: selection.rangeCount}, (_, index) => selection.getRangeAt(index).cloneRange()) : [];
+    const ranges = selection
+      ? Array.from({ length: selection.rangeCount }, (_, index) =>
+          selection.getRangeAt(index).cloneRange(),
+        )
+      : [];
     const element = document.createElement('textarea');
     element.value = text;
     element.readOnly = true;
-    element.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+    element.style.cssText =
+      'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;';
     (document.querySelector('dialog[open]') || document.body).append(element);
 
     try {
-      element.focus({preventScroll: true});
+      element.focus({ preventScroll: true });
       element.select();
       if (!document.execCommand('copy')) throw new Error('Clipboard copy failed');
       resolve();
@@ -45,10 +55,10 @@ async function writeClipboard(text) {
       reject(error);
     } finally {
       element.remove();
-      if (focused?.isConnected) focused.focus({preventScroll: true});
+      if (focused?.isConnected) focused.focus({ preventScroll: true });
       if (selection) {
         selection.removeAllRanges();
-        ranges.forEach(range => selection.addRange(range));
+        ranges.forEach((range) => selection.addRange(range));
       }
     }
   });
@@ -66,23 +76,25 @@ function actionError(error, fallback = 'Something went wrong') {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const hd = value => value
-  ? new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  : '';
+const hd = (value) =>
+  value
+    ? new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '';
 
 const fmtD = hd;
 
-const fmtLongD = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
+const fmtLongD = (value) =>
+  new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
-const fmtMD = value => {
+const fmtMD = (value) => {
   const [monthDay, time] = value.split(' ');
   const [month, day] = monthDay.split('-');
   return `${+day} ${MONTHS[+month - 1]}${time ? ` · ${time}` : ''}`;
@@ -94,26 +106,33 @@ const yesterdayKey = () => {
   return date.toISOString().slice(5, 10);
 };
 
-const dayLabel = value => {
+const dayLabel = (value) => {
   const key = value.slice(0, 5);
   if (key === T.slice(5)) return 'Today';
   if (key === yesterdayKey()) return 'Yesterday';
   return key;
 };
 
-const fmtDay = value => {
+const fmtDay = (value) => {
   const label = dayLabel(value);
   const date = /^\d\d-\d\d$/.test(label) ? fmtMD(label) : label;
   return `${date} · ${value.slice(6)}`;
 };
 
-const fmtLogTime = value => /^\d{4}-\d{2}-\d{2}$/.test(String(value))
-  ? hd(value)
-  : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(String(value))
-    ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : fmtDay(value);
+const fmtLogTime = (value) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(String(value))
+    ? hd(value)
+    : /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(String(value))
+      ? new Date(value).toLocaleString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : fmtDay(value);
 
-const clockAmPm = value => {
+const clockAmPm = (value) => {
   const match = String(value || '').match(/^(\d{2}):(\d{2})$/);
   if (!match) return String(value || '');
   const hour = Number(match[1]);
@@ -121,21 +140,29 @@ const clockAmPm = value => {
   return `${String(hour % 12 || 12).padStart(2, '0')}:${match[2]} ${hour < 12 ? 'AM' : 'PM'}`;
 };
 
-const optimoTime = value => {
-  const raw = typeof value === 'object' && value
-    ? value.localTime || value.utcTime || (Number.isFinite(value.unixTimestamp) ? new Date(value.unixTimestamp * 1000).toISOString() : '')
-    : String(value || '');
+const optimoTime = (value) => {
+  const raw =
+    typeof value === 'object' && value
+      ? value.localTime ||
+        value.utcTime ||
+        (Number.isFinite(value.unixTimestamp)
+          ? new Date(value.unixTimestamp * 1000).toISOString()
+          : '')
+      : String(value || '');
   const match = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
   return match ? `${hd(match[1])}, ${clockAmPm(match[2])}` : raw || '—';
 };
 
-const optimoClock = value => {
-  const raw = typeof value === 'object' && value ? value.localTime || value.utcTime || '' : String(value || '');
+const optimoClock = (value) => {
+  const raw =
+    typeof value === 'object' && value
+      ? value.localTime || value.utcTime || ''
+      : String(value || '');
   const clock = raw.match(/[T ](\d{2}:\d{2})/)?.[1];
   return clock ? clockAmPm(clock) : '';
 };
 
-const detailDateTime = value => {
+const detailDateTime = (value) => {
   if (!value) return '';
   const raw = typeof value === 'object' ? value.localTime || value.utcTime || '' : String(value);
   if (!raw && typeof value === 'object') return optimoTime(value);
@@ -144,109 +171,54 @@ const detailDateTime = value => {
   return raw;
 };
 
-function palletwaysDetails(
-  delivery,
-  copyButton = () => ''
-) {
-  const details =
-    delivery.carrier === 'Palletways'
-      ? delivery.palletwaysDetails
-      : null;
+function palletwaysDetails(delivery, copyButton = () => '') {
+  const details = delivery.carrier === 'Palletways' ? delivery.palletwaysDetails : null;
 
   if (!details) return '';
 
-  const list = value => {
+  const list = (value) => {
     if (Array.isArray(value)) {
       return value;
     }
 
-    return value
-      ? [value]
-      : [];
+    return value ? [value] : [];
   };
 
-  const palletText = list(
-    details.pallets
-  )
-    .map(item => {
-      if (
-        item
-        && typeof item === 'object'
-      ) {
-        return (
-          item.Barcode
-          || item.barcode
-          || item.ID
-          || item.id
-          || ''
-        );
+  const palletText = list(details.pallets)
+    .map((item) => {
+      if (item && typeof item === 'object') {
+        return item.Barcode || item.barcode || item.ID || item.id || '';
       }
 
-      return String(
-        item || ''
-      );
+      return String(item || '');
     })
     .filter(Boolean)
     .join(', ');
 
-  const billUnitText = list(
-    details.billUnits
-  )
-    .map(item => {
-      if (
-        !item
-        || typeof item !== 'object'
-      ) {
-        return String(
-          item || ''
-        );
+  const billUnitText = list(details.billUnits)
+    .map((item) => {
+      if (!item || typeof item !== 'object') {
+        return String(item || '');
       }
 
-      const type =
-        item.Type
-        || item.type
-        || '';
+      const type = item.Type || item.type || '';
 
-      const amount =
-        item.Amount
-        || item.amount
-        || '';
+      const amount = item.Amount || item.amount || '';
 
-      return [
-        type,
-        amount
-          ? `× ${amount}`
-          : '',
-      ]
-        .filter(Boolean)
-        .join(' ');
+      return [type, amount ? `× ${amount}` : ''].filter(Boolean).join(' ');
     })
     .filter(Boolean)
     .join(', ');
 
   const dueText = [
-    details.dueDate
-      ? hd(details.dueDate)
-      : '',
-    details.dueTime
-      ? clockAmPm(
-          String(
-            details.dueTime
-          ).slice(0, 5)
-        )
-      : '',
+    details.dueDate ? hd(details.dueDate) : '',
+    details.dueTime ? clockAmPm(String(details.dueTime).slice(0, 5)) : '',
   ]
     .filter(Boolean)
     .join(' · ');
 
-  const fact = (
-    label,
-    value,
-    field = ''
-  ) => {
-    const text = String(
-      value ?? ''
-    ).trim();
+  const fact = (label, value, field = '') => {
+    const text = String(value ?? '').trim();
 
     if (!text) return '';
 
@@ -255,191 +227,77 @@ function palletwaysDetails(
         <dt>${esc(label)}</dt>
         <dd>
           ${esc(text)}
-          ${
-            field
-              ? copyButton(
-                  field,
-                  text,
-                  label.toLowerCase()
-                )
-              : ''
-          }
+          ${field ? copyButton(field, text, label.toLowerCase()) : ''}
         </dd>
       </div>
     `;
   };
 
   const facts = [
-    fact(
-      'Consignment number',
-      details.consignmentNumber,
-      'consignmentNumber'
-    ),
+    fact('Consignment number', details.consignmentNumber, 'consignmentNumber'),
 
-    fact(
-      'Tracking ID',
-      details.trackingId
-        || delivery.trk,
-      'trackingNumber'
-    ),
+    fact('Tracking ID', details.trackingId || delivery.trk, 'trackingNumber'),
 
-    fact(
-      'Customer reference',
-      details.customerRef
-    ),
+    fact('Customer reference', details.customerRef),
 
-    fact(
-      'Delivery service',
-      details.deliveryService,
-      'deliveryService'
-    ),
+    fact('Delivery service', details.deliveryService, 'deliveryService'),
 
-    fact(
-      'Classification',
-      details.classification
-    ),
+    fact('Classification', details.classification),
 
-    fact(
-      'Weight',
-      details.weight
-    ),
+    fact('Weight', details.weight),
 
-    fact(
-      'Lifts',
-      details.lifts
-    ),
+    fact('Lifts', details.lifts),
 
-    fact(
-      'Collection depot',
-      details.collectionDepot
-    ),
+    fact('Collection depot', details.collectionDepot),
 
-    fact(
-      'Delivery depot',
-      details.deliveryDepot
-    ),
+    fact('Delivery depot', details.deliveryDepot),
 
-    fact(
-      'Due',
-      dueText
-    ),
+    fact('Due', dueText),
 
-    fact(
-      'Booked in',
-      details.bookedIn
-    ),
+    fact('Booked in', details.bookedIn),
 
-    fact(
-      'Book-in request',
-      details.bookInRequest
-    ),    
+    fact('Book-in request', details.bookInRequest),
 
-    fact(
-      'Tail lift requested',
-      details.tailLift
-    ),
+    fact('Tail lift requested', details.tailLift),
 
-    fact(
-      'Hand-ball requested',
-      details.handBall
-    ),
+    fact('Hand-ball requested', details.handBall),
 
-    fact(
-      'Insurance',
-      details.insurance
-    ),
+    fact('Insurance', details.insurance),
 
+    fact('Booking contact', details.bookInContactName),
 
-    fact(
-      'Booking contact',
-      details.bookInContactName
-    ),
+    fact('Booking reference', details.bookInReference),
 
-    fact(
-      'Booking reference',
-      details.bookInReference
-    ),
+    fact('Pallet', palletText),
 
-    fact(
-      'Pallet',
-      palletText
-    ),
+    fact('Bill units', billUnitText),
 
-    fact(
-      'Bill units',
-      billUnitText
-    ),
+    fact('Collection address', details.collectionAddress),
 
+    fact('Collection postcode', details.collectionPostcode),
 
-    fact(
-      'Collection address',
-      details.collectionAddress
-    ),
+    fact('Collection contact', details.collectionContact),
 
-    fact(
-      'Collection postcode',
-      details.collectionPostcode
-    ),
+    fact('Collection telephone', details.collectionTelephone),
 
-    fact(
-      'Collection contact',
-      details.collectionContact
-    ),
+    fact('Delivery address', details.deliveryAddress),
 
-    fact(
-      'Collection telephone',
-      details.collectionTelephone
-    ),
+    fact('Delivery postcode', details.deliveryPostcode),
 
-    fact(
-      'Delivery address',
-      details.deliveryAddress
-    ),
-
-    fact(
-      'Delivery postcode',
-      details.deliveryPostcode
-    ),
-
-    fact(
-      'Telephone',
-      details.deliveryTelephone
-    ),
-    fact(
-      'Delivery contact',
-      details.deliveryContact
-    ),
-    fact(
-      'Instructions',
-      details.manifestNote
-    ),
+    fact('Telephone', details.deliveryTelephone),
+    fact('Delivery contact', details.deliveryContact),
+    fact('Instructions', details.manifestNote),
   ].filter(Boolean);
-  const portal =
-    delivery.palletwaysPortal || {};
+  const portal = delivery.palletwaysPortal || {};
 
-  const invoiceText =
-    Array.isArray(portal.invoices)
-      ? portal.invoices
-          .map(item =>
-            [
-              item.number,
-              item.date,
-              item.type,
-              item.value,
-            ]
-              .filter(Boolean)
-              .join(' · ')
-          )
-          .join(', ')
-      : '';
+  const invoiceText = Array.isArray(portal.invoices)
+    ? portal.invoices
+        .map((item) => [item.number, item.date, item.type, item.value].filter(Boolean).join(' · '))
+        .join(', ')
+    : '';
 
   if (invoiceText) {
-    facts.push(
-      fact(
-        'Palletways invoice',
-        invoiceText
-      )
-    );
+    facts.push(fact('Palletways invoice', invoiceText));
   }
   if (!facts.length) {
     return '';
@@ -466,15 +324,8 @@ function palletwaysDetails(
   `;
 }
 
-
-
-
-function palletwaysDocumentInfo(
-  delivery
-) {
-  if (
-    delivery?.carrier !== 'Palletways'
-  ) {
+function palletwaysDocumentInfo(delivery) {
+  if (delivery?.carrier !== 'Palletways') {
     return {
       tracking: '',
       consignment: '',
@@ -485,51 +336,28 @@ function palletwaysDocumentInfo(
     };
   }
 
-  const details =
-    delivery.palletwaysDetails
-    || {};
+  const details = delivery.palletwaysDetails || {};
 
-  const tracking = String(
-    details.trackingId
-    || delivery.trk
-    || ''
-  ).trim();
+  const tracking = String(details.trackingId || delivery.trk || '').trim();
 
-  const consignment = String(
-    details.consignmentNumber
-    || ''
-  ).trim();
+  const consignment = String(details.consignmentNumber || '').trim();
 
-  const events = Array.isArray(
-    delivery.palletwaysEvents
-  )
-    ? delivery.palletwaysEvents
-    : [];
+  const events = Array.isArray(delivery.palletwaysEvents) ? delivery.palletwaysEvents : [];
 
-  const podEvent = [
-    ...events
-  ]
-    .reverse()
-    .find(item =>
-      String(
-        item.group || ''
-      ).toUpperCase() === 'POD'
-      &&
-      String(
-        item.type || ''
-      ).toUpperCase() === 'POD'
-    ) || null;
+  const podEvent =
+    [...events]
+      .reverse()
+      .find(
+        (item) =>
+          String(item.group || '').toUpperCase() === 'POD' &&
+          String(item.type || '').toUpperCase() === 'POD',
+      ) || null;
 
   const hasPod = Boolean(
-    (podEvent || delivery.palletwaysDocuments?.podAvailable)
-    && /^\d{11}$/.test(
-      tracking
-    )
+    (podEvent || delivery.palletwaysDocuments?.podAvailable) && /^\d{11}$/.test(tracking),
   );
 
-  const hasLabel = Boolean(
-    consignment
-  );
+  const hasLabel = Boolean(consignment);
 
   return {
     tracking,
@@ -537,13 +365,9 @@ function palletwaysDocumentInfo(
     podEvent,
     hasPod,
     hasLabel,
-    hasAny:
-      hasPod
-      || hasLabel,
+    hasAny: hasPod || hasLabel,
   };
 }
-
-
 
 function documentViewButton(url, title) {
   return `<a class="qd-document-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="View online" aria-label="View ${esc(title)} online"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3"/><path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6"/></svg></a>`;
@@ -591,18 +415,30 @@ function shipmentDocumentCard(title, url, preview, description, downloadUrl = `$
 
 function xdpDocuments(delivery) {
   if (delivery?.carrier !== 'XDP') return '';
-  const documents = [...new Set((delivery.xdpDocuments || []).filter(url =>
-    /^https:\/\/xdp\.sysx\.co\.uk\/pod\/view\/\d+\/[A-Za-z0-9_+=%-]+$/.test(url)))];
-  if (!documents.length) return '<section class="qd-documents-empty" role="status">No document found</section>';
+  const documents = [
+    ...new Set(
+      (delivery.xdpDocuments || []).filter((url) =>
+        /^https:\/\/xdp\.sysx\.co\.uk\/pod\/view\/\d+\/[A-Za-z0-9_+=%-]+$/.test(url),
+      ),
+    ),
+  ];
+  if (!documents.length)
+    return '<section class="qd-documents-empty" role="status">No document found</section>';
   return `<section class="qd-block qd-pod qd-palletways-documents qd-xdp-documents" aria-label="Proof of delivery">
     <div class="qd-title-row"><div class="qd-title">${ico('note', 18, 1.9)}<h3>Proof of delivery</h3></div></div>
-    <div class="qd-amazon-doc-grid">${documents.map((url, index) => {
-      const title = documents.length > 1 ? `Shipment photo ${index + 1}` : 'Shipment photo';
-      const proxy = `/api/xdp/document?${new URLSearchParams({order: delivery.order || delivery.id, index})}`;
-      return shipmentDocumentCard(title, url,
-        `<img class="qd-palletways-photo-image" data-document-preview src="${esc(proxy)}" loading="lazy" alt="${esc(title)}">`,
-        'XDP image', `${proxy}&download=1`);
-    }).join('')}</div>
+    <div class="qd-amazon-doc-grid">${documents
+      .map((url, index) => {
+        const title = documents.length > 1 ? `Shipment photo ${index + 1}` : 'Shipment photo';
+        const proxy = `/api/xdp/document?${new URLSearchParams({ order: delivery.order || delivery.id, index })}`;
+        return shipmentDocumentCard(
+          title,
+          url,
+          `<img class="qd-palletways-photo-image" data-document-preview src="${esc(proxy)}" loading="lazy" alt="${esc(title)}">`,
+          'XDP image',
+          `${proxy}&download=1`,
+        );
+      })
+      .join('')}</div>
   </section>`;
 }
 
@@ -610,14 +446,23 @@ function palletwaysDocuments(delivery) {
   if (delivery?.carrier !== 'Palletways') return '';
   const info = palletwaysDocumentInfo(delivery);
   const portal = delivery.palletwaysPortal || {};
-  const media = [...new Map([
-    ...(Array.isArray(delivery.palletwaysPhotos) ? delivery.palletwaysPhotos : []),
-    ...(Array.isArray(portal.media) ? portal.media : []),
-  ].filter(item => item?.filename).map(item => [item.filename, item])).values()];
+  const media = [
+    ...new Map(
+      [
+        ...(Array.isArray(delivery.palletwaysPhotos) ? delivery.palletwaysPhotos : []),
+        ...(Array.isArray(portal.media) ? portal.media : []),
+      ]
+        .filter((item) => item?.filename)
+        .map((item) => [item.filename, item]),
+    ).values(),
+  ];
   const cards = [];
   const card = shipmentDocumentCard;
 
-  const photos = media.filter(item => !/\.(tif|tiff)$/i.test(item.filename) && !unavailablePalletwaysPhotos.has(item.filename));
+  const photos = media.filter(
+    (item) =>
+      !/\.(tif|tiff)$/i.test(item.filename) && !unavailablePalletwaysPhotos.has(item.filename),
+  );
   photos.forEach((item, index) => {
     const url = `/api/palletways/media/${encodeURIComponent(item.filename)}`;
     const title = photos.length > 1 ? `Shipment photo ${index + 1}` : 'Shipment photo';
@@ -627,15 +472,25 @@ function palletwaysDocuments(delivery) {
 
   if (info.hasPod) {
     const url = `/api/palletways/pod/${encodeURIComponent(info.tracking)}`;
-    cards.push(card('Delivery note', url,
-      `<iframe title="Delivery note preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
-      'PDF document'));
+    cards.push(
+      card(
+        'Delivery note',
+        url,
+        `<iframe title="Delivery note preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
+        'PDF document',
+      ),
+    );
   }
   if (info.hasLabel) {
     const url = `/api/palletways/label/${encodeURIComponent(info.consignment)}`;
-    cards.push(card('Shipping label', url,
-      `<iframe title="Shipping label preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
-      `Consignment ${info.consignment}`));
+    cards.push(
+      card(
+        'Shipping label',
+        url,
+        `<iframe title="Shipping label preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
+        `Consignment ${info.consignment}`,
+      ),
+    );
   }
   const photoState = delivery.palletwaysPortalLoading
     ? '<p class="mut" role="status">Loading shipment photos from Palletways…</p>'
@@ -651,7 +506,6 @@ function palletwaysDocuments(delivery) {
   </section>`;
 }
 
-
 function deliveryWindow(delivery) {
   const start = String(delivery.deliveryWindowStartAt || '');
   const end = String(delivery.deliveryWindowEndAt || '');
@@ -666,7 +520,11 @@ function deliveryWindow(delivery) {
     };
   }
   if (/^\d{2}:\d{2}\s*[-–]\s*\d{2}:\d{2}$/.test(String(delivery.win || ''))) {
-    const short = delivery.win.replace(/\s*[-–]\s*/, '–').split('–').map(clockAmPm).join('–');
+    const short = delivery.win
+      .replace(/\s*[-–]\s*/, '–')
+      .split('–')
+      .map(clockAmPm)
+      .join('–');
     return { short, full: `${delivery.date ? `${hd(delivery.date)}, ` : ''}${short}` };
   }
   if (delivery.eta) {
@@ -695,33 +553,43 @@ const DELIVERY_REASON_COPY = {
   },
 };
 
-const deliveryReason = reason => DELIVERY_REASON_COPY[reason] || {
-  label: reason || '',
-  detail: '',
-};
+const deliveryReason = (reason) =>
+  DELIVERY_REASON_COPY[reason] || {
+    label: reason || '',
+    detail: '',
+  };
 
-const get = id => DeliveryStore.find(id);
-const carName = carrier => carrier === 'Own van'
-  ? 'Own van'
-  : (EXTERNAL_CARRIERS[carrier] || carrier);
+const get = (id) => DeliveryStore.find(id);
+const carName = (carrier) =>
+  carrier === 'Own van' ? 'Own van' : EXTERNAL_CARRIERS[carrier] || carrier;
 const SELF_DELIVERY_GROUP = 'Own van / Self Delivery';
 const SELF_DELIVERY_CARRIERS = ['Own van', 'Self Delivery'];
-const matchesDeliveryCarrier = (carrier, filter) => !filter
-  || (filter === SELF_DELIVERY_GROUP ? SELF_DELIVERY_CARRIERS.includes(carrier) : carrier === filter);
+const matchesDeliveryCarrier = (carrier, filter) =>
+  !filter ||
+  (filter === SELF_DELIVERY_GROUP ? SELF_DELIVERY_CARRIERS.includes(carrier) : carrier === filter);
 
-const PAGE_LABELS = { Deliveries: 'Tracking', 'Collective Note': 'Collection Notes', Integrations: 'Integration & Data Trafficking' };
+const PAGE_LABELS = {
+  Deliveries: 'Tracking',
+  'Collective Note': 'Collection Notes',
+  Integrations: 'Integration & Data Trafficking',
+};
 const PAGE_URL = APP_CONFIG.routes;
 let page = PAGE_URL[document.body.dataset.page] ? document.body.dataset.page : 'Deliveries';
-let trackingScope = page === 'Deliveries' && new URLSearchParams(location.search).get('view') === 'today'
-  ? 'today' : '';
+let trackingScope =
+  page === 'Deliveries' && new URLSearchParams(location.search).get('view') === 'today'
+    ? 'today'
+    : '';
 // Give the initial page (including / and index.html) an explicit history identity.
-try { history.replaceState({ ...history.state, page }, '', location.href); } catch {}
+try {
+  history.replaceState({ ...history.state, page }, '', location.href);
+} catch {}
 let sel = null;
 let q = '';
 let fs = '';
 let fstore = '';
 let fsrc = '';
-let dashboardWidgetFilter = page === 'Deliveries' ? new URLSearchParams(location.search).get('dashboard_widget') || '' : '';
+let dashboardWidgetFilter =
+  page === 'Deliveries' ? new URLSearchParams(location.search).get('dashboard_widget') || '' : '';
 let trackingWidgetFacets = null;
 if (dashboardWidgetFilter) {
   fsrc = new URLSearchParams(location.search).get('carrier') || '';
@@ -737,7 +605,7 @@ let dq = '';
 let dashboardSearchTimer = null;
 
 function syncSelectedTrackingRow() {
-  document.querySelectorAll('.tracking-row[data-delivery-id]').forEach(row => {
+  document.querySelectorAll('.tracking-row[data-delivery-id]').forEach((row) => {
     const selected = Boolean(sel) && row.dataset.deliveryId === sel;
     row.classList.toggle('is-selected', selected);
     if (selected) row.setAttribute('aria-current', 'true');
@@ -750,28 +618,42 @@ const ICON = {
   Return: '<path d="M9 10 4 5l5-5M4 5h10a7 7 0 0 1 0 14h-3" transform="translate(0 2)"/>',
   'Free Return': '<path d="m8 4-5 5 5 5M3 9h11a6 6 0 0 1 0 12h-3"/><path d="m14 5 2 2 4-4"/>',
   'Manufacture Claims': '<path d="M3 21V9l6 3V7l6 3V3h4l2 18ZM7 17h1m4 0h1m4 0h1"/>',
-  'Logistics Claims': '<path d="M3 17V5h12v12M15 9h4l3 4v4h-3M7 17h8"/><circle cx="5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M9 8v4m0 2h.01"/>',
-  Refund: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20m-8 4-3 3 3 3m-3-3h7"/>',
-  Guidance: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h6"/>',
-  'Collective Note': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/>',
-  Dashboard: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
-  Deliveries: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/>',
-  'Van Deliveries': '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
-  'Failed Deliveries': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
-  Integrations: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
-  Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  'Logistics Claims':
+    '<path d="M3 17V5h12v12M15 9h4l3 4v4h-3M7 17h8"/><circle cx="5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M9 8v4m0 2h.01"/>',
+  Refund:
+    '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20m-8 4-3 3 3 3m-3-3h7"/>',
+  Guidance:
+    '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h6"/>',
+  'Collective Note':
+    '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/>',
+  Dashboard:
+    '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+  Deliveries:
+    '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/>',
+  'Van Deliveries':
+    '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  'Failed Deliveries':
+    '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  Integrations:
+    '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
+  Settings:
+    '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   search: '<circle cx="10.5" cy="10.5" r="7.5"/><path d="M16 16l5 5"/>',
-  filter: '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+  filter:
+    '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
   sort: '<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
   more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
   chevdown: 'm6 9 6 6 6-6',
-  clipboardcheck: '<rect width="14" height="18" x="5" y="3" rx="2"/><path d="M9 5h6"/><path d="m9 14 2 2 4-4"/>',
+  clipboardcheck:
+    '<rect width="14" height="18" x="5" y="3" rx="2"/><path d="M9 5h6"/><path d="m9 14 2 2 4-4"/>',
   right: 'm9 18 6-6-6-6',
   back: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
   next: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
-  alert: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+  alert:
+    '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   pin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
-  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  phone:
+    '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
   cal: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>',
   clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6h4"/>',
   bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>',
@@ -779,19 +661,24 @@ const ICON = {
   ok: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
   chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
   send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
-  truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  truck:
+    '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
   pkg: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/>',
   pkgx: '<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/><path d="m9 15 6 6"/><path d="m15 15-6 6"/>',
   mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
   note: '<path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
-  download: '<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
-  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
-  image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  download:
+    '<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+  pencil:
+    '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  image:
+    '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
   circ: '<circle cx="12" cy="12" r="10"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-  calplus: '<path d="M8 2v4"/><path d="M16 2v4"/><path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/><path d="M3 10h18"/><path d="M16 19h6"/><path d="M19 16v6"/>',
+  calplus:
+    '<path d="M8 2v4"/><path d="M16 2v4"/><path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/><path d="M3 10h18"/><path d="M16 19h6"/><path d="M19 16v6"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
 };
@@ -819,13 +706,18 @@ const ANIMATED_TRUCK_BODY = `
   </g>`;
 
 const ANIMATED_ICON_BODY = {
-  search: '<circle class="ai-search-ring" cx="10.5" cy="10.5" r="7.5"/><path class="ai-search-handle" d="M16 16l5 5"/>',
+  search:
+    '<circle class="ai-search-ring" cx="10.5" cy="10.5" r="7.5"/><path class="ai-search-handle" d="M16 16l5 5"/>',
   copy: '<rect class="ai-copy-front" width="14" height="14" x="8" y="8" rx="2"/><path class="ai-copy-back" d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   truck: ANIMATED_TRUCK_BODY,
   'Van Deliveries': ANIMATED_TRUCK_BODY,
 };
 
-const iconToken = name => String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+const iconToken = (name) =>
+  String(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
 const ico = (name, size = 20, strokeWidth = 1.75) => {
   const shape = (ANIMATED_ICON_BODY[name] || ICON[name] || '').trim();
@@ -877,63 +769,112 @@ const OW_STATUS_DESCRIPTION = Object.freeze({
   Y: 'Pre-auth pending',
 });
 
-const owStatusDescription = raw => OW_STATUS_DESCRIPTION[String(raw || '').trim().toUpperCase()] || String(raw || '').trim();
+const owStatusDescription = (raw) =>
+  OW_STATUS_DESCRIPTION[
+    String(raw || '')
+      .trim()
+      .toUpperCase()
+  ] || String(raw || '').trim();
 
-const amazonStatusLabel = value => String(value).toUpperCase() === 'READY_FOR_RECEIVE'
-  ? 'Ready To Receive'
-  : String(value).toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+const amazonStatusLabel = (value) =>
+  String(value).toUpperCase() === 'READY_FOR_RECEIVE'
+    ? 'Ready To Receive'
+    : String(value)
+        .toLowerCase()
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-const carrierStatusLabel = delivery => {
-  if (page === 'Deliveries' && fsrc === 'Palletways' && delivery?.carrier === 'Palletways' && delivery.palletwaysSheetStatus) {
+const depotDelayLabel = (delivery) => {
+  const stay = delivery?.palletwaysDepotStay;
+  const active = !['Delivered', 'Cancelled', 'Return'].includes(delivery?.st);
+  const overdue = Date.now() - Date.parse(stay?.arrivedAt) > 72 * 3600000;
+  return delivery?.carrier === 'Palletways' && stay?.verified && active && overdue
+    ? 'At Depot 3> Days'
+    : '';
+};
+
+const carrierStatusLabel = (delivery) => {
+  if (
+    page === 'Deliveries' &&
+    fsrc === 'Palletways' &&
+    delivery?.carrier === 'Palletways' &&
+    delivery.palletwaysSheetStatus
+  ) {
     return delivery.palletwaysSheetStatus;
   }
   if (delivery?.carrier === 'XDP' && delivery.xdpStatus) {
     return amazonStatusLabel(delivery.xdpStatus);
   }
-  if (page === 'Deliveries' && fsrc === 'Stopstart' && delivery?.carrier === 'Stopstart' && delivery.stopstartStatus) {
+  if (
+    page === 'Deliveries' &&
+    fsrc === 'Stopstart' &&
+    delivery?.carrier === 'Stopstart' &&
+    delivery.stopstartStatus
+  ) {
     return delivery.stopstartStatus;
   }
-  if (delivery?.carrier === 'AMZ'
-    && (delivery.amazonSheetStatus || delivery.amazonStatus)) {
+  if (delivery?.carrier === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus)) {
     return amazonStatusLabel(delivery.amazonSheetStatus || delivery.amazonStatus);
   }
-  if (
-    delivery?.carrier === 'Palletways'
-    && delivery?.palletwaysStatusLabel
-  ) {
+  if (delivery?.carrier === 'Palletways' && delivery?.palletwaysStatusLabel) {
     return delivery.palletwaysStatusLabel;
   }
 
-  return trackingStatus(delivery?.st)
-    || delivery?.st
-    || 'Unscheduled';
+  return trackingStatus(delivery?.st) || delivery?.st || 'Unscheduled';
 };
 
-const statusSourceLabel = delivery => {
-  if (delivery?.carrier === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus)) return 'Amazon Shipping';
-  if (page === 'Deliveries' && fsrc === 'Palletways' && delivery?.carrier === 'Palletways' && delivery.palletwaysSheetStatus) return 'Palletways sheet';
+const statusSourceLabel = (delivery) => {
+  if (delivery?.carrier === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus))
+    return 'Amazon Shipping';
+  if (
+    page === 'Deliveries' &&
+    fsrc === 'Palletways' &&
+    delivery?.carrier === 'Palletways' &&
+    delivery.palletwaysSheetStatus
+  )
+    return 'Palletways sheet';
   if (delivery?.carrier === 'XDP' && delivery.xdpStatus) return 'XDP sheet';
-  if (page === 'Deliveries' && fsrc === 'Stopstart' && delivery?.carrier === 'Stopstart' && delivery.stopstartStatus) return 'STOPSTART sheet';
-  return ['Palletways', 'OptimoRoute', 'Amazon Shipping', 'XDP fallback', 'Routine Dashboard - Live'].includes(delivery?.statusSource) ? delivery.statusSource : 'OW';
+  if (
+    page === 'Deliveries' &&
+    fsrc === 'Stopstart' &&
+    delivery?.carrier === 'Stopstart' &&
+    delivery.stopstartStatus
+  )
+    return 'STOPSTART sheet';
+  return [
+    'Palletways',
+    'OptimoRoute',
+    'Amazon Shipping',
+    'XDP fallback',
+    'Routine Dashboard - Live',
+  ].includes(delivery?.statusSource)
+    ? delivery.statusSource
+    : 'OW';
 };
 
-const statusSourceDisplay = delivery => {
+const statusSourceDisplay = (delivery) => {
   return statusSourceLabel(delivery);
 };
 
 function courierIssueFollowUpNotice(delivery) {
   if (!['Failed', 'Rejected'].includes(trackingStatus(delivery?.st))) return null;
-  if (document.body.dataset.live === 'true'
-    && (liveSummary?.courierIssuesUnavailable || liveSummary?.stale)) return null;
+  if (
+    document.body.dataset.live === 'true' &&
+    (liveSummary?.courierIssuesUnavailable || liveSummary?.stale)
+  )
+    return null;
 
   const tab = ['Own van', 'Self Delivery', 'LOCAL MULTIDROP'].includes(delivery.carrier)
-    ? 'Van' : ['Palletways', 'XDP'].includes(delivery.carrier)
-      ? delivery.carrier : '';
+    ? 'Van'
+    : ['Palletways', 'XDP'].includes(delivery.carrier)
+      ? delivery.carrier
+      : '';
   if (!tab) return null;
 
   const source = `Courier Issues · ${tab}`;
-  const hasIssueRecord = (delivery.carrierIssueEntries || []).some(item =>
-    item.source === source);
+  const hasIssueRecord = (delivery.carrierIssueEntries || []).some(
+    (item) => item.source === source,
+  );
   if (!hasIssueRecord) {
     return {
       kind: 'missing-row',
@@ -944,31 +885,48 @@ function courierIssueFollowUpNotice(delivery) {
   if (tab !== 'Van' || String(delivery.providerStatus || '').toLowerCase() !== 'failed') {
     return null;
   }
-  const hasRemark = (delivery.followUps || []).some(item =>
-    item.status === source && String(item.remark || '').trim());
-  const hasRecordedAction = (delivery.carrierIssueEntries || []).some(item =>
-    item.source === source && [item.messageStatus, item.scheduledStatus, item.deliveredStatus]
-      .some(value => String(value || '').trim()));
-  return hasRemark || hasRecordedAction ? null : {
-    kind: 'missing-remark',
-    text: 'Courier Issues Excel: no follow-up remark recorded.',
-  };
+  const hasRemark = (delivery.followUps || []).some(
+    (item) => item.status === source && String(item.remark || '').trim(),
+  );
+  const hasRecordedAction = (delivery.carrierIssueEntries || []).some(
+    (item) =>
+      item.source === source &&
+      [item.messageStatus, item.scheduledStatus, item.deliveredStatus].some((value) =>
+        String(value || '').trim(),
+      ),
+  );
+  return hasRemark || hasRecordedAction
+    ? null
+    : {
+        kind: 'missing-remark',
+        text: 'Courier Issues Excel: no follow-up remark recorded.',
+      };
 }
 
-const pill = status => status ? stat(status) : '';
+const pill = (status) => (status ? stat(status) : '');
 
 function activityMarkerKind(source, title) {
   if (source === 'ow') return 'ow';
-  const text = String(title || '').toLowerCase().replace(/_/g, ' ');
+  const text = String(title || '')
+    .toLowerCase()
+    .replace(/_/g, ' ');
   if (/\blost\b/.test(text)) return 'lost';
-  if (/\bfailed\b|\bundeliverable\b|\bnot delivered\b|\bdelivery unsuccessful\b/.test(text)) return 'failed';
+  if (/\bfailed\b|\bundeliverable\b|\bnot delivered\b|\bdelivery unsuccessful\b/.test(text))
+    return 'failed';
   if (/\bdelivered\b/.test(text) && !/\bnot\b|\bunable\b/.test(text)) return 'delivered';
   return 'neutral';
 }
 
-function filterValues(value) { return (Array.isArray(value) ? value : [value]).filter(Boolean); }
-function compactFilter(values) { return values.length > 1 ? values : values[0] || ''; }
-function filterIncludes(value, candidate) { const values = filterValues(value); return !values.length || values.includes(candidate); }
+function filterValues(value) {
+  return (Array.isArray(value) ? value : [value]).filter(Boolean);
+}
+function compactFilter(values) {
+  return values.length > 1 ? values : values[0] || '';
+}
+function filterIncludes(value, candidate) {
+  const values = filterValues(value);
+  return !values.length || values.includes(candidate);
+}
 
 const UiSelect = (() => {
   const callbacks = new Map();
@@ -979,7 +937,10 @@ const UiSelect = (() => {
     const multiple = Boolean(config.multiple);
     const values = filterValues(value);
     const selected = options.find(([optionValue]) => String(optionValue) === String(value));
-    const label = multiple && values.length > 1 ? `${values.length} ${config.selectionLabel || 'selected'}` : selected?.[1] ?? config.placeholder ?? 'Select';
+    const label =
+      multiple && values.length > 1
+        ? `${values.length} ${config.selectionLabel || 'selected'}`
+        : (selected?.[1] ?? config.placeholder ?? 'Select');
     const classes = ['ui-select', config.className || ''].filter(Boolean).join(' ');
     const disabled = Boolean(config.disabled);
 
@@ -990,19 +951,25 @@ const UiSelect = (() => {
         <span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span>
       </button>
       <div class="ui-select-menu" role="menu" hidden>
-        ${options.map(([optionValue, optionLabel]) => {
-          const active = multiple ? (optionValue ? values.includes(optionValue) : !values.length) : String(optionValue) === String(value);
-          return `<button class="ui-select-option${active ? ' on' : ''}" type="button" role="${multiple ? 'menuitemcheckbox' : 'menuitemradio'}" aria-checked="${active}" data-ui-select-option data-value="${esc(optionValue)}" data-label="${esc(optionLabel)}">
+        ${options
+          .map(([optionValue, optionLabel]) => {
+            const active = multiple
+              ? optionValue
+                ? values.includes(optionValue)
+                : !values.length
+              : String(optionValue) === String(value);
+            return `<button class="ui-select-option${active ? ' on' : ''}" type="button" role="${multiple ? 'menuitemcheckbox' : 'menuitemradio'}" aria-checked="${active}" data-ui-select-option data-value="${esc(optionValue)}" data-label="${esc(optionLabel)}">
             <span>${esc(optionLabel)}</span>
             ${multiple ? `<span class="ui-select-checkbox" aria-hidden="true">${active ? ico('check', 13, 2) : ''}</span>` : active ? ico('check', 17, 2) : '<span class="ui-select-check" aria-hidden="true"></span>'}
           </button>`;
-        }).join('')}
+          })
+          .join('')}
       </div>
     </div>`;
   }
 
   function closeAll(exceptId = '') {
-    document.querySelectorAll('[data-ui-select-id]').forEach(select => {
+    document.querySelectorAll('[data-ui-select-id]').forEach((select) => {
       if (select.dataset.uiSelectId === exceptId) return;
       const menu = select.querySelector('.ui-select-menu');
       const trigger = select.querySelector('.ui-select-trigger');
@@ -1045,8 +1012,14 @@ const UiSelect = (() => {
     const value = option.dataset.value ?? '';
     const text = option.dataset.label ?? option.textContent.trim();
     if (select.dataset.uiSelectMultiple === 'true') {
-      const values = [...select.querySelectorAll('[data-ui-select-option][aria-checked="true"]')].map(item => item.dataset.value).filter(Boolean);
-      const next = !value ? [] : values.includes(value) ? values.filter(item => item !== value) : [...values, value];
+      const values = [...select.querySelectorAll('[data-ui-select-option][aria-checked="true"]')]
+        .map((item) => item.dataset.value)
+        .filter(Boolean);
+      const next = !value
+        ? []
+        : values.includes(value)
+          ? values.filter((item) => item !== value)
+          : [...values, value];
       const scroll = menu.scrollTop;
       callbacks.get(id)?.(compactFilter(next), input);
       const updated = selectRoot(id);
@@ -1054,24 +1027,28 @@ const UiSelect = (() => {
         updated.querySelector('.ui-select-menu').hidden = false;
         updated.querySelector('.ui-select-menu').scrollTop = scroll;
         updated.querySelector('.ui-select-trigger').setAttribute('aria-expanded', 'true');
-        [...updated.querySelectorAll('[data-ui-select-option]')].find(item => item.dataset.value === value)?.focus({preventScroll:true});
+        [...updated.querySelectorAll('[data-ui-select-option]')]
+          .find((item) => item.dataset.value === value)
+          ?.focus({ preventScroll: true });
       }
       return;
     }
-
 
     if (input) input.value = value;
     if (label) label.textContent = text;
     if (menu) menu.hidden = true;
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
 
-    select.querySelectorAll('.ui-select-option').forEach(item => {
+    select.querySelectorAll('.ui-select-option').forEach((item) => {
       const active = item === option;
       item.classList.toggle('on', active);
       item.setAttribute('aria-checked', String(active));
       const marker = item.querySelector('svg, .ui-select-check');
       if (marker) marker.remove();
-      item.insertAdjacentHTML('beforeend', active ? ico('check', 17, 2) : '<span class="ui-select-check" aria-hidden="true"></span>');
+      item.insertAdjacentHTML(
+        'beforeend',
+        active ? ico('check', 17, 2) : '<span class="ui-select-check" aria-hidden="true"></span>',
+      );
     });
 
     input?.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1104,14 +1081,15 @@ const UiSelect = (() => {
   };
 })();
 
-const tlink = delivery => {
+const tlink = (delivery) => {
   return delivery?.trackingUrl || '';
 };
 
 function purchaseChannel(delivery) {
   const details = delivery?.salesActivityDetails || {};
   const orderType = String(details['Order Type'] || '').trim();
-  if (['sales', 'hr_replacement'].includes(orderType.toLowerCase())) return 'Hygienic Cleaning Company (UK) LTD';
+  if (['sales', 'hr_replacement'].includes(orderType.toLowerCase()))
+    return 'Hygienic Cleaning Company (UK) LTD';
   // Orders saved before AH was imported retain their existing store identity.
   // A present but blank/unknown AH value must still use the new mapping.
   if (!Object.prototype.hasOwnProperty.call(delivery || {}, 'storeCode')) {
@@ -1119,20 +1097,42 @@ function purchaseChannel(delivery) {
     if (analysis.toLowerCase() === 'ebay0') return 'Ebay Bathroom Republic';
     if (analysis.toLowerCase() === 'ebay1') return 'EBay Willesden Bathroom';
     if (orderType.toLowerCase() === 'shopify') return analysis;
-    if (orderType.toLowerCase() === 'debenhams' && analysis.toLowerCase() === 'debenhams - neshome') return 'Debenhams - Neshome';
+    if (orderType.toLowerCase() === 'debenhams' && analysis.toLowerCase() === 'debenhams - neshome')
+      return 'Debenhams - Neshome';
     return orderType;
   }
-  const code = String(delivery?.storeCode || '').trim().toUpperCase();
-  return ({EBAY_BR: 'Ebay Bathroom Republic', EBAY_WB: 'EBay Willesden Bathroom',
-    AMAZON: 'Amazon', DEBENHAM: 'Debenhams - Neshome', 'B&Q': 'B&Q',
-    SHOPIFY: 'Shopify - Neshome', BATHPROF: 'Bathroom Republic - Website',
-    BATHREP: 'Bathroom Republic - Website', BATHROOM: 'Bathroom Republic - Website',
-    WILKO: 'Wilko', WAYFAIR: 'Wayfair'})[code] || '';
+  const code = String(delivery?.storeCode || '')
+    .trim()
+    .toUpperCase();
+  return (
+    {
+      EBAY_BR: 'Ebay Bathroom Republic',
+      EBAY_WB: 'EBay Willesden Bathroom',
+      AMAZON: 'Amazon',
+      DEBENHAM: 'Debenhams - Neshome',
+      'B&Q': 'B&Q',
+      SHOPIFY: 'Shopify - Neshome',
+      BATHPROF: 'Bathroom Republic - Website',
+      BATHREP: 'Bathroom Republic - Website',
+      BATHROOM: 'Bathroom Republic - Website',
+      WILKO: 'Wilko',
+      WAYFAIR: 'Wayfair',
+    }[code] || ''
+  );
 }
 
-const PURCHASE_STORES = ['Amazon', 'Hygienic Cleaning Company (UK) LTD', 'Debenhams - Neshome',
-  'B&Q', 'Ebay Bathroom Republic', 'EBay Willesden Bathroom', 'Shopify - Neshome',
-  'Bathroom Republic - Website', 'Wilko', 'Wayfair'];
+const PURCHASE_STORES = [
+  'Amazon',
+  'Hygienic Cleaning Company (UK) LTD',
+  'Debenhams - Neshome',
+  'B&Q',
+  'Ebay Bathroom Republic',
+  'EBay Willesden Bathroom',
+  'Shopify - Neshome',
+  'Bathroom Republic - Website',
+  'Wilko',
+  'Wayfair',
+];
 
 function purchaseStoreLogo(delivery, className = '') {
   const channel = purchaseChannel(delivery).toLowerCase().replace(/\s+/g, ' ').trim();
@@ -1148,7 +1148,9 @@ function purchaseStoreLogo(delivery, className = '') {
   else if (channel === 'bathroom republic - website') filename = 'ShpfyBR.png';
   else if (channel === 'wayfair') filename = 'wayfair.jpg';
   else if (channel === 'wilko' || channel === 'weiko') filename = 'wilko.png';
-  return filename ? `<img class="purchase-store-logo ${esc(className)}" src="/assets/${filename}" alt="${esc(purchaseChannel(delivery))}" title="${esc(purchaseChannel(delivery))}">` : '';
+  return filename
+    ? `<img class="purchase-store-logo ${esc(className)}" src="/assets/${filename}" alt="${esc(purchaseChannel(delivery))}" title="${esc(purchaseChannel(delivery))}">`
+    : '';
 }
 
 function cp(id, quiet = false) {
@@ -1170,7 +1172,7 @@ function cp(id, quiet = false) {
     });
 }
 
-const trackingButton = delivery => {
+const trackingButton = (delivery) => {
   const link = tlink(delivery);
   return `<button class="cb" ${link ? '' : 'disabled'} onclick="event.stopPropagation();cp('${delivery.id}')">${link ? 'Copy link' : 'No tracking link'}</button>`;
 };
@@ -1191,27 +1193,50 @@ async function dres() {
       const result = await DeliveryApi.list({ q: term, limit: 6 });
       if (dq.trim().toLowerCase().replace(/\s+/g, ' ') !== term) return;
       candidates = result.deliveries;
-      for (const delivery of candidates) if (!DeliveryStore.find(delivery.id)) DeliveryStore.add(delivery);
+      for (const delivery of candidates)
+        if (!DeliveryStore.find(delivery.id)) DeliveryStore.add(delivery);
     } catch (error) {
       container.textContent = error.message;
       return;
     }
   }
   const phoneTerm = term.replace(/\s/g, '');
-  const matches = candidates.filter(delivery => {
-    const fields = [delivery.trk, delivery.palletwaysSheetConsignmentNumber, delivery.order, delivery.orderRef, delivery.orderReference, delivery.cust, delivery.addr, delivery.phone]
-      .join(' ')
-      .toLowerCase();
-    return fields.includes(term)
-      || (phoneTerm.length > 3 && String(delivery.phone || '').replace(/\s/g, '').includes(phoneTerm));
-  }).slice(0, 6);
+  const matches = candidates
+    .filter((delivery) => {
+      const fields = [
+        delivery.trk,
+        delivery.palletwaysSheetConsignmentNumber,
+        delivery.order,
+        delivery.orderRef,
+        delivery.orderReference,
+        delivery.cust,
+        delivery.addr,
+        delivery.phone,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return (
+        fields.includes(term) ||
+        (phoneTerm.length > 3 &&
+          String(delivery.phone || '')
+            .replace(/\s/g, '')
+            .includes(phoneTerm))
+      );
+    })
+    .slice(0, 6);
 
   container.innerHTML = matches.length
-    ? matches.map(delivery => `<div class="rc" tabindex="0" onclick="op('${delivery.id}')" onkeydown="if(event.key==='Enter')op('${delivery.id}')">
+    ? matches
+        .map(
+          (
+            delivery,
+          ) => `<div class="rc" tabindex="0" onclick="op('${delivery.id}')" onkeydown="if(event.key==='Enter')op('${delivery.id}')">
         <div><b>${esc(delivery.cust)}</b><br><span class="mut">${esc(delivery.addr)}</span><br><span class="mut">${esc(delivery.phone)} · ${delivery.trk ? esc(delivery.trk) : 'No tracking no.'}</span></div>
         <div class="rcm">${stat(delivery.st, carrierStatusLabel(delivery))}<br><span class="mut">${delivery.reason ? esc(deliveryReason(delivery.reason).label) : delivery.date ? `${hd(delivery.date)}${delivery.win ? ` · ${delivery.win.replace('-', '–')}` : ''}` : 'Date unavailable'} · ${esc(delivery.carrier === 'Own van' ? 'Own van' : delivery.carrier)}</span></div>
         <div>${trackingButton(delivery)}</div>
-      </div>`).join('')
+      </div>`,
+        )
+        .join('')
     : '<div class="rc0">No match. Check the spelling, or try the order ID.</div>';
 }
 
@@ -1224,9 +1249,9 @@ function scheduleDashboardSearch() {
   dashboardSearchTimer = setTimeout(dres, 200);
 }
 
-const mt = values => !q || values.join(' ').toLowerCase().includes(q.toLowerCase());
+const mt = (values) => !q || values.join(' ').toLowerCase().includes(q.toLowerCase());
 
-const sq = value => {
+const sq = (value) => {
   q = value;
   R();
   const input = $('#q');
@@ -1236,32 +1261,66 @@ const sq = value => {
   }
 };
 
-const sb = (placeholder = 'Search tracking no., order ID, customer or postcode') => (
-  `<div class="bar"><input type="search" id="q" placeholder="${placeholder}" value="${esc(q)}" oninput="sq(this.value)" aria-label="Search"></div>`
-);
+const sb = (placeholder = 'Search tracking no., order ID, customer or postcode') =>
+  `<div class="bar"><input type="search" id="q" placeholder="${placeholder}" value="${esc(q)}" oninput="sq(this.value)" aria-label="Search"></div>`;
 
-const stale = delivery => {
-  const source = S.find(item => item[0] === delivery.carrier || (delivery.carrier === 'Own van' && item[0] === 'OptimoRoute'));
+const stale = (delivery) => {
+  const source = S.find(
+    (item) =>
+      item[0] === delivery.carrier || (delivery.carrier === 'Own van' && item[0] === 'OptimoRoute'),
+  );
   if (!source || source[2] === 'ok') return '';
   return `<div class="card" style="box-shadow:none;background:var(--k2);margin:10px 0">Data from ${source[0]} may be out of date: ${esc(source[3])}</div>`;
 };
 
-const deliveryNotifySub = delivery => {
-  if (!['Scheduled', 'Rescheduled', 'Out for Delivery'].includes(delivery.st) || !delivery.date) return '';
+const deliveryNotifySub = (delivery) => {
+  if (!['Scheduled', 'Rescheduled', 'Out for Delivery'].includes(delivery.st) || !delivery.date)
+    return '';
   return delivery.nt
-    ? `<small class="vx-sub ok">${ico('ok',14,2)}Customer notified</small>`
-    : `<small class="vx-sub">${ico('circ',14,2)}Not notified</small>`;
+    ? `<small class="vx-sub ok">${ico('ok', 14, 2)}Customer notified</small>`
+    : `<small class="vx-sub">${ico('circ', 14, 2)}Not notified</small>`;
 };
 
 function dashboardWidgetControls(key = dashboardWidgetFilter) {
-  if (key === 'charge-pending') return {scope:'Charge Pending (Remote Postcode)', conditions:'Charge Pending (Remote Postcode) ? All order dates'};
-  if (key === 'collect') return {scope:'Collect in Person', conditions:'Collect in Person ? All order dates'};
-  if (key === 'hold') return {scope:'On Hold', conditions:'On Hold or Unassigned'};
-  if (key === 'cancelled' || key === 'cancelled-month') return {scope:'Cancelled', conditions:`Cancelled ? Order date: ${key === 'cancelled-month' ? 'this month' : 'today'} (UK)`};
-  if (key === 'palletways-next-day') return {carrier:'Palletways', conditions:'Palletways ? Next Day ? Excludes Delivered, Cancelled and Return'};
-  if (key.startsWith('palletways-unbooked')) return {carrier:'Palletways', bookedIn:'no', conditions:`Palletways${key.endsWith('-b2c') ? ' B2C' : key.endsWith('-b2b') ? ' B2B' : ''} ? Booked in: No ? Excludes Delivered ? Current Sales Activity orders`};
-  if (key === 'out-of-stock') return {conditions:'Booking status: Out of Stock or O/S ? Excludes Delivered, Cancelled and Return'};
-  if (key === 'van-unscheduled') return {carrier:SELF_DELIVERY_GROUP, conditions:'Own van / Self Delivery ? Unscheduled, O/S, Out of Stock, On Hold or Open ? Excludes Delivered, Cancelled and Return'};
+  if (key === 'palletways-depot-3days')
+    return {
+      carrier: 'Palletways',
+      conditions: 'Confirmed delivery depot arrival · Over 72 hours · No recorded departure',
+    };
+  if (key === 'charge-pending')
+    return {
+      scope: 'Charge Pending (Remote Postcode)',
+      conditions: 'Charge Pending (Remote Postcode) ? All order dates',
+    };
+  if (key === 'collect')
+    return { scope: 'Collect in Person', conditions: 'Collect in Person ? All order dates' };
+  if (key === 'hold') return { scope: 'On Hold', conditions: 'On Hold or Unassigned' };
+  if (key === 'cancelled' || key === 'cancelled-month')
+    return {
+      scope: 'Cancelled',
+      conditions: `Cancelled ? Order date: ${key === 'cancelled-month' ? 'this month' : 'today'} (UK)`,
+    };
+  if (key === 'palletways-next-day')
+    return {
+      carrier: 'Palletways',
+      conditions: 'Palletways ? Next Day ? Excludes Delivered, Cancelled and Return',
+    };
+  if (key.startsWith('palletways-unbooked'))
+    return {
+      carrier: 'Palletways',
+      bookedIn: 'no',
+      conditions: `Palletways${key.endsWith('-b2c') ? ' B2C' : key.endsWith('-b2b') ? ' B2B' : ''} ? Booked in: No ? Excludes Delivered ? Current Sales Activity orders`,
+    };
+  if (key === 'out-of-stock')
+    return {
+      conditions: 'Booking status: Out of Stock or O/S ? Excludes Delivered, Cancelled and Return',
+    };
+  if (key === 'van-unscheduled')
+    return {
+      carrier: SELF_DELIVERY_GROUP,
+      conditions:
+        'Own van / Self Delivery ? Unscheduled, O/S, Out of Stock, On Hold or Open ? Excludes Delivered, Cancelled and Return',
+    };
   return {};
 }
 function applyDashboardWidgetControls() {
@@ -1293,12 +1352,14 @@ function go(target, statusFilter = '', scope = '', filters = {}) {
   $('.mn')?.setAttribute('aria-expanded', 'false');
 
   try {
-    let url = target === 'Deliveries' && trackingScope === 'today'
-      ? `${PAGE_URL[target]}?view=today` : PAGE_URL[target];
+    let url =
+      target === 'Deliveries' && trackingScope === 'today'
+        ? `${PAGE_URL[target]}?view=today`
+        : PAGE_URL[target];
     if (dashboardWidgetFilter) {
-      const query = new URLSearchParams({dashboard_widget: dashboardWidgetFilter});
+      const query = new URLSearchParams({ dashboard_widget: dashboardWidgetFilter });
       if (fsrc) query.set('carrier', fsrc);
-      filterValues(fstore).forEach(value => query.append('store', value));
+      filterValues(fstore).forEach((value) => query.append('store', value));
       url += `?${query}`;
     }
     history.pushState({ page: target }, '', url);
@@ -1309,7 +1370,7 @@ function go(target, statusFilter = '', scope = '', filters = {}) {
   R();
 }
 
-const rowAct = delivery => {
+const rowAct = (delivery) => {
   const link = tlink(delivery);
   return `<span class="ract">
   <button class="cpi" ${link ? '' : 'disabled'} title="${link ? 'Copy tracking link' : 'No tracking link yet'}" aria-label="Copy tracking link" onclick="event.stopPropagation();cpi(this,'${delivery.id}')">
@@ -1361,19 +1422,32 @@ const ScopeLiquid = (() => {
   }
 
   function capture(level = '') {
-    const selected = fluid || document.querySelector(`.tracking-scope-sections .fx-tab.on${level ? `[data-delivery-filter-action="${level}"]` : ''}`);
+    const selected =
+      fluid ||
+      document.querySelector(
+        `.tracking-scope-sections .fx-tab.on${level ? `[data-delivery-filter-action="${level}"]` : ''}`,
+      );
     const bounds = AtlasViewport.rect(selected);
     clear();
     return bounds;
   }
 
   function move(from, level = '') {
-    const target = document.querySelector(`.tracking-scope-sections .fx-tab.on${level ? `[data-delivery-filter-action="${level}"]` : ''}`);
-    if (!from || !target || matchMedia('(prefers-reduced-motion: reduce)').matches
-      || typeof target.animate !== 'function') return;
+    const target = document.querySelector(
+      `.tracking-scope-sections .fx-tab.on${level ? `[data-delivery-filter-action="${level}"]` : ''}`,
+    );
+    if (
+      !from ||
+      !target ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      typeof target.animate !== 'function'
+    )
+      return;
     const to = AtlasViewport.rect(target);
     if (Math.abs(from.left - to.left) < 1 && Math.abs(from.top - to.top) < 1) return;
-    const sameRow = Math.abs((from.top + from.height / 2) - (to.top + to.height / 2)) < Math.min(from.height, to.height) / 2;
+    const sameRow =
+      Math.abs(from.top + from.height / 2 - (to.top + to.height / 2)) <
+      Math.min(from.height, to.height) / 2;
     if (!sameRow) {
       // Enter on the destination row instead of crossing intervening controls.
       from = {
@@ -1395,17 +1469,44 @@ const ScopeLiquid = (() => {
     const frame = (progress, width, height, radius, rotate = 0) => ({
       left: `${from.left + (to.left - from.left) * progress + (from.width + (to.width - from.width) * progress - width) / 2 - origin.left}px`,
       top: `${to.top + (to.height - height) / 2 - origin.top}px`,
-      width: `${width}px`, height: `${height}px`, borderRadius: radius,
+      width: `${width}px`,
+      height: `${height}px`,
+      borderRadius: radius,
       transform: `rotate(${rotate * direction}deg)`,
     });
-    const travellingWidth = Math.min(180, Math.max(from.width, to.width) * .85);
-    motion = fluid.animate([
-      { ...frame(0, from.width, from.height, '12px'), opacity: sameRow ? 1 : 0, offset: 0 },
-      { ...frame(.12, from.width * .8, from.height * .85, '36% 64% 58% 42% / 48% 39% 61% 52%', -5), opacity: 1, offset: .18 },
-      { ...frame(.5, travellingWidth, from.height * .6, '65% 35% 38% 62% / 50% 65% 35% 50%', 4), offset: .48 },
-      { ...frame(.86, to.width * .82, to.height * 1.12, '38% 62% 63% 37% / 62% 43% 57% 38%', -3), offset: .76 },
-      { ...frame(1, to.width, to.height, '12px'), offset: 1 },
-    ], { duration: sameRow ? 680 : 520, easing: 'cubic-bezier(.22,.68,.22,1)', fill: 'forwards' });
+    const travellingWidth = Math.min(180, Math.max(from.width, to.width) * 0.85);
+    motion = fluid.animate(
+      [
+        { ...frame(0, from.width, from.height, '12px'), opacity: sameRow ? 1 : 0, offset: 0 },
+        {
+          ...frame(
+            0.12,
+            from.width * 0.8,
+            from.height * 0.85,
+            '36% 64% 58% 42% / 48% 39% 61% 52%',
+            -5,
+          ),
+          opacity: 1,
+          offset: 0.18,
+        },
+        {
+          ...frame(0.5, travellingWidth, from.height * 0.6, '65% 35% 38% 62% / 50% 65% 35% 50%', 4),
+          offset: 0.48,
+        },
+        {
+          ...frame(
+            0.86,
+            to.width * 0.82,
+            to.height * 1.12,
+            '38% 62% 63% 37% / 62% 43% 57% 38%',
+            -3,
+          ),
+          offset: 0.76,
+        },
+        { ...frame(1, to.width, to.height, '12px'), offset: 1 },
+      ],
+      { duration: sameRow ? 680 : 520, easing: 'cubic-bezier(.22,.68,.22,1)', fill: 'forwards' },
+    );
     motion.onfinish = clear;
   }
 
@@ -1413,8 +1514,12 @@ const ScopeLiquid = (() => {
 })();
 
 function fadeClearFilter(button) {
-  if (!button || matchMedia('(prefers-reduced-motion: reduce)').matches
-    || typeof button.animate !== 'function') return;
+  if (
+    !button ||
+    matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    typeof button.animate !== 'function'
+  )
+    return;
   const bounds = AtlasViewport.rect(button);
   const appearance = getComputedStyle(button);
   // Joined orange pieces soften into droplets as they separate.
@@ -1433,20 +1538,40 @@ function fadeClearFilter(button) {
     const joined = `polygon(${left}% 0%, ${middle}% 0%, ${right}% 0%, ${right}% 50%, ${right}% 100%, ${middle}% 100%, ${left}% 100%, ${left}% 50%)`;
     const liquid = `polygon(${left + 4}% 20%, ${middle}% 6%, ${right - 3}% 19%, ${right - 1}% 48%, ${right - 5}% 78%, ${middle - 2}% 94%, ${left + 2}% 79%, ${left}% 48%)`;
     Object.assign(fragment.style, {
-      left: `${bounds.left}px`, top: `${bounds.top}px`,
-      width: `${bounds.width}px`, height: `${bounds.height}px`,
-      background: appearance.background, color: appearance.color,
-      border: appearance.border, boxShadow: appearance.boxShadow,
+      left: `${bounds.left}px`,
+      top: `${bounds.top}px`,
+      width: `${bounds.width}px`,
+      height: `${bounds.height}px`,
+      background: appearance.background,
+      color: appearance.color,
+      border: appearance.border,
+      boxShadow: appearance.boxShadow,
       transformOrigin: `${middle}% 50%`,
       filter: 'blur(0.4px)',
     });
     document.body.append(fragment);
-    fragment.animate([
-      { opacity: 1, clipPath: joined, transform: 'translate(0, 0) scale(1) rotate(0)' },
-      { opacity: 0.85, clipPath: liquid, transform: `translate(${x * 0.55}px, ${y * 0.55}px) scale(.98, 1.08) rotate(${angle * 0.4}deg)`, offset: 0.45 },
-      { opacity: 0, clipPath: liquid, transform: `translate(${x}px, ${y}px) scale(.68, .8) rotate(${angle}deg)` },
-    ], { duration: 380, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' })
-      .finished.then(() => fragment.remove(), () => fragment.remove());
+    fragment
+      .animate(
+        [
+          { opacity: 1, clipPath: joined, transform: 'translate(0, 0) scale(1) rotate(0)' },
+          {
+            opacity: 0.85,
+            clipPath: liquid,
+            transform: `translate(${x * 0.55}px, ${y * 0.55}px) scale(.98, 1.08) rotate(${angle * 0.4}deg)`,
+            offset: 0.45,
+          },
+          {
+            opacity: 0,
+            clipPath: liquid,
+            transform: `translate(${x}px, ${y}px) scale(.68, .8) rotate(${angle}deg)`,
+          },
+        ],
+        { duration: 380, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' },
+      )
+      .finished.then(
+        () => fragment.remove(),
+        () => fragment.remove(),
+      );
   }
 }
 
@@ -1464,15 +1589,24 @@ const DeliveryFilters = (() => {
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
     const classifications = $('#tracking-classification-menu');
     if (classifications?.matches(':popover-open')) classifications.hidePopover();
-    $('[data-delivery-filter-action="toggle-classification"]')?.setAttribute('aria-expanded', 'false');
-    document.querySelectorAll('[data-booking-menu]').forEach(menu => {
+    $('[data-delivery-filter-action="toggle-classification"]')?.setAttribute(
+      'aria-expanded',
+      'false',
+    );
+    document.querySelectorAll('[data-booking-menu]').forEach((menu) => {
       if (menu.matches(':popover-open')) menu.hidePopover();
     });
-    document.querySelectorAll('[data-delivery-filter-action="toggle-booking"]').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
+    document
+      .querySelectorAll('[data-delivery-filter-action="toggle-booking"]')
+      .forEach((trigger) => trigger.setAttribute('aria-expanded', 'false'));
   }
 
   function hasOpenMenu() {
-    return Boolean($('#dpn:not([hidden])') || $('#tracking-classification-menu:popover-open') || $('[data-booking-menu]:popover-open'));
+    return Boolean(
+      $('#dpn:not([hidden])') ||
+        $('#tracking-classification-menu:popover-open') ||
+        $('[data-booking-menu]:popover-open'),
+    );
   }
 
   const bookingFields = {
@@ -1487,9 +1621,25 @@ const DeliveryFilters = (() => {
 
   function renderBookingMenus() {
     if (fsrc !== 'Palletways') return '';
-    return Object.entries(bookingFields).map(([field, [label, selected]]) => `<div class="tracking-classification-menu" id="tracking-${field}-menu" data-booking-menu popover="manual" role="menu" aria-label="Filter ${label}">
-      ${[['', 'All'], ['yes', 'Yes'], ['no', 'No']].map(([value, text]) => `<button class="tracking-classification-option ${value === selected() ? 'on' : ''}" type="button" role="menuitemradio" aria-checked="${value === selected()}" data-delivery-filter-action="booking" data-booking-field="${field}" data-value="${value}">${text}</button>`).join('')}
-    </div>`).join('');
+    return Object.entries(bookingFields)
+      .map(
+        ([
+          field,
+          [label, selected],
+        ]) => `<div class="tracking-classification-menu" id="tracking-${field}-menu" data-booking-menu popover="manual" role="menu" aria-label="Filter ${label}">
+      ${[
+        ['', 'All'],
+        ['yes', 'Yes'],
+        ['no', 'No'],
+      ]
+        .map(
+          ([value, text]) =>
+            `<button class="tracking-classification-option ${value === selected() ? 'on' : ''}" type="button" role="menuitemradio" aria-checked="${value === selected()}" data-delivery-filter-action="booking" data-booking-field="${field}" data-value="${value}">${text}</button>`,
+        )
+        .join('')}
+    </div>`,
+      )
+      .join('');
   }
 
   function toggleBooking(trigger) {
@@ -1511,14 +1661,19 @@ const DeliveryFilters = (() => {
   }
 
   function renderClassificationMenu() {
-    const classifications = trackingFilterFacets().filter(item => trackingMatchesScope(item)
-      && matchesDeliveryCarrier(item.carrier, fsrc)).map(item => item.classification);
-    const options = [...new Set(classifications.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const classifications = trackingFilterFacets()
+      .filter((item) => trackingMatchesScope(item) && matchesDeliveryCarrier(item.carrier, fsrc))
+      .map((item) => item.classification);
+    const options = [...new Set(classifications.filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b),
+    );
     return `<div class="tracking-classification-menu" id="tracking-classification-menu" popover="manual" role="menu" aria-label="${esc(fsrc || 'Delivery method')} classifications">
-      ${[['', 'All classifications'], ...options.map(value => [value, value])].map(([value, label]) => {
-        const selected = value ? fclassification.includes(value) : !fclassification.length;
-        return `<button class="tracking-classification-option tracking-classification-multi ${selected ? 'on' : ''}" type="button" role="menuitemcheckbox" aria-checked="${selected}" data-delivery-filter-action="classification" data-value="${esc(value)}"><span class="tracking-classification-check" aria-hidden="true">${selected ? ico('check', 14) : ''}</span><span>${esc(label)}</span></button>`;
-      }).join('')}
+      ${[['', 'All classifications'], ...options.map((value) => [value, value])]
+        .map(([value, label]) => {
+          const selected = value ? fclassification.includes(value) : !fclassification.length;
+          return `<button class="tracking-classification-option tracking-classification-multi ${selected ? 'on' : ''}" type="button" role="menuitemcheckbox" aria-checked="${selected}" data-delivery-filter-action="classification" data-value="${esc(value)}"><span class="tracking-classification-check" aria-hidden="true">${selected ? ico('check', 14) : ''}</span><span>${esc(label)}</span></button>`;
+        })
+        .join('')}
     </div>`;
   }
 
@@ -1542,15 +1697,22 @@ const DeliveryFilters = (() => {
 
   function syncClassificationFilter() {
     const menu = $('#tracking-classification-menu');
-    menu?.querySelectorAll('[data-delivery-filter-action="classification"]').forEach(option => {
-      const selected = option.dataset.value ? fclassification.includes(option.dataset.value) : !fclassification.length;
+    menu?.querySelectorAll('[data-delivery-filter-action="classification"]').forEach((option) => {
+      const selected = option.dataset.value
+        ? fclassification.includes(option.dataset.value)
+        : !fclassification.length;
       option.classList.toggle('on', selected);
       option.setAttribute('aria-checked', String(selected));
-      option.querySelector('.tracking-classification-check').innerHTML = selected ? ico('check', 14) : '';
+      option.querySelector('.tracking-classification-check').innerHTML = selected
+        ? ico('check', 14)
+        : '';
     });
     const trigger = $('[data-delivery-filter-action="toggle-classification"]');
     trigger?.classList.toggle('on', Boolean(fclassification.length));
-    if (trigger) trigger.title = fclassification.length ? fclassification.join(', ') : 'Filter delivery-method classification';
+    if (trigger)
+      trigger.title = fclassification.length
+        ? fclassification.join(', ')
+        : 'Filter delivery-method classification';
   }
 
   function toggleDate() {
@@ -1572,14 +1734,24 @@ const DeliveryFilters = (() => {
 
   function popSelection(level, value) {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const target = [...document.querySelectorAll(`[data-delivery-filter-action="${level}"]`)]
-      .find(button => button.dataset.value === value);
+    const target = [...document.querySelectorAll(`[data-delivery-filter-action="${level}"]`)].find(
+      (button) => button.dataset.value === value,
+    );
     // Keep the button out of a transform stacking context so its content
     // stays above the travelling liquid throughout the pop.
-    target?.querySelectorAll(':scope > span').forEach(content => content.animate?.([
-      {transform: 'scale(1)'}, {transform: 'scale(1.06, .92)', offset: .3},
-      {transform: 'scale(.98, 1.04)', offset: .65}, {transform: 'scale(1)'},
-    ], {duration: 360, easing: 'cubic-bezier(.22,.8,.3,1)'}));
+    target
+      ?.querySelectorAll(':scope > span')
+      .forEach((content) =>
+        content.animate?.(
+          [
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06, .92)', offset: 0.3 },
+            { transform: 'scale(.98, 1.04)', offset: 0.65 },
+            { transform: 'scale(1)' },
+          ],
+          { duration: 360, easing: 'cubic-bezier(.22,.8,.3,1)' },
+        ),
+      );
   }
 
   function setScope(value, level = 'general', toggle = true) {
@@ -1589,16 +1761,37 @@ const DeliveryFilters = (() => {
     UiSelect.closeAll();
     if (level === 'general') {
       trackingScope = toggle && trackingScope === value ? '' : value;
-      if (!trackingLevelCounts().carriers[fsrc]) fsrc = '';
+      if (
+        !trackingLevelCounts().carriers[fsrc] &&
+        dashboardWidgetFilter !== 'palletways-depot-3days'
+      )
+        fsrc = '';
     } else {
       fsrc = fsrc === value ? '' : value;
     }
     fmethod = '';
     fclassification = [];
-    if (previousCarrier !== fsrc) { fbookedIn = ''; fbookInRequest = ''; }
-    if (previousCarrier !== fsrc && [previousCarrier, fsrc].some(carrier => ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(carrier))) fs = '';
-    fs = compactFilter(filterValues(fs).filter(value => trackingLevelCounts().statuses[value]));
-    history.replaceState({ page: 'Deliveries' }, '', trackingScope === 'today' ? 'deliveries.html?view=today' : 'deliveries.html');
+    if (previousCarrier !== fsrc) {
+      fbookedIn = '';
+      fbookInRequest = '';
+      if (fsrc !== 'Palletways' && dashboardWidgetFilter === 'palletways-depot-3days') {
+        dashboardWidgetFilter = '';
+        trackingWidgetFacets = null;
+      }
+    }
+    if (
+      previousCarrier !== fsrc &&
+      [previousCarrier, fsrc].some((carrier) =>
+        ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(carrier),
+      )
+    )
+      fs = '';
+    fs = compactFilter(filterValues(fs).filter((value) => trackingLevelCounts().statuses[value]));
+    history.replaceState(
+      { page: 'Deliveries' },
+      '',
+      trackingScope === 'today' ? 'deliveries.html?view=today' : 'deliveries.html',
+    );
     R();
     ScopeLiquid.move(previousBubble, level);
     popSelection(level, value);
@@ -1606,17 +1799,49 @@ const DeliveryFilters = (() => {
 
   function render() {
     const stores = availableTrackingStores();
-    if (dashboardWidgetFilter) filterValues(fstore).forEach(value => { if (!stores.includes(value)) stores.push(value); });
-    if (document.body.dataset.live !== 'true' || liveReady) fstore = compactFilter(filterValues(fstore).filter(value => stores.includes(value)));
+    if (dashboardWidgetFilter)
+      filterValues(fstore).forEach((value) => {
+        if (!stores.includes(value)) stores.push(value);
+      });
+    if (document.body.dataset.live !== 'true' || liveReady)
+      fstore = compactFilter(filterValues(fstore).filter((value) => stores.includes(value)));
     const levelCounts = trackingLevelCounts();
     const counts = levelCounts.statuses;
     const statusOptions = [
       ['', `All statuses (${Object.values(counts).reduce((sum, count) => sum + count, 0)})`],
-      ...(['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc) ? Object.keys(counts).sort((a, b) => a.localeCompare(b))
-        : ['Awaiting', 'Unscheduled', 'Scheduled', 'Out for Delivery', 'Delivered', 'Failed', 'Rejected', 'Lost', 'Cancelled', 'Return', 'Unassigned'])
-        .filter(status => counts[status] || filterValues(fs).includes(status)).map(status => [status, `${status.startsWith('amazon:') ? amazonStatusLabel(status.slice(7)) : status.startsWith('stopstart:') ? status.slice(10) : status.startsWith('xdp:') ? amazonStatusLabel(status.slice(4)) : status.startsWith('palletways:') ? status.slice(11) : status} (${counts[status] || 0})`]),
+      ...(['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc)
+        ? Object.keys(counts).sort((a, b) => a.localeCompare(b))
+        : [
+            'Awaiting',
+            'Unscheduled',
+            'Scheduled',
+            'Out for Delivery',
+            'Delivered',
+            'Failed',
+            'Rejected',
+            'Lost',
+            'Cancelled',
+            'Return',
+            'Unassigned',
+          ]
+      )
+        .filter((status) => counts[status] || filterValues(fs).includes(status))
+        .map((status) => [
+          status,
+          `${status.startsWith('amazon:') ? amazonStatusLabel(status.slice(7)) : status.startsWith('stopstart:') ? status.slice(10) : status.startsWith('xdp:') ? amazonStatusLabel(status.slice(4)) : status.startsWith('palletways:') ? status.slice(11) : status} (${counts[status] || 0})`,
+        ]),
     ];
-    const hasFilters = Boolean(fstore || fs || fsrc || fclassification.length || fbookedIn || fbookInRequest || fd || ft || trackingScope);
+    const hasFilters = Boolean(
+      fstore ||
+        fs ||
+        fsrc ||
+        fclassification.length ||
+        fbookedIn ||
+        fbookInRequest ||
+        fd ||
+        ft ||
+        trackingScope,
+    );
 
     return `<div class="bar delivery-filters">
       <label class="delivery-search">
@@ -1624,24 +1849,67 @@ const DeliveryFilters = (() => {
         <input type="search" id="q" data-delivery-search placeholder="Search delivery" value="${esc(q)}" aria-label="Search deliveries">
       </label>
 
-      ${UiSelect.render('dstoreValue', fstore, [['', 'All stores'], ...stores.map(store => [store, store])], {
-        ariaLabel: 'Filter by store',
-        className: 'delivery-store-select',
-        multiple: true, selectionLabel: 'stores selected',
-        onChange: value => { fstore = value; R(); },
-      })}
-      ${UiSelect.render('dscopeValue', trackingScope, TRACKING_SCOPE_OPTIONS.filter(([value]) => value !== 'hygienic' || !TrackingVisibility.enabled()).map(([value, label]) => [value,
-        value ? `${label} (${levelCounts.facets.filter(item => trackingMatchesScope(item, value)).reduce((sum, item) => sum + item.count, 0)})` : 'All categories']), {
-        ariaLabel: 'Filter general and non-delivery',
-        className: 'delivery-scope-select',
-        multiple: true, selectionLabel: 'categories selected',
-        onChange: value => setScope(value, 'general', false),
-      })}
+      ${UiSelect.render(
+        'dstoreValue',
+        fstore,
+        [['', 'All stores'], ...stores.map((store) => [store, store])],
+        {
+          ariaLabel: 'Filter by store',
+          className: 'delivery-store-select',
+          multiple: true,
+          selectionLabel: 'stores selected',
+          onChange: (value) => {
+            fstore = value;
+            R();
+          },
+        },
+      )}
+      ${UiSelect.render(
+        'dscopeValue',
+        compactFilter([
+          ...filterValues(trackingScope),
+          ...(fsrc === 'Palletways' && dashboardWidgetFilter === 'palletways-depot-3days'
+            ? ['palletways-depot-3days']
+            : []),
+        ]),
+        [
+          ...TRACKING_SCOPE_OPTIONS.filter(
+            ([value]) => value !== 'hygienic' || !TrackingVisibility.enabled(),
+          ).map(([value, label]) => [
+            value,
+            value
+              ? `${label} (${levelCounts.facets.filter((item) => trackingMatchesScope(item, value)).reduce((sum, item) => sum + item.count, 0)})`
+              : 'All categories',
+          ]),
+          ...(fsrc === 'Palletways' ? [['palletways-depot-3days', 'At Depot 3> Days']] : []),
+        ],
+        {
+          ariaLabel: 'Filter categories',
+          className: 'delivery-scope-select',
+          multiple: true,
+          selectionLabel: 'categories selected',
+          onChange: (value) => {
+            const selected = filterValues(value);
+            if (fsrc === 'Palletways' && selected.includes('palletways-depot-3days')) {
+              dashboardWidgetFilter = 'palletways-depot-3days';
+            } else if (dashboardWidgetFilter === 'palletways-depot-3days') {
+              dashboardWidgetFilter = '';
+            }
+            trackingWidgetFacets = null;
+            setScope(
+              compactFilter(selected.filter((item) => item !== 'palletways-depot-3days')),
+              'general',
+              false,
+            );
+          },
+        },
+      )}
       ${UiSelect.render('dstatusValue', fs, statusOptions, {
         ariaLabel: 'Filter by status',
         className: 'delivery-select',
-        multiple: true, selectionLabel: 'statuses selected',
-        onChange: value => {
+        multiple: true,
+        selectionLabel: 'statuses selected',
+        onChange: (value) => {
           fs = value;
           R();
         },
@@ -1700,9 +1968,10 @@ const DeliveryFilters = (() => {
     if (action === 'classification') {
       const value = actionButton.dataset.value || '';
       if (!value) fclassification = [];
-      else if (fclassification.includes(value)) fclassification = fclassification.filter(item => item !== value);
+      else if (fclassification.includes(value))
+        fclassification = fclassification.filter((item) => item !== value);
       else fclassification = [...fclassification, value];
-      fs = compactFilter(filterValues(fs).filter(value => trackingLevelCounts().statuses[value]));
+      fs = compactFilter(filterValues(fs).filter((value) => trackingLevelCounts().statuses[value]));
       syncClassificationFilter();
       const filters = document.querySelector('.delivery-filters');
       if (filters) filters.outerHTML = render();
@@ -1793,9 +2062,10 @@ let sidebarWaterId = 0;
 function sidebarWaterBounds(from, to, progress, collapsed) {
   const eased = 1 - Math.pow(1 - progress, 4);
   const pulse = Math.sin(Math.PI * progress) * Math.exp(-progress * 2);
-  const mix = key => from[key] + (to[key] - from[key]) * eased;
+  const mix = (key) => from[key] + (to[key] - from[key]) * eased;
   return {
-    left: mix('left'), top: mix('top'),
+    left: mix('left'),
+    top: mix('top'),
     width: mix('width') + pulse * (collapsed ? -12 : 18),
     height: mix('height'),
     pulse,
@@ -1811,7 +2081,12 @@ function animateSidebarWater(sidebar, from, to, collapsed, duration, startedAt) 
   const layer = document.createElement('div');
   layer.className = 'sidebar-water-layer';
   layer.setAttribute('aria-hidden', 'true');
-  Object.assign(layer.style, { left: `${origin.x}px`, top: `${origin.y}px`, width: `${width}px`, height: `${height}px` });
+  Object.assign(layer.style, {
+    left: `${origin.x}px`,
+    top: `${origin.y}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+  });
   layer.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="${id}-merge" x="-25%" y="-10%" width="150%" height="120%" color-interpolation-filters="sRGB">
@@ -1839,7 +2114,9 @@ function animateSidebarWater(sidebar, from, to, collapsed, duration, startedAt) 
   </svg>`;
   document.body.append(layer);
   sidebar.classList.add('sidebar-water-active');
-  const paths = ['body', 'clip', 'glass', 'rim'].map(name => layer.querySelector(`[data-water-${name}]`));
+  const paths = ['body', 'clip', 'glass', 'rim'].map((name) =>
+    layer.querySelector(`[data-water-${name}]`),
+  );
   const drops = [...layer.querySelectorAll('[data-water-drop]')];
   const ribbons = [...layer.querySelectorAll('[data-water-ribbon]')];
   const displacement = layer.querySelector('feDisplacementMap');
@@ -1851,42 +2128,50 @@ function animateSidebarWater(sidebar, from, to, collapsed, duration, startedAt) 
     layer.remove();
     sidebar.classList.remove('sidebar-water-active');
   };
-  const tick = now => {
+  const tick = (now) => {
     if (disposed) return;
     const t = Math.min(1, Math.max(0, (now - startedAt) / duration));
     const bounds = sidebarWaterBounds(from, to, t, collapsed);
-    const x = bounds.left - origin.x, y = bounds.top - origin.y;
-    const w = bounds.width, h = bounds.height;
+    const x = bounds.left - origin.x,
+      y = bounds.top - origin.y;
+    const w = bounds.width,
+      h = bounds.height;
     const r = Math.min(24, w / 3);
     const energy = Math.sin(Math.PI * t) * (1 - t);
     const wave = Math.sin(t * Math.PI * 3.5) * energy * 24;
     // The long edge bows, then releases a travelling wave as the surface settles.
-    const d = `M ${x+r} ${y} Q ${x+w/2} ${y} ${x+w-r} ${y}
-      Q ${x+w} ${y} ${x+w} ${y+r}
-      C ${x+w+wave} ${y+h*.25} ${x+w-wave*.7} ${y+h*.4} ${x+w} ${y+h*.5}
-      C ${x+w+wave*.6} ${y+h*.64} ${x+w-wave*.45} ${y+h*.82} ${x+w} ${y+h-r}
-      Q ${x+w} ${y+h} ${x+w-r} ${y+h}
-      Q ${x+w/2} ${y+h} ${x+r} ${y+h}
-      Q ${x} ${y+h} ${x} ${y+h-r}
-      C ${x-wave*.3} ${y+h*.7} ${x+wave*.3} ${y+h*.3} ${x} ${y+r}
-      Q ${x} ${y} ${x+r} ${y} Z`;
-    paths.forEach(path => path.setAttribute('d', d));
+    const d = `M ${x + r} ${y} Q ${x + w / 2} ${y} ${x + w - r} ${y}
+      Q ${x + w} ${y} ${x + w} ${y + r}
+      C ${x + w + wave} ${y + h * 0.25} ${x + w - wave * 0.7} ${y + h * 0.4} ${x + w} ${y + h * 0.5}
+      C ${x + w + wave * 0.6} ${y + h * 0.64} ${x + w - wave * 0.45} ${y + h * 0.82} ${x + w} ${y + h - r}
+      Q ${x + w} ${y + h} ${x + w - r} ${y + h}
+      Q ${x + w / 2} ${y + h} ${x + r} ${y + h}
+      Q ${x} ${y + h} ${x} ${y + h - r}
+      C ${x - wave * 0.3} ${y + h * 0.7} ${x + wave * 0.3} ${y + h * 0.3} ${x} ${y + r}
+      Q ${x} ${y} ${x + r} ${y} Z`;
+    paths.forEach((path) => path.setAttribute('d', d));
     paths[2].setAttribute('opacity', String(energy * 1.8));
-    paths[3].setAttribute('opacity', String(energy * .8));
+    paths[3].setAttribute('opacity', String(energy * 0.8));
     displacement.setAttribute('scale', String(energy * 16));
     drops.forEach((drop, index) => {
-      const phase = Math.max(0, Math.min(1, (t - .08 - index * .035) / .72));
+      const phase = Math.max(0, Math.min(1, (t - 0.08 - index * 0.035) / 0.72));
       const lift = Math.sin(Math.PI * phase);
       const radius = lift * (5 + index * 1.3) * (1 - t);
       drop.setAttribute('cx', String(x + w + lift * (12 + index * 5)));
-      drop.setAttribute('cy', String(y + h * (.2 + index * .19) + Math.sin(phase * Math.PI * 2) * 18));
+      drop.setAttribute(
+        'cy',
+        String(y + h * (0.2 + index * 0.19) + Math.sin(phase * Math.PI * 2) * 18),
+      );
       drop.setAttribute('rx', String(radius));
-      drop.setAttribute('ry', String(radius * (1.4 - lift * .5)));
+      drop.setAttribute('ry', String(radius * (1.4 - lift * 0.5)));
     });
     ribbons.forEach((ribbon, index) => {
-      const center = y + h * (.18 + index * .27) + t * 34;
-      ribbon.setAttribute('d', `M ${x-10} ${center} C ${x+w*.3} ${center-30*energy} ${x+w*.65} ${center+50*energy} ${x+w+10} ${center-12} M ${x+w-9-index*4} ${y+r} Q ${x+w-26-wave} ${y+h*.5} ${x+w-10-index*4} ${y+h-r}`);
-      ribbon.setAttribute('opacity', String(energy * (.42 - index * .1)));
+      const center = y + h * (0.18 + index * 0.27) + t * 34;
+      ribbon.setAttribute(
+        'd',
+        `M ${x - 10} ${center} C ${x + w * 0.3} ${center - 30 * energy} ${x + w * 0.65} ${center + 50 * energy} ${x + w + 10} ${center - 12} M ${x + w - 9 - index * 4} ${y + r} Q ${x + w - 26 - wave} ${y + h * 0.5} ${x + w - 10 - index * 4} ${y + h - r}`,
+      );
+      ribbon.setAttribute('opacity', String(energy * (0.42 - index * 0.1)));
     });
     if (t < 1) request = requestAnimationFrame(tick);
     else cleanup();
@@ -1900,17 +2185,25 @@ function setSidebarCollapsed(collapsed) {
   const sidebar = $('#side');
   if (app.classList.contains('cl') === collapsed) return;
   const desktop = matchMedia('(min-width:761px)').matches;
-  const animate = desktop && !matchMedia('(prefers-reduced-motion: reduce)').matches
-    && typeof sidebar.animate === 'function';
+  const animate =
+    desktop &&
+    !matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    typeof sidebar.animate === 'function';
   const from = animate ? AtlasViewport.rect(sidebar) : null;
   const fromRadius = animate ? getComputedStyle(sidebar).borderRadius : '';
-  const content = animate ? [...sidebar.querySelectorAll('.sidebar-app-icon img, .side-main a, .side-main a svg, .side-bottom a, .side-bottom a svg, .sidebar-expand')] : [];
-  const contentBefore = content.map(element => ({
+  const content = animate
+    ? [
+        ...sidebar.querySelectorAll(
+          '.sidebar-app-icon img, .side-main a, .side-main a svg, .side-bottom a, .side-bottom a svg, .sidebar-expand',
+        ),
+      ]
+    : [];
+  const contentBefore = content.map((element) => ({
     bounds: AtlasViewport.rect(element),
     opacity: getComputedStyle(element).opacity,
   }));
   sidebarMotion?.cancel();
-  sidebarContentMotions.forEach(motion => motion.cancel());
+  sidebarContentMotions.forEach((motion) => motion.cancel());
   sidebarContentMotions = [];
   sidebarWaterCleanup();
   sidebar.style.transition = 'none';
@@ -1923,49 +2216,72 @@ function setSidebarCollapsed(collapsed) {
   }
   const to = AtlasViewport.rect(sidebar);
   const frame = (bounds, radius) => ({
-    left: `${bounds.left}px`, top: `${bounds.top}px`,
-    width: `${bounds.width}px`, height: `${bounds.height}px`,
-    transform: 'none', borderRadius: radius,
+    left: `${bounds.left}px`,
+    top: `${bounds.top}px`,
+    width: `${bounds.width}px`,
+    height: `${bounds.height}px`,
+    transform: 'none',
+    borderRadius: radius,
   });
   const duration = collapsed ? 650 : 750;
-  const contentAfter = content.map(element => AtlasViewport.rect(element));
+  const contentAfter = content.map((element) => AtlasViewport.rect(element));
   sidebarContentMotions = content.map((element, index) => {
     const before = contentBefore[index];
     const after = contentAfter[index];
     const parentIndex = element.matches('a svg') ? content.indexOf(element.closest('a')) : -1;
     const parentAfter = parentIndex >= 0 ? contentAfter[parentIndex] : null;
     const parentBefore = parentIndex >= 0 ? contentBefore[parentIndex].bounds : null;
-    const dx = before.bounds.left - after.left - (parentBefore ? parentBefore.left - parentAfter.left : 0);
-    const dy = before.bounds.top - after.top - (parentBefore ? parentBefore.top - parentAfter.top : 0);
-    const motion = element.animate([
-      { transform: `translate(${dx}px, ${dy}px)`, opacity: before.opacity },
-      { transform: 'translate(0, 0)', opacity: getComputedStyle(element).opacity },
-    ], {
-      duration: duration - 100,
-      easing: 'cubic-bezier(.22, .8, .24, 1)',
-    });
-    motion.finished.then(() => {
-      sidebarContentMotions = sidebarContentMotions.filter(item => item !== motion);
-    }, () => {});
+    const dx =
+      before.bounds.left - after.left - (parentBefore ? parentBefore.left - parentAfter.left : 0);
+    const dy =
+      before.bounds.top - after.top - (parentBefore ? parentBefore.top - parentAfter.top : 0);
+    const motion = element.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px)`, opacity: before.opacity },
+        { transform: 'translate(0, 0)', opacity: getComputedStyle(element).opacity },
+      ],
+      {
+        duration: duration - 100,
+        easing: 'cubic-bezier(.22, .8, .24, 1)',
+      },
+    );
+    motion.finished.then(
+      () => {
+        sidebarContentMotions = sidebarContentMotions.filter((item) => item !== motion);
+      },
+      () => {},
+    );
     return motion;
   });
   const toRadius = getComputedStyle(sidebar).borderRadius;
   const frames = Array.from({ length: 61 }, (_, index) => {
     const t = index / 60;
     const bounds = sidebarWaterBounds(from, to, t, collapsed);
-    return { ...frame(bounds, index === 0 ? fromRadius : index === 60 ? toRadius
-      : `${24 + bounds.pulse * 24}px ${24 + bounds.pulse * 38}px ${24 + bounds.pulse * 18}px ${24 + bounds.pulse * 30}px`), offset: t };
+    return {
+      ...frame(
+        bounds,
+        index === 0
+          ? fromRadius
+          : index === 60
+            ? toRadius
+            : `${24 + bounds.pulse * 24}px ${24 + bounds.pulse * 38}px ${24 + bounds.pulse * 18}px ${24 + bounds.pulse * 30}px`,
+      ),
+      offset: t,
+    };
   });
   const startedAt = performance.now();
   const motion = sidebar.animate(frames, { duration, easing: 'linear' });
   sidebarWaterCleanup = animateSidebarWater(sidebar, from, to, collapsed, duration, startedAt);
   sidebarMotion = motion;
-  motion.finished.then(() => {
-    if (sidebarMotion !== motion) return;
-    sidebarMotion = null;
-    sidebarWaterCleanup();
-    sidebar.style.removeProperty('transition');
-  }, () => {});
+  motion.finished.then(
+    () => {
+      if (sidebarMotion !== motion) return;
+      sidebarMotion = null;
+      sidebarWaterCleanup();
+      sidebar.style.removeProperty('transition');
+    },
+    () => {},
+  );
 }
 
 const isOrderDetailPage = () => ['Dashboard', 'Deliveries', 'Failed Deliveries'].includes(page);
@@ -1973,7 +2289,8 @@ const isOrderDetailPage = () => ['Dashboard', 'Deliveries', 'Failed Deliveries']
 const DeliveryDetail = (() => {
   const container = () => $('#dr');
   let galleryIndex = null;
-  let externalGallery = null, galleryOpener = null;
+  let externalGallery = null,
+    galleryOpener = null;
   let galleryPortal = null;
   let galleryTransform = { scale: 1, rotation: 0, x: 0, y: 0 };
   let galleryDrag = null;
@@ -1984,16 +2301,21 @@ const DeliveryDetail = (() => {
 
   function podItemsFor(delivery) {
     const podUrl = delivery?.podUrl || delivery?.proofUrl || '';
-    const podImageUrl = delivery?.podImageUrl || (/\.(?:png|jpe?g|webp|gif|svg)(?:[?#]|$)/i.test(podUrl) ? podUrl : '');
+    const podImageUrl =
+      delivery?.podImageUrl ||
+      (/\.(?:png|jpe?g|webp|gif|svg)(?:[?#]|$)/i.test(podUrl) ? podUrl : '');
     return Array.isArray(delivery?.podPhotos) && delivery.podPhotos.length
-      ? delivery.podPhotos.filter(item => item && item.url)
-      : podUrl ? [{ url: podUrl, kind: 'Photo', imageUrl: podImageUrl }] : [];
+      ? delivery.podPhotos.filter((item) => item && item.url)
+      : podUrl
+        ? [{ url: podUrl, kind: 'Photo', imageUrl: podImageUrl }]
+        : [];
   }
 
   function podPreviewMarkup(delivery, item, index, extraCount = 0) {
     const label = item.kind === 'Signature' ? 'Signature' : `Photo ${index + 1}`;
     const imageUrl = item.imageUrl || (Array.isArray(delivery.podPhotos) ? item.url : '');
-    if (!imageUrl) return `<a class="qd-track-link" href="${esc(item.url)}" target="_blank" rel="noopener">Open proof of delivery ${ico('right', 14, 2)}</a>`;
+    if (!imageUrl)
+      return `<a class="qd-track-link" href="${esc(item.url)}" target="_blank" rel="noopener">Open proof of delivery ${ico('right', 14, 2)}</a>`;
     const preview = `<img class="qd-pod-image" data-pod-index="${index}" src="${esc(imageUrl)}" alt="${esc(label)}" loading="lazy" decoding="async">`;
 
     return `<button class="qd-pod-thumb" type="button" data-detail-action="open-pod-gallery" data-pod-index="${index}" aria-label="${extraCount ? `View ${extraCount} more images` : `View ${esc(label)}`}">
@@ -2007,12 +2329,12 @@ const DeliveryDetail = (() => {
     galleryIndex = null;
     container()?.querySelector('.qd-gallery-viewer')?.remove();
     if (galleryPortal) {
-      const {parent, next} = galleryPortal;
+      const { parent, next } = galleryPortal;
       parent.insertBefore(container(), next?.parentNode === parent ? next : null);
       galleryPortal = null;
     }
     externalGallery = null;
-    if (galleryOpener?.isConnected) galleryOpener.focus({preventScroll:true});
+    if (galleryOpener?.isConnected) galleryOpener.focus({ preventScroll: true });
     galleryOpener = null;
   }
 
@@ -2021,7 +2343,8 @@ const DeliveryDetail = (() => {
     galleryDrag = null;
     if (!drag) return;
     drag.image.classList.remove('is-dragging');
-    if (drag.image.hasPointerCapture(drag.pointerId)) drag.image.releasePointerCapture(drag.pointerId);
+    if (drag.image.hasPointerCapture(drag.pointerId))
+      drag.image.releasePointerCapture(drag.pointerId);
   }
 
   function applyGalleryTransform() {
@@ -2032,7 +2355,7 @@ const DeliveryDetail = (() => {
     if (image.naturalWidth && image.naturalHeight && canvas.clientWidth && canvas.clientHeight) {
       const fit = Math.min(
         canvas.clientWidth / (rotated ? image.naturalHeight : image.naturalWidth),
-        canvas.clientHeight / (rotated ? image.naturalWidth : image.naturalHeight)
+        canvas.clientHeight / (rotated ? image.naturalWidth : image.naturalHeight),
       );
       image.style.width = `${image.naturalWidth * fit}px`;
       image.style.height = `${image.naturalHeight * fit}px`;
@@ -2072,19 +2395,29 @@ const DeliveryDetail = (() => {
     galleryIndex = (index + items.length) % items.length;
     if (!preserveView) galleryTransform = { scale: 1, rotation: 0, x: 0, y: 0 };
     const item = items[galleryIndex];
-    const label = externalGallery ? delivery.order : item.kind === 'Signature' ? 'Signature' : 'Proof of delivery photo';
+    const label = externalGallery
+      ? delivery.order
+      : item.kind === 'Signature'
+        ? 'Signature'
+        : 'Proof of delivery photo';
     const imageUrl = item.imageUrl || (Array.isArray(delivery.podPhotos) ? item.url : '');
     container().querySelector('.qd-gallery-viewer')?.remove();
-    container().insertAdjacentHTML('beforeend', `<div class="qd-gallery-viewer" role="dialog" aria-modal="true" aria-label="${externalGallery ? 'Claim pictures' : 'Proof of delivery images'}">
+    container().insertAdjacentHTML(
+      'beforeend',
+      `<div class="qd-gallery-viewer" role="dialog" aria-modal="true" aria-label="${externalGallery ? 'Claim pictures' : 'Proof of delivery images'}">
       <div class="qd-gallery-backdrop" data-detail-action="close-gallery"></div>
       <div class="qd-gallery-panel">
         <div class="qd-gallery-head"><div><b>${esc(label)}</b><span>${galleryIndex + 1} of ${items.length}</span></div>
-          ${imageUrl ? `<div class="qd-gallery-tools" role="toolbar" aria-label="Image controls">
+          ${
+            imageUrl
+              ? `<div class="qd-gallery-tools" role="toolbar" aria-label="Image controls">
             <button type="button" data-detail-action="rotate-pod" aria-label="Rotate image clockwise" title="Rotate 90 degrees">&#8635;</button>
             <button type="button" data-detail-action="zoom-pod-out" aria-label="Zoom out" title="Zoom out">&#8722;</button>
             <button type="button" class="qd-gallery-zoom-value" data-detail-action="reset-pod-view" aria-label="Reset image view" title="Reset image view">100%</button>
             <button type="button" data-detail-action="zoom-pod-in" aria-label="Zoom in" title="Zoom in">+</button>
-          </div>` : '<div></div>'}
+          </div>`
+              : '<div></div>'
+          }
           <button type="button" class="qd-gallery-close" data-detail-action="close-gallery" aria-label="Close image viewer">${ico('x', 20)}</button></div>
         <div class="qd-gallery-stage">
           ${items.length > 1 ? `<button type="button" class="qd-gallery-arrow" data-detail-action="previous-pod" aria-label="Previous image">&#8249;</button>` : ''}
@@ -2093,7 +2426,8 @@ const DeliveryDetail = (() => {
         </div>
         <div class="qd-gallery-actions">${externalGallery ? '' : `<a class="qd-track-link" href="${esc(item.url)}" target="_blank" rel="noopener">Open original ${ico('right', 14, 2)}</a><button class="qd-text" type="button" data-detail-action="copy-pod-link" data-pod-index="${galleryIndex}">${ico('copy', 15, 1.8)} Copy link</button>`}${imageUrl ? `<button class="qd-text" type="button" data-detail-action="download-pod-image" data-pod-index="${galleryIndex}">${ico('download', 15, 1.8)} Download image</button>` : ''}</div>
       </div>
-    </div>`);
+    </div>`,
+    );
     const image = container().querySelector('.qd-gallery-image');
     image?.addEventListener('load', applyGalleryTransform, { once: true });
     applyGalleryTransform();
@@ -2101,18 +2435,29 @@ const DeliveryDetail = (() => {
   }
 
   async function downloadPodImage(index) {
-    const image = container().querySelector(`[data-gallery-image="${index}"]`) || container().querySelector(`.qd-pod-image[data-pod-index="${index}"]`);
+    const image =
+      container().querySelector(`[data-gallery-image="${index}"]`) ||
+      container().querySelector(`.qd-pod-image[data-pod-index="${index}"]`);
     if (!image || (!sel && !externalGallery)) return;
     try {
       const source = new URL(image.currentSrc || image.src, location.href);
-      const endpoint = source.origin === location.origin || ['data:', 'blob:'].includes(source.protocol)
-        ? source.href
-        : `/api/pod-image?${new URLSearchParams({ order: sel, index: String(index) })}`;
+      const endpoint =
+        source.origin === location.origin || ['data:', 'blob:'].includes(source.protocol)
+          ? source.href
+          : `/api/pod-image?${new URLSearchParams({ order: sel, index: String(index) })}`;
       const response = await fetch(endpoint);
       if (!response.ok) throw new Error('Image retrieval failed');
       const blob = await response.blob();
       if (!blob.type.startsWith('image/')) throw new Error('Invalid image response');
-      const extension = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg', 'image/avif': 'avif' })[blob.type] || 'img';
+      const extension =
+        {
+          'image/jpeg': 'jpg',
+          'image/png': 'png',
+          'image/webp': 'webp',
+          'image/gif': 'gif',
+          'image/svg+xml': 'svg',
+          'image/avif': 'avif',
+        }[blob.type] || 'img';
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -2133,26 +2478,48 @@ const DeliveryDetail = (() => {
       return { title: 'Order created', detail: '', observed: false };
     }
     const ow = raw.match(/^OW status observed:\s*(.*)$/i);
-    if (ow) return { title: 'OW status observed', detail: owStatusDescription(ow[1]), observed: true };
+    if (ow)
+      return { title: 'OW status observed', detail: owStatusDescription(ow[1]), observed: true };
     const carrier = raw.match(/^(Palletways|OptimoRoute) status observed:\s*(.*)$/i);
     if (carrier) {
       const status = carrier[2].trim().toLowerCase();
-      const names = { success: 'Delivered', failed: 'Delivery failed', on_route: 'Out for delivery', scheduled: 'Scheduled' };
-      return { title: `${carrier[1]} · ${names[status] || carrier[2].replace(/_/g, ' ')}`, detail: '', observed: true };
+      const names = {
+        success: 'Delivered',
+        failed: 'Delivery failed',
+        on_route: 'Out for delivery',
+        scheduled: 'Scheduled',
+      };
+      return {
+        title: `${carrier[1]} · ${names[status] || carrier[2].replace(/_/g, ' ')}`,
+        detail: '',
+        observed: true,
+      };
     }
     const provider = raw.match(/^OptimoRoute:\s*([^—]+?)(?:\s*—\s*([\s\S]*))?$/i);
     if (provider) {
       const status = provider[1].trim().toLowerCase();
-      const names = { failed: 'Delivery failed', success: 'Delivered', start_service: 'Delivery started', 'start service': 'Delivery started' };
+      const names = {
+        failed: 'Delivery failed',
+        success: 'Delivered',
+        start_service: 'Delivery started',
+        'start service': 'Delivery started',
+      };
       const note = provider[2]?.match(/Delivery note:\s*([\s\S]*)$/i)?.[1]?.trim() || '';
       return {
         title: `${names[status] || provider[1].trim()} · OptimoRoute`,
         detail: note && !/^fail(?:ed)?$/i.test(note) ? note : '',
-        observed: /first observed|status changed|original change time is unknown/i.test(provider[2] || ''),
+        observed: /first observed|status changed|original change time is unknown/i.test(
+          provider[2] || '',
+        ),
       };
     }
     const issue = raw.match(/^Courier Issues\s*[·�-]\s*([^:]+):\s*([\s\S]*)$/i);
-    if (issue) return { title: `Delivery issue · ${issue[1].trim()}`, detail: issue[2].trim(), observed: false };
+    if (issue)
+      return {
+        title: `Delivery issue · ${issue[1].trim()}`,
+        detail: issue[2].trim(),
+        observed: false,
+      };
     return { title: raw, detail: '', observed: false };
   }
   function toggleCarrierScans(button) {
@@ -2160,50 +2527,46 @@ const DeliveryDetail = (() => {
 
     if (!activity) return;
 
-    const expanded =
-      activity.dataset.carrierExpanded === 'true';
+    const expanded = activity.dataset.carrierExpanded === 'true';
 
-    const technicalEvents =
-      activity.querySelectorAll(
-        '.qd-event[data-technical="true"]'
-      );
+    const technicalEvents = activity.querySelectorAll('.qd-event[data-technical="true"]');
 
-    technicalEvents.forEach(event => {
+    technicalEvents.forEach((event) => {
       const shouldHide = expanded;
 
       event.hidden = shouldHide;
-      event.style.display = shouldHide
-        ? 'none'
-        : '';
+      event.style.display = shouldHide ? 'none' : '';
     });
 
-    activity.dataset.carrierExpanded =
-      String(!expanded);
+    activity.dataset.carrierExpanded = String(!expanded);
 
-    activity.querySelectorAll('.qd-carrier-more').forEach(toggle => {
+    activity.querySelectorAll('.qd-carrier-more').forEach((toggle) => {
       toggle.hidden = toggle.dataset.carrierToggle === 'more' ? !expanded : expanded;
       toggle.setAttribute('aria-expanded', String(!expanded));
     });
-    activity.querySelector(`.qd-carrier-more[data-carrier-toggle="${expanded ? 'more' : 'less'}"]`)?.focus({preventScroll: true});
+    activity
+      .querySelector(`.qd-carrier-more[data-carrier-toggle="${expanded ? 'more' : 'less'}"]`)
+      ?.focus({ preventScroll: true });
 
-    const count =
-      activity.querySelector('.qd-log-count');
+    const count = activity.querySelector('.qd-log-count');
 
     if (count) {
-      count.textContent = expanded
-        ? activity.dataset.visibleCount
-        : activity.dataset.totalCount;
+      count.textContent = expanded ? activity.dataset.visibleCount : activity.dataset.totalCount;
     }
   }
   function logMarkup(delivery, collect = null) {
-    const timestamp = value => {
+    const timestamp = (value) => {
       const utc = typeof value === 'object' && value ? value.utcTime : '';
-      const raw = utc || (typeof value === 'object' && value ? value.localTime || '' : String(value || ''));
+      const raw =
+        utc || (typeof value === 'object' && value ? value.localTime || '' : String(value || ''));
       const normalized = raw.replace(' ', 'T');
       return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2})?/.test(normalized)
-        ? utc && !/[Z+-]\d{0,2}:?\d{0,2}$/.test(normalized) ? `${normalized}Z` : normalized : '';
+        ? utc && !/[Z+-]\d{0,2}:?\d{0,2}$/.test(normalized)
+          ? `${normalized}Z`
+          : normalized
+        : '';
     };
-    const day = value => timestamp(value).slice(0, 10);
+    const day = (value) => timestamp(value).slice(0, 10);
     const events = [];
     const add = (
       kind,
@@ -2212,7 +2575,7 @@ const DeliveryDetail = (() => {
       observed = false,
       title = '',
       technical = false,
-      source = 'ow'
+      source = 'ow',
     ) => {
       const date = timestamp(at);
 
@@ -2229,263 +2592,272 @@ const DeliveryDetail = (() => {
       }
     };
     add('created', delivery.orderDateTime || delivery.orderDate);
-    const schedules = [...(Array.isArray(delivery.scheduleHistory) ? delivery.scheduleHistory : []),
-      delivery.providerScheduledAt || delivery.providerPlannedDate || delivery.palletwaysDetails?.dueAt || delivery.date].filter(Boolean);
+    const schedules = [
+      ...(Array.isArray(delivery.scheduleHistory) ? delivery.scheduleHistory : []),
+      delivery.providerScheduledAt ||
+        delivery.providerPlannedDate ||
+        delivery.palletwaysDetails?.dueAt ||
+        delivery.date,
+    ].filter(Boolean);
     schedules.forEach((schedule, index) => add(index ? 'rescheduled' : 'scheduled', schedule));
-    if (!events.some(item => item.kind === 'scheduled')) {
+    if (!events.some((item) => item.kind === 'scheduled')) {
       const booking = String(delivery.bookingStatus || '');
       const match = booking.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if (match) add('scheduled', `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`);
+      if (match)
+        add('scheduled', `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`);
       const named = booking.match(/^(?:Delay to\s+)?(\d{1,2})-([A-Za-z]{3})-(\d{4})$/i);
-      const month = named ? ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(named[2].toLowerCase()) + 1 : 0;
-      if (month) add('scheduled', `${named[3]}-${String(month).padStart(2, '0')}-${named[1].padStart(2, '0')}`);
+      const month = named
+        ? [
+            'jan',
+            'feb',
+            'mar',
+            'apr',
+            'may',
+            'jun',
+            'jul',
+            'aug',
+            'sep',
+            'oct',
+            'nov',
+            'dec',
+          ].indexOf(named[2].toLowerCase()) + 1
+        : 0;
+      if (month)
+        add(
+          'scheduled',
+          `${named[3]}-${String(month).padStart(2, '0')}-${named[1].padStart(2, '0')}`,
+        );
     }
     add('dispatch', delivery.dispatchDate || delivery.carrierIssueDispatchDate);
-    const palletwaysEvents = Array.isArray(
-      delivery.palletwaysEvents
-    )
+    const palletwaysEvents = Array.isArray(delivery.palletwaysEvents)
       ? delivery.palletwaysEvents
       : [];
-    palletwaysEvents.forEach(item => {
-      const group = String(
-        item.group || ''
-      ).toUpperCase();
+    palletwaysEvents.forEach((item) => {
+      const group = String(item.group || '').toUpperCase();
 
-      const type = String(
-        item.type || ''
-      ).toUpperCase();
+      const type = String(item.type || '').toUpperCase();
 
-      const statusCode = String(
-        item.statusCode || ''
-      );
+      const statusCode = String(item.statusCode || '');
 
       let kind = 'palletways';
       let title = 'Palletways update';
 
-      if (
-        group === 'POD'
-        && type === 'POD'
-      ) {
+      if (group === 'POD' && type === 'POD') {
         kind = 'delivered';
         title = 'Delivered · Palletways';
-
-      } else if (
-        group === 'POD'
-        && type === 'IMG'
-      ) {
+      } else if (group === 'POD' && type === 'IMG') {
         title = 'Proof of delivery image · Palletways';
-
-      } else if (
-        group === 'VP'
-        && type === 'DAR'
-      ) {
+      } else if (group === 'VP' && type === 'DAR') {
         title = 'Driver arrived · Palletways';
-
-      } else if (
-        group === 'VL'
-        && type === 'SCN'
-        && statusCode === '800'
-      ) {
+      } else if (group === 'VL' && type === 'SCN' && statusCode === '800') {
         kind = 'out';
         title = 'Out for delivery · Palletways';
-
-      } else if (
-        group === 'BIN'
-        && type === 'BIN'
-      ) {
+      } else if (group === 'BIN' && type === 'BIN') {
         title = 'Delivery booking update · Palletways';
-
-      } else if (
-        group === 'JIN'
-        && type === 'GDEP'
-      ) {
+      } else if (group === 'JIN' && type === 'GDEP') {
         title = 'Departed hub · Palletways';
-
-      } else if (
-        group === 'BAY'
-        && type === 'SCN'
-      ) {
+      } else if (group === 'BAY' && type === 'SCN') {
         title = 'Depot scan · Palletways';
-
-      } else if (
-        group === 'VU'
-        && type === 'SCN'
-      ) {
+      } else if (group === 'VU' && type === 'SCN') {
         title = 'Depot scan · Palletways';
-
-      } else if (
-        group === 'POC'
-      ) {
+      } else if (group === 'POC') {
         title = 'Consignment created · Palletways';
-
       } else if (group || type) {
-        title = [
-          group,
-          type
-        ].filter(Boolean).join(' / ')
-          + ' · Palletways';
+        title = [group, type].filter(Boolean).join(' / ') + ' · Palletways';
       }
 
       const meta = [
-        group || type
-          ? [group, type]
-              .filter(Boolean)
-              .join('/')
-          : '',
-        statusCode
-          ? `Status ${statusCode}`
-          : '',
-        item.codeId
-          ? `Code ${item.codeId}`
-          : '',
-      ].filter(Boolean).join(' · ');
+        group || type ? [group, type].filter(Boolean).join('/') : '',
+        statusCode ? `Status ${statusCode}` : '',
+        item.codeId ? `Code ${item.codeId}` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
 
-      const signature = item.podSignature
-        ? `Signed by ${item.podSignature}`
-        : '';
+      const signature = item.podSignature ? `Signed by ${item.podSignature}` : '';
 
-      const detail = [
-        item.text,
-        signature,
-        meta,
-      ].filter(Boolean).join(' — ');
+      const detail = [item.text, signature, meta].filter(Boolean).join(' — ');
 
-      const technical = (
-        (
-          group === 'VL'
-          && type === 'SCN'
-          && statusCode !== '800'
-        )
-        || (
-          group === 'VU'
-          && type === 'SCN'
-        )
-        || (
-          group === 'BAY'
-          && type === 'SCN'
-        )
-        || (
-          group === 'POD'
-          && type === 'IMG'
-        )
-        || (
-          group === 'BIN'
-          && type === 'BIN'
-        )
-        || group === 'POC'
-      );
+      const technical =
+        (group === 'VL' && type === 'SCN' && statusCode !== '800') ||
+        (group === 'VU' && type === 'SCN') ||
+        (group === 'BAY' && type === 'SCN') ||
+        (group === 'POD' && type === 'IMG') ||
+        (group === 'BIN' && type === 'BIN') ||
+        group === 'POC';
 
-      add(
-        kind,
-        item.at,
-        detail,
-        false,
-        title,
-        technical,
-        'palletways'
-      );
+      add(kind, item.at, detail, false, title, technical, 'palletways');
     });
     // Starting service proves an attempt began; it does not prove an earlier van departure.
     add('attempt', delivery.providerStartedAt);
-    const issues = (Array.isArray(delivery.carrierIssueEntries) ? delivery.carrierIssueEntries : [])
-      .filter(item => !String(item.source || '').includes('COMPLETED VAN DELIVERIES'));
-    issues.forEach(item => {
+    const issues = (
+      Array.isArray(delivery.carrierIssueEntries) ? delivery.carrierIssueEntries : []
+    ).filter((item) => !String(item.source || '').includes('COMPLETED VAN DELIVERIES'));
+    issues.forEach((item) => {
       const combined = `${item.status || ''} ${item.note || ''}`.trim();
       const failure = /\bfailed\b|\brefused\b|\bdamaged\b|\blost\b/i.test(combined);
       if (failure) {
-        const attempt = combined.match(/\bfailed(?:\s+delivery)?\s+(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?/i);
+        const attempt = combined.match(
+          /\bfailed(?:\s+delivery)?\s+(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?/i,
+        );
         const year = attempt ? Number(attempt[3] || day(item.date).slice(0, 4)) : 0;
-        const failedAt = attempt && year ? `${year < 100 ? year + 2000 : year}-${attempt[2].padStart(2, '0')}-${attempt[1].padStart(2, '0')}` : item.date;
+        const failedAt =
+          attempt && year
+            ? `${year < 100 ? year + 2000 : year}-${attempt[2].padStart(2, '0')}-${attempt[1].padStart(2, '0')}`
+            : item.date;
         const reason = String(item.note || item.status || '')
           .replace(/^(?:\+?\d[\d\s]{8,}\s*[-:]\s*)?/i, '')
-          .replace(/^failed\s+\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\s*[-:]?\s*/i, '').trim();
+          .replace(/^failed\s+\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\s*[-:]?\s*/i, '')
+          .trim();
         add('failed', failedAt, reason || item.status);
       }
       const message = String(item.messageStatus || '').trim();
       const messageDate = message.match(/\b(?:on\s+)?(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/i);
       if (message && messageDate) {
         const year = Number(messageDate[3] || day(item.date).slice(0, 4));
-        if (year) add('followup', `${year < 100 ? year + 2000 : year}-${messageDate[2].padStart(2, '0')}-${messageDate[1].padStart(2, '0')}`, message);
+        if (year)
+          add(
+            'followup',
+            `${year < 100 ? year + 2000 : year}-${messageDate[2].padStart(2, '0')}-${messageDate[1].padStart(2, '0')}`,
+            message,
+          );
       }
       const schedule = String(item.scheduledStatus || '').trim();
       const reschedule = schedule.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);
       if (reschedule) {
         const year = Number(reschedule[3] || day(item.date).slice(0, 4));
-        if (year) add('rescheduled', `${year < 100 ? year + 2000 : year}-${reschedule[2].padStart(2, '0')}-${reschedule[1].padStart(2, '0')}`, schedule);
+        if (year)
+          add(
+            'rescheduled',
+            `${year < 100 ? year + 2000 : year}-${reschedule[2].padStart(2, '0')}-${reschedule[1].padStart(2, '0')}`,
+            schedule,
+          );
       }
     });
-    (delivery.followUps || []).forEach(item => {
+    (delivery.followUps || []).forEach((item) => {
       const remark = String(item.remark || '').trim();
       const dated = remark.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);
       const year = dated ? Number(dated[3] || day(item.at).slice(0, 4)) : 0;
-      const at = dated && year
-        ? `${year < 100 ? year + 2000 : year}-${dated[2].padStart(2, '0')}-${dated[1].padStart(2, '0')}`
-        : item.at;
-      if (/^delivered\b/i.test(remark) && /delivered/i.test(String(delivery.st || ''))
-        && String(delivery.completedAt || '').slice(0, 10) === String(at).slice(0, 10)) return;
+      const at =
+        dated && year
+          ? `${year < 100 ? year + 2000 : year}-${dated[2].padStart(2, '0')}-${dated[1].padStart(2, '0')}`
+          : item.at;
+      if (
+        /^delivered\b/i.test(remark) &&
+        /delivered/i.test(String(delivery.st || '')) &&
+        String(delivery.completedAt || '').slice(0, 10) === String(at).slice(0, 10)
+      )
+        return;
       add('followup', at, remark, !dated);
     });
-    (delivery.providerAttemptHistory || []).forEach(item => {
+    (delivery.providerAttemptHistory || []).forEach((item) => {
       if (item.status === 'failed') add('failed', item.at, item.note);
       if (item.status === 'success') add('delivered', item.at, item.note);
     });
     if (String(delivery.providerStatus || '').toLowerCase() === 'failed') {
-      add('failed', delivery.providerEndedAt || delivery.failedAt || delivery.completedAt || delivery.failedDate, delivery.providerPodNote || delivery.reason);
-    } else if (!events.some(item => item.kind === 'failed')) {
-      add('failed', delivery.failedAt || delivery.failedDate, delivery.carrierIssueReason || delivery.reason);
-    }
-    const delivered = /delivered|success|completed/i.test(
-      String(delivery.st || '')
-    );
-
-    const hasPalletwaysDelivered = palletwaysEvents.some(
-      item =>
-        String(item.group || '').toUpperCase() === 'POD'
-        && String(item.type || '').toUpperCase() === 'POD'
-    );
-
-    if (
-      delivered
-      && !hasPalletwaysDelivered
-    ) {
       add(
-        'delivered',
-        delivery.providerEndedAt
-          || delivery.completedAt
-          || delivery.palletwaysDetails?.dateCompleted,
-        '', false, '', false,
-        delivery.statusSource === 'Palletways' ? 'palletways' : 'ow'
+        'failed',
+        delivery.providerEndedAt ||
+          delivery.failedAt ||
+          delivery.completedAt ||
+          delivery.failedDate,
+        delivery.providerPodNote || delivery.reason,
+      );
+    } else if (!events.some((item) => item.kind === 'failed')) {
+      add(
+        'failed',
+        delivery.failedAt || delivery.failedDate,
+        delivery.carrierIssueReason || delivery.reason,
       );
     }
-    (delivery.logs || []).forEach(item => {
+    const delivered = /delivered|success|completed/i.test(String(delivery.st || ''));
+
+    const hasPalletwaysDelivered = palletwaysEvents.some(
+      (item) =>
+        String(item.group || '').toUpperCase() === 'POD' &&
+        String(item.type || '').toUpperCase() === 'POD',
+    );
+
+    if (delivered && !hasPalletwaysDelivered) {
+      add(
+        'delivered',
+        delivery.providerEndedAt ||
+          delivery.completedAt ||
+          delivery.palletwaysDetails?.dateCompleted,
+        '',
+        false,
+        '',
+        false,
+        delivery.statusSource === 'Palletways' ? 'palletways' : 'ow',
+      );
+    }
+    (delivery.logs || []).forEach((item) => {
       const label = String(item.text || '');
       if (/^Routine Dashboard - Live(?: booking status)?:/i.test(label)) {
         const bookingUpdate = /^Routine Dashboard - Live booking status:/i.test(label);
-        const detail = label.replace(/^Routine Dashboard - Live(?: booking status)?:\s*/i, '')
-          .replace(/\s*\(#[0-9a-f]{6}\s*,\s*[A-Z]+\d+\)\s*$/i, '').trim();
+        const detail = label
+          .replace(/^Routine Dashboard - Live(?: booking status)?:\s*/i, '')
+          .replace(/\s*\(#[0-9a-f]{6}\s*,\s*[A-Z]+\d+\)\s*$/i, '')
+          .trim();
         const isFailed = !bookingUpdate && /^Failed\b/i.test(detail);
-        add(bookingUpdate ? 'booking-update' : isFailed ? 'routine-failed' : 'routine-update', item.at,
-          isFailed ? '' : detail, true,
-          bookingUpdate ? 'Booking status updated' : isFailed ? 'Delivery failed' : 'Delivery status updated', false, 'routine');
+        add(
+          bookingUpdate ? 'booking-update' : isFailed ? 'routine-failed' : 'routine-update',
+          item.at,
+          isFailed ? '' : detail,
+          true,
+          bookingUpdate
+            ? 'Booking status updated'
+            : isFailed
+              ? 'Delivery failed'
+              : 'Delivery status updated',
+          false,
+          'routine',
+        );
       }
       const exact = /Timestamp supplied in order completion details/i.test(label);
       const owStatus = label.match(/^OW status observed:\s*(.+)$/i);
       if (owStatus) add('ow-status', item.at, owStatusDescription(owStatus[1]), true);
-      if (exact && /^OptimoRoute:\s*Failed/i.test(label) && !events.some(event => event.kind === 'failed' && day(event.at) === day(item.at))) add('failed', item.at, delivery.providerPodNote);
-      if (exact && /^OptimoRoute:\s*Success/i.test(label) && !events.some(event => event.kind === 'delivered')) add('delivered', item.at);
-      if (/^OptimoRoute status observed:\s*on_route$/i.test(label) && !events.some(event => event.kind === 'out')) add('out', item.at, '', true);
-      if (/^Palletways status observed:\s*out[_ ]for[_ ]delivery$/i.test(label) && !events.some(event => event.kind === 'out')) add('out', item.at, '', true, '', false, 'palletways');
+      if (
+        exact &&
+        /^OptimoRoute:\s*Failed/i.test(label) &&
+        !events.some((event) => event.kind === 'failed' && day(event.at) === day(item.at))
+      )
+        add('failed', item.at, delivery.providerPodNote);
+      if (
+        exact &&
+        /^OptimoRoute:\s*Success/i.test(label) &&
+        !events.some((event) => event.kind === 'delivered')
+      )
+        add('delivered', item.at);
+      if (
+        /^OptimoRoute status observed:\s*on_route$/i.test(label) &&
+        !events.some((event) => event.kind === 'out')
+      )
+        add('out', item.at, '', true);
+      if (
+        /^Palletways status observed:\s*out[_ ]for[_ ]delivery$/i.test(label) &&
+        !events.some((event) => event.kind === 'out')
+      )
+        add('out', item.at, '', true, '', false, 'palletways');
     });
-    if (delivery.statusSource === 'Routine Dashboard - Live'
-      && !events.some(item => ['routine-update', 'routine-failed'].includes(item.kind))) {
+    if (
+      delivery.statusSource === 'Routine Dashboard - Live' &&
+      !events.some((item) => ['routine-update', 'routine-failed'].includes(item.kind))
+    ) {
       const isFailed = (delivery.routineLiveStatus || delivery.st) === 'Failed';
-      add(isFailed ? 'routine-failed' : 'routine-update', delivery.routineLiveObservedAt,
+      add(
+        isFailed ? 'routine-failed' : 'routine-update',
+        delivery.routineLiveObservedAt,
         isFailed ? '' : delivery.routineLiveStatus || delivery.st,
-        true, isFailed ? 'Delivery failed' : 'Delivery status observed', false, 'routine');
+        true,
+        isFailed ? 'Delivery failed' : 'Delivery status observed',
+        false,
+        'routine',
+      );
     }
     if (statusSourceLabel(delivery) === 'OW' && delivery.rawStatus) {
       const currentOwStatus = owStatusDescription(delivery.rawStatus);
-      if (!events.some(item => item.kind === 'ow-status' && item.detail === currentOwStatus)) {
+      if (!events.some((item) => item.kind === 'ow-status' && item.detail === currentOwStatus)) {
         add('ow-status', delivery.updatedAt || delivery.firstSeenAt, currentOwStatus, true);
       }
     }
@@ -2495,16 +2867,28 @@ const DeliveryDetail = (() => {
       const second = b.toLowerCase().replace(/\s+/g, ' ').trim();
       return !first || !second || first === second;
     };
-    events.forEach(item => {
+    events.forEach((item) => {
       const timed = item.at.includes('T');
-      const index = unique.findIndex(previous => previous.kind === item.kind && day(previous.at) === day(item.at)
-        && sameDetail(previous.detail, item.detail)
-        && (!timed || !previous.at.includes('T') || previous.at.slice(0, 16) === item.at.slice(0, 16)));
+      const index = unique.findIndex(
+        (previous) =>
+          previous.kind === item.kind &&
+          day(previous.at) === day(item.at) &&
+          sameDetail(previous.detail, item.detail) &&
+          (!timed ||
+            !previous.at.includes('T') ||
+            previous.at.slice(0, 16) === item.at.slice(0, 16)),
+      );
       if (index < 0) unique.push(item);
       else {
         const previous = unique[index];
-        const preferred = timed && !previous.at.includes('T') || previous.observed && !item.observed ? item : previous;
-        unique[index] = { ...preferred, detail: previous.detail.length > item.detail.length ? previous.detail : item.detail };
+        const preferred =
+          (timed && !previous.at.includes('T')) || (previous.observed && !item.observed)
+            ? item
+            : previous;
+        unique[index] = {
+          ...preferred,
+          detail: previous.detail.length > item.detail.length ? previous.detail : item.detail,
+        };
       }
     });
     const sequence = {
@@ -2524,41 +2908,40 @@ const DeliveryDetail = (() => {
       const first = new Date(timestamp(a.at)).getTime();
       const second = new Date(timestamp(b.at)).getTime();
 
-      if (
-        Number.isFinite(first)
-        && Number.isFinite(second)
-        && first !== second
-      ) {
+      if (Number.isFinite(first) && Number.isFinite(second) && first !== second) {
         return first - second;
       }
 
-      return (
-        (sequence[a.kind] ?? 99)
-        - (sequence[b.kind] ?? 99)
-      );
+      return (sequence[a.kind] ?? 99) - (sequence[b.kind] ?? 99);
     });
 
-    const visibleEvents = ordered.filter(
-      item => !item.technical
-    );
+    const visibleEvents = ordered.filter((item) => !item.technical);
 
-    const technicalEvents = ordered.filter(
-      item => item.technical
-    );
-    const titles = { created: 'Order created', scheduled: 'Scheduled delivery', dispatch: 'Despatched', out: 'Out for delivery', attempt: 'Delivery attempt started', 'ow-status': 'OW status observed', failed: 'Delivery failed', followup: 'Customer service follow-up', rescheduled: 'Rescheduled', delivered: 'Delivered' };
-    
+    const technicalEvents = ordered.filter((item) => item.technical);
+    const titles = {
+      created: 'Order created',
+      scheduled: 'Scheduled delivery',
+      dispatch: 'Despatched',
+      out: 'Out for delivery',
+      attempt: 'Delivery attempt started',
+      'ow-status': 'OW status observed',
+      failed: 'Delivery failed',
+      followup: 'Customer service follow-up',
+      rescheduled: 'Rescheduled',
+      delivered: 'Delivered',
+    };
+
     if (Array.isArray(collect)) {
-      collect.push(...visibleEvents.map(item => ({
-        title: item.title || titles[item.kind] || item.kind,
-        detail: item.detail,
-        timeLabel: `${item.observed ? 'Recorded ' : ''}${fmtLogTime(item.at)}`,
-        recordedAt: /^\d{4}-\d{2}-\d{2}$/.test(item.at)
-          ? `${item.at}T23:59:59`
-          : item.at,
-      })));
+      collect.push(
+        ...visibleEvents.map((item) => ({
+          title: item.title || titles[item.kind] || item.kind,
+          detail: item.detail,
+          timeLabel: `${item.observed ? 'Recorded ' : ''}${fmtLogTime(item.at)}`,
+          recordedAt: /^\d{4}-\d{2}-\d{2}$/.test(item.at) ? `${item.at}T23:59:59` : item.at,
+        })),
+      );
     }
-    
-    
+
     const tones = {
       'routine-failed': 'failed',
       scheduled: 'scheduled',
@@ -2572,13 +2955,17 @@ const DeliveryDetail = (() => {
       delivered: 'success',
     };
 
-    const renderEvent = item => `
+    const renderEvent = (item) => `
       <div
         class="qd-event qd-event-${tones[item.kind] || 'neutral'}"
         data-activity-source="${item.source}"
-        ${['Own van', 'Self Delivery', 'LOCAL MULTIDROP'].includes(delivery.carrier)
-          ? `data-activity-marker="${['failed', 'routine-failed'].includes(item.kind) ? 'failed' : item.kind === 'delivered' ? 'delivered' : ['created', 'ow-status'].includes(item.kind) ? 'ow' : 'neutral'}"`
-          : delivery.carrier === 'Palletways' ? `data-activity-marker="${item.source === 'ow' ? 'ow' : item.kind === 'delivered' ? 'delivered' : 'neutral'}"` : ''}
+        ${
+          ['Own van', 'Self Delivery', 'LOCAL MULTIDROP'].includes(delivery.carrier)
+            ? `data-activity-marker="${['failed', 'routine-failed'].includes(item.kind) ? 'failed' : item.kind === 'delivered' ? 'delivered' : ['created', 'ow-status'].includes(item.kind) ? 'ow' : 'neutral'}"`
+            : delivery.carrier === 'Palletways'
+              ? `data-activity-marker="${item.source === 'ow' ? 'ow' : item.kind === 'delivered' ? 'delivered' : 'neutral'}"`
+              : ''
+        }
         data-technical="${item.technical ? 'true' : 'false'}"
         ${item.technical ? 'hidden' : ''}
         style="${item.technical ? 'display:none;' : ''}"
@@ -2591,11 +2978,7 @@ const DeliveryDetail = (() => {
         <div class="qd-event-card">
           <div class="qd-event-top">
             <b>
-              ${esc(
-                item.title
-                || titles[item.kind]
-                || item.kind
-              )}
+              ${esc(item.title || titles[item.kind] || item.kind)}
             </b>
 
             <time>
@@ -2604,11 +2987,7 @@ const DeliveryDetail = (() => {
             </time>
           </div>
 
-          ${
-            item.detail
-              ? `<p class="qd-event-detail">${esc(item.detail)}</p>`
-              : ''
-          }
+          ${item.detail ? `<p class="qd-event-detail">${esc(item.detail)}</p>` : ''}
         </div>
       </div>
     `;
@@ -2617,8 +2996,9 @@ const DeliveryDetail = (() => {
       ? ordered.map(renderEvent).join('')
       : '<p class="mut">No activity yet.</p>';
 
-    const carrierToggle = (expanded = false) => technicalEvents.length
-      ? `
+    const carrierToggle = (expanded = false) =>
+      technicalEvents.length
+        ? `
         <button
           type="button"
           class="qd-carrier-more"
@@ -2630,10 +3010,7 @@ const DeliveryDetail = (() => {
           ${expanded ? 'Show less' : 'Show more information'}
         </button>
       `
-      : '';
-
-
-
+        : '';
 
     return `
       <div
@@ -2675,14 +3052,9 @@ const DeliveryDetail = (() => {
     panel.classList.add('qd-tracking-view');
     panel.dataset.qdTab = trackingTab;
 
+    const customerTitle = panel.querySelector('.qd-customer-block .qd-title h3');
 
-    const customerTitle = panel.querySelector(
-      '.qd-customer-block .qd-title h3'
-    );
-
-    const trackingTitle = panel.querySelector(
-      '.qd-tracking .qd-title h3'
-    );
+    const trackingTitle = panel.querySelector('.qd-tracking .qd-title h3');
 
     if (customerTitle) {
       customerTitle.textContent = 'Customer information';
@@ -2699,24 +3071,22 @@ const DeliveryDetail = (() => {
     }
 
     const status = trackingStatus(delivery.st);
-    const source = statusSourceLabel(delivery) === 'OW'
-      ? 'OrderWise'
-      : statusSourceDisplay(delivery);
+    const source =
+      statusSourceLabel(delivery) === 'OW' ? 'OrderWise' : statusSourceDisplay(delivery);
 
     const isDelivered = status === 'Delivered';
 
     const hasSchedule = Boolean(
       delivery.date ||
-      delivery.providerScheduledAt ||
-      delivery.providerPlannedDate ||
-      delivery.palletwaysDetails?.dueAt
+        delivery.providerScheduledAt ||
+        delivery.providerPlannedDate ||
+        delivery.palletwaysDetails?.dueAt,
     );
 
-    const hasDispatch = Boolean(
-      delivery.dispatchDate ||
-      delivery.carrierIssueDispatchDate ||
-      delivery.providerStartedAt
-    ) || ['Out for Delivery', 'Delivered'].includes(status);
+    const hasDispatch =
+      Boolean(
+        delivery.dispatchDate || delivery.carrierIssueDispatchDate || delivery.providerStartedAt,
+      ) || ['Out for Delivery', 'Delivered'].includes(status);
 
     const progressStep = isDelivered
       ? 4
@@ -2726,31 +3096,28 @@ const DeliveryDetail = (() => {
           ? 2
           : 1;
 
-    const progressLabel = ({
-      Awaiting: 'Awaiting XDP status',
-      Unscheduled: 'Awaiting despatch',
-      Unassigned: 'On hold',
-      Scheduled: 'Delivery scheduled',
-      'Out for Delivery': 'Out for delivery',
-      Delivered: 'Delivered',
-      Failed: 'Delivery issue',
-      Rejected: 'Delivery rejected',
-      Lost: 'Shipment lost',
-      Cancelled: 'Cancelled',
-      Return: 'Return in progress',
-    })[status] || (
-      hasDispatch
-        ? 'In transit'
-        : hasSchedule
-          ? 'Delivery scheduled'
-          : 'Awaiting despatch'
-    );
+    const progressLabel =
+      {
+        Awaiting: 'Awaiting XDP status',
+        Unscheduled: 'Awaiting despatch',
+        Unassigned: 'On hold',
+        Scheduled: 'Delivery scheduled',
+        'Out for Delivery': 'Out for delivery',
+        Delivered: 'Delivered',
+        Failed: 'Delivery issue',
+        Rejected: 'Delivery rejected',
+        Lost: 'Shipment lost',
+        Cancelled: 'Cancelled',
+        Return: 'Return in progress',
+      }[status] ||
+      (hasDispatch ? 'In transit' : hasSchedule ? 'Delivery scheduled' : 'Awaiting despatch');
 
-    const createdAt = detailDateTime(
-      delivery.orderDateTime || delivery.orderDate
-    ) || 'Date unavailable';
+    const createdAt =
+      detailDateTime(delivery.orderDateTime || delivery.orderDate) || 'Date unavailable';
 
-    head.insertAdjacentHTML('afterend', `
+    head.insertAdjacentHTML(
+      'afterend',
+      `
       <div class="qd-badges" aria-label="Order status and source">
         <span class="qd-badge qd-badge-status">
           ${stat(delivery.st, carrierStatusLabel(delivery))}
@@ -2773,8 +3140,9 @@ const DeliveryDetail = (() => {
         </div>
 
         <div class="qd-progress-steps" aria-hidden="true">
-          ${Array.from({ length: 4 }, (_, index) =>
-            `<span class="${index < progressStep ? 'is-active' : ''}"></span>`
+          ${Array.from(
+            { length: 4 },
+            (_, index) => `<span class="${index < progressStep ? 'is-active' : ''}"></span>`,
           ).join('')}
         </div>
 
@@ -2783,38 +3151,42 @@ const DeliveryDetail = (() => {
           <span>${isDelivered ? 'Completed' : 'Not completed'}</span>
         </div>
       </section>
-    `);
+    `,
+    );
 
-    const factRow = (label, value) => value
-      ? `<div class="qd-summary-item">
+    const factRow = (label, value) =>
+      value
+        ? `<div class="qd-summary-item">
           <div>
             <span>${esc(label)}</span>
             <b>${esc(value)}</b>
           </div>
         </div>`
-      : '';
+        : '';
 
-    summary.insertAdjacentHTML('beforeend', [
-      factRow('Delivery method', provider),
-      factRow('Source', source),
+    summary.insertAdjacentHTML(
+      'beforeend',
+      [
+        factRow('Delivery method', provider),
+        factRow('Source', source),
 
-      delivery.deliveryMethodRaw &&
-      delivery.deliveryMethodRaw !== provider
-        ? factRow('Original delivery method', delivery.deliveryMethodRaw)
-        : '',
+        delivery.deliveryMethodRaw && delivery.deliveryMethodRaw !== provider
+          ? factRow('Original delivery method', delivery.deliveryMethodRaw)
+          : '',
 
-      factRow('Order reference', delivery.orderRef || delivery.orderReference),
-      factRow('Booking status', delivery.bookingStatus),
-      (['AMZ', 'XDP', 'Stopstart'].includes(delivery.carrier) || isPalletwaysDelivery(delivery))
-        ? factRow('Special instructions', delivery.specialInstructions || delivery.instructions)
-        : '',
+        factRow('Order reference', delivery.orderRef || delivery.orderReference),
+        factRow('Booking status', delivery.bookingStatus),
+        ['AMZ', 'XDP', 'Stopstart'].includes(delivery.carrier) || isPalletwaysDelivery(delivery)
+          ? factRow('Special instructions', delivery.specialInstructions || delivery.instructions)
+          : '',
 
-      delivery.rawStatus
-        ? factRow('OrderWise status', owStatusDescription(delivery.rawStatus))
-        : '',
+        delivery.rawStatus
+          ? factRow('OrderWise status', owStatusDescription(delivery.rawStatus))
+          : '',
 
-      factRow('Delivery issue', delivery.reason),
-    ].join(''));
+        factRow('Delivery issue', delivery.reason),
+      ].join(''),
+    );
 
     const tabs = [
       ['activity', 'Activity'],
@@ -2822,14 +3194,19 @@ const DeliveryDetail = (() => {
       ['documents', 'Documents'],
       ['action', 'Action'],
     ];
-    const actionCard = (icon, title, description, label) => `<span class="qd-action-card-top"><span class="qd-action-card-icon" aria-hidden="true">${ico(icon, 23)}</span><span class="qd-action-card-label">${label}</span></span><strong>${title}</strong><span class="qd-action-card-description">${description}</span><span class="qd-action-card-arrow" aria-hidden="true">${ico('right', 17)}</span>`;
+    const actionCard = (icon, title, description, label) =>
+      `<span class="qd-action-card-top"><span class="qd-action-card-icon" aria-hidden="true">${ico(icon, 23)}</span><span class="qd-action-card-label">${label}</span></span><strong>${title}</strong><span class="qd-action-card-description">${description}</span><span class="qd-action-card-arrow" aria-hidden="true">${ico('right', 17)}</span>`;
 
-    customerTracking.insertAdjacentHTML('afterend', `
+    customerTracking.insertAdjacentHTML(
+      'afterend',
+      `
       <div class="qd-section-tabs"
            role="group"
            aria-label="Order detail sections">
 
-        ${tabs.map(([key, label]) => `
+        ${tabs
+          .map(
+            ([key, label]) => `
           <button
             type="button"
             class="qd-section-tab"
@@ -2838,7 +3215,9 @@ const DeliveryDetail = (() => {
             aria-pressed="${trackingTab === key}">
             ${label}
           </button>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </div>
       <section class="qd-block qd-action-section" aria-label="Order actions">
         <div class="qd-action-buttons">
@@ -2848,30 +3227,25 @@ const DeliveryDetail = (() => {
           <button type="button" class="qd-action-button qd-action-manufacture" disabled aria-label="Generate Manufacture Claims">${actionCard('pkg', 'Generate Manufacture Claims', 'Manufacturing claim tools are on the way.', 'COMING SOON')}</button>
         </div>
       </section>
-    `);
+    `,
+    );
 
     if (
-      !isPalletwaysDelivery(delivery)
-      && delivery.carrier !== 'XDP'
-      && !podItems.length
-      && !palletwaysDocumentInfo(
-        delivery
-      ).hasAny
-      && !delivery.palletwaysPhotos?.length
-      && !delivery.palletwaysPortal?.media?.length
+      !isPalletwaysDelivery(delivery) &&
+      delivery.carrier !== 'XDP' &&
+      !podItems.length &&
+      !palletwaysDocumentInfo(delivery).hasAny &&
+      !delivery.palletwaysPhotos?.length &&
+      !delivery.palletwaysPortal?.media?.length
     ) {
       panel
-        .querySelector(
-          '.qd-section-tabs'
-        )
+        .querySelector('.qd-section-tabs')
         .insertAdjacentHTML(
           'afterend',
-          '<section class="qd-documents-empty" role="status">No document found</section>'
+          '<section class="qd-documents-empty" role="status">No document found</section>',
         );
     }
-
   }
-
 
   // Palletways live data is loaded on demand for whichever
   // Palletways order the user opens.
@@ -2879,17 +3253,16 @@ const DeliveryDetail = (() => {
   const palletwaysLivePending = new Set();
 
   function isPalletwaysDelivery(delivery) {
-    return String(
-      delivery?.carrier || ''
-    ).trim().toLowerCase() === 'palletways';
+    return (
+      String(delivery?.carrier || '')
+        .trim()
+        .toLowerCase() === 'palletways'
+    );
   }
 
   function palletwaysTrackingId(delivery) {
     return String(
-      delivery?.palletwaysDetails?.trackingId
-      || delivery?.trk
-      || delivery?.owTrackingNo
-      || ''
+      delivery?.palletwaysDetails?.trackingId || delivery?.trk || delivery?.owTrackingNo || '',
     ).trim();
   }
 
@@ -2898,11 +3271,7 @@ const DeliveryDetail = (() => {
       return '';
     }
 
-    const lines = Array.isArray(address.Line)
-      ? address.Line
-      : address.Line
-        ? [address.Line]
-        : [];
+    const lines = Array.isArray(address.Line) ? address.Line : address.Line ? [address.Line] : [];
 
     return [
       address.CompanyName,
@@ -2912,619 +3281,358 @@ const DeliveryDetail = (() => {
       address.PostCode,
       address.Country,
     ]
-      .map(value => String(value || '').trim())
+      .map((value) => String(value || '').trim())
       .filter(Boolean)
       .join(', ');
   }
 
-  function palletwaysAddress(
-    addresses,
-    type
-  ) {
-    const list = Array.isArray(addresses)
-      ? addresses
-      : addresses
-        ? [addresses]
-        : [];
+  function palletwaysAddress(addresses, type) {
+    const list = Array.isArray(addresses) ? addresses : addresses ? [addresses] : [];
 
-    return list.find(address =>
-      String(
-        address?.Type || ''
-      ).trim().toLowerCase()
-      === String(type).toLowerCase()
-    ) || {};
+    return (
+      list.find(
+        (address) =>
+          String(address?.Type || '')
+            .trim()
+            .toLowerCase() === String(type).toLowerCase(),
+      ) || {}
+    );
   }
 
   function palletwaysServiceText(service) {
     if (!service) return '';
 
-    const item = Array.isArray(service)
-      ? service[0] || {}
-      : service;
+    const item = Array.isArray(service) ? service[0] || {} : service;
 
     if (typeof item !== 'object') {
       return String(item || '');
     }
 
-    return [
-      item.Type,
-      item.Code,
-    ]
-      .map(value => String(value || '').trim())
+    return [item.Type, item.Code]
+      .map((value) => String(value || '').trim())
       .filter(Boolean)
       .join(' ');
   }
 
-  function applyPalletwaysLive(
-    delivery,
-    payload
-  ) {
+  function applyPalletwaysLive(delivery, payload) {
     if (!delivery || !payload?.ok) {
       return;
     }
 
-    const consignment =
-      payload.consignment || {};
+    const consignment = payload.consignment || {};
 
-    const addresses =
-      consignment.Address || [];
+    const addresses = consignment.Address || [];
 
-    const deliveryAddress =
-      palletwaysAddress(
-        addresses,
-        'Delivery'
-      );
+    const deliveryAddress = palletwaysAddress(addresses, 'Delivery');
 
-    const collectionAddress =
-      palletwaysAddress(
-        addresses,
-        'Collection'
-      );
+    const collectionAddress = palletwaysAddress(addresses, 'Collection');
 
     const trackingId = String(
-      payload.trackingId
-      || consignment.TrackingID
-      || palletwaysTrackingId(delivery)
-      || ''
+      payload.trackingId || consignment.TrackingID || palletwaysTrackingId(delivery) || '',
     ).trim();
 
-    const dueDate = String(
-      consignment.DueDate || ''
-    ).trim();
+    const dueDate = String(consignment.DueDate || '').trim();
 
-    const dueTime = String(
-      consignment.DueTime || ''
-    ).trim();
+    const dueTime = String(consignment.DueTime || '').trim();
 
-    delivery.trk =
-      trackingId
-      || delivery.trk;
+    delivery.trk = trackingId || delivery.trk;
 
     delivery.palletwaysDetails = {
       ...(delivery.palletwaysDetails || {}),
 
       trackingId,
 
-      consignmentNumber:
-        consignment.Number || '',
+      consignmentNumber: consignment.Number || '',
 
-      customerRef:
-        consignment.Reference || '',
+      customerRef: consignment.Reference || '',
 
-      deliveryService:
-        palletwaysServiceText(
-          consignment.Service
-        ),
+      deliveryService: palletwaysServiceText(consignment.Service),
 
-      classification:
-        consignment.Classification || '',
+      classification: consignment.Classification || '',
 
-      weight:
-        consignment.Weight || '',
+      weight: consignment.Weight || '',
 
-      lifts:
-        consignment.Lifts || '',
+      lifts: consignment.Lifts || '',
 
-      collectionDepot:
-        consignment.CollectionDepot || '',
+      collectionDepot: consignment.CollectionDepot || '',
 
-      deliveryDepot:
-        consignment.DeliveryDepot || '',
+      deliveryDepot: consignment.DeliveryDepot || '',
 
       dueDate,
       dueTime,
 
-      dueAt:
-        dueDate
-          ? `${dueDate}${
-              dueTime
-                ? `T${String(dueTime).slice(0, 8)}`
-                : ''
-            }`
-          : '',
+      dueAt: dueDate ? `${dueDate}${dueTime ? `T${String(dueTime).slice(0, 8)}` : ''}` : '',
 
-      bookedIn:
-        consignment.BookedIn || '',
+      bookedIn: consignment.BookedIn || '',
 
-      bookInRequest:
-        consignment.BookInRequest || '',
+      bookInRequest: consignment.BookInRequest || '',
 
-      bookInContactName:
-        consignment.BookInContactName || '',
+      bookInContactName: consignment.BookInContactName || '',
 
-      bookInReference:
-        consignment.BookInReference || '',
+      bookInReference: consignment.BookInReference || '',
 
-      handBall:
-        consignment.HandBall
-        ?? consignment.Handball
-        ?? '',
+      handBall: consignment.HandBall ?? consignment.Handball ?? '',
 
-      tailLift:
-        consignment.TailLift ?? '',
+      tailLift: consignment.TailLift ?? '',
 
-      insurance:
-        consignment.Insurance ?? '',
+      insurance: consignment.Insurance ?? '',
 
-      manifestNote:
-        consignment.ManifestNote || '',
+      manifestNote: consignment.ManifestNote || '',
 
-      pallets:
-        consignment.Pallet || [],
+      pallets: consignment.Pallet || [],
 
-      billUnits:
-        consignment.BillUnit || [],
+      billUnits: consignment.BillUnit || [],
 
-      collectionAddress:
-        palletwaysAddressText(
-          collectionAddress
-        ),
+      collectionAddress: palletwaysAddressText(collectionAddress),
 
-      collectionPostcode:
-        collectionAddress.PostCode || '',
+      collectionPostcode: collectionAddress.PostCode || '',
 
-      collectionTelephone:
-        collectionAddress.Telephone || '',
+      collectionTelephone: collectionAddress.Telephone || '',
 
-      collectionContact:
-        collectionAddress.ContactName || '',
+      collectionContact: collectionAddress.ContactName || '',
 
-      deliveryAddress:
-        palletwaysAddressText(
-          deliveryAddress
-        ),
+      deliveryAddress: palletwaysAddressText(deliveryAddress),
 
-      deliveryPostcode:
-        deliveryAddress.PostCode || '',
+      deliveryPostcode: deliveryAddress.PostCode || '',
 
-      deliveryTelephone:
-        deliveryAddress.Telephone || '',
+      deliveryTelephone: deliveryAddress.Telephone || '',
 
-      deliveryContact:
-        deliveryAddress.ContactName || '',
+      deliveryContact: deliveryAddress.ContactName || '',
 
-      accountName:
-        consignment._account?.name || '',
+      accountName: consignment._account?.name || '',
 
-      accountCode:
-        consignment._account?.code || '',
+      accountCode: consignment._account?.code || '',
     };
 
-    delivery.palletwaysEvents = (
-      Array.isArray(payload.events)
-        ? payload.events
-        : []
-    ).map(item => ({
-      ...item,
+    delivery.palletwaysEvents = (Array.isArray(payload.events) ? payload.events : []).map(
+      (item) => ({
+        ...item,
 
-      at:
-        item.at
-        || (
-          item.date
-            ? `${item.date}${
-                item.time
-                  ? `T${item.time}`
-                  : ''
-              }`
-            : ''
-        ),
-    }));
+        at: item.at || (item.date ? `${item.date}${item.time ? `T${item.time}` : ''}` : ''),
+      }),
+    );
 
-    delivery.palletwaysDocuments =
-      payload.documents || {};
+    delivery.palletwaysDocuments = payload.documents || {};
 
     if (payload.status?.status) {
-      delivery.st =
-        payload.status.status;
+      delivery.st = payload.status.status;
     }
 
     if (payload.status?.label) {
-      delivery.palletwaysStatusLabel =
-        payload.status.label;
+      delivery.palletwaysStatusLabel = payload.status.label;
     }
 
-    delivery.statusSource =
-      'Palletways';
+    delivery.statusSource = 'Palletways';
   }
 
-  async function loadPalletwaysLive(
-    deliveryId
-  ) {
+  async function loadPalletwaysLive(deliveryId) {
     const delivery = get(deliveryId);
 
-    if (
-      !delivery
-      || !isPalletwaysDelivery(delivery)
-    ) {
+    if (!delivery || !isPalletwaysDelivery(delivery)) {
       return;
     }
 
-    const trackingId =
-      palletwaysTrackingId(delivery);
+    const trackingId = palletwaysTrackingId(delivery);
 
     if (!/^\d{11}$/.test(trackingId)) {
-      console.warn(
-        'Palletways order has no valid tracking ID:',
-        delivery.order,
-        trackingId
-      );
+      console.warn('Palletways order has no valid tracking ID:', delivery.order, trackingId);
 
       return;
     }
 
-    if (
-      palletwaysLivePending.has(
-        trackingId
-      )
-    ) {
+    if (palletwaysLivePending.has(trackingId)) {
       return;
     }
 
-    const cached =
-      palletwaysLiveCache.get(
-        trackingId
-      );
+    const cached = palletwaysLiveCache.get(trackingId);
 
     if (cached?.ok) {
-      applyPalletwaysLive(
-        delivery,
-        cached
-      );
+      applyPalletwaysLive(delivery, cached);
 
       return;
     }
 
-    palletwaysLivePending.add(
-      trackingId
-    );
+    palletwaysLivePending.add(trackingId);
 
     try {
-      const response = await fetch(
-        `/api/palletways/live/${
-          encodeURIComponent(
-            trackingId
-          )
-        }`,
-        {
-          cache: 'no-store',
-        }
-      );
+      const response = await fetch(`/api/palletways/live/${encodeURIComponent(trackingId)}`, {
+        cache: 'no-store',
+      });
 
-      const payload =
-        await response.json();
+      const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          payload.error
-          || `Palletways HTTP ${
-              response.status
-            }`
-        );
+        throw new Error(payload.error || `Palletways HTTP ${response.status}`);
       }
 
-      palletwaysLiveCache.set(
-        trackingId,
-        payload
-      );
+      palletwaysLiveCache.set(trackingId, payload);
 
-      applyPalletwaysLive(
-        delivery,
-        payload
-      );
-
+      applyPalletwaysLive(delivery, payload);
     } catch (error) {
-      console.error(
-        'Palletways live lookup failed:',
-        trackingId,
-        error
-      );
-
+      console.error('Palletways live lookup failed:', trackingId, error);
     } finally {
-      palletwaysLivePending.delete(
-        trackingId
-      );
+      palletwaysLivePending.delete(trackingId);
 
-      const current =
-        sel ? get(sel) : null;
+      const current = sel ? get(sel) : null;
 
-      if (
-        current
-        && String(current.id)
-          === String(deliveryId)
-        && isPalletwaysDelivery(
-          current
-        )
-      ) {
+      if (current && String(current.id) === String(deliveryId) && isPalletwaysDelivery(current)) {
         render();
       }
     }
   }
-
 
   const palletwaysCache = new Map();
   const palletwaysLoading = new Set();
 
   function isPalletwaysDelivery(delivery) {
-    return String(
-      delivery?.carrier || ''
-    ).trim().toLowerCase()
-      === 'palletways';
+    return (
+      String(delivery?.carrier || '')
+        .trim()
+        .toLowerCase() === 'palletways'
+    );
   }
 
   function palletwaysTrackingId(delivery) {
     return String(
-      delivery?.palletwaysDetails?.trackingId
-      || delivery?.trk
-      || delivery?.owTrackingNo
-      || ''
+      delivery?.palletwaysDetails?.trackingId || delivery?.trk || delivery?.owTrackingNo || '',
     ).trim();
   }
 
-  async function loadPalletways(
-    deliveryId
-  ) {
+  async function loadPalletways(deliveryId) {
     const delivery = get(deliveryId);
 
-    if (
-      !delivery
-      || !isPalletwaysDelivery(delivery)
-    ) {
+    if (!delivery || !isPalletwaysDelivery(delivery)) {
       return;
     }
 
-    const trackingId =
-      palletwaysTrackingId(delivery);
+    const trackingId = palletwaysTrackingId(delivery);
 
     if (!/^\d{11}$/.test(trackingId)) {
-      console.warn(
-        'No valid Palletways tracking ID',
-        delivery.order
-      );
+      console.warn('No valid Palletways tracking ID', delivery.order);
 
       return;
     }
 
-    if (
-      palletwaysLoading.has(
-        trackingId
-      )
-    ) {
+    if (palletwaysLoading.has(trackingId)) {
       return;
     }
 
-    const cached =
-      palletwaysCache.get(
-        trackingId
-      );
+    const cached = palletwaysCache.get(trackingId);
 
     if (cached) {
-      applyPalletwaysData(
-        delivery,
-        cached
-      );
+      applyPalletwaysData(delivery, cached);
 
       return;
     }
 
-    palletwaysLoading.add(
-      trackingId
-    );
+    palletwaysLoading.add(trackingId);
 
     try {
-      const [
-        apiResponse,
-        portalResponse,
-      ] = await Promise.all([
-        fetch(
-          `/api/palletways/live/${
-            encodeURIComponent(
-              trackingId
-            )
-          }`,
-          {
-            cache: 'no-store',
-          }
-        ),
+      const [apiResponse, portalResponse] = await Promise.all([
+        fetch(`/api/palletways/live/${encodeURIComponent(trackingId)}`, {
+          cache: 'no-store',
+        }),
 
-        fetch(
-          `/api/palletways/portal/${
-            encodeURIComponent(
-              trackingId
-            )
-          }`,
-          {
-            cache: 'no-store',
-          }
-        ),
+        fetch(`/api/palletways/portal/${encodeURIComponent(trackingId)}`, {
+          cache: 'no-store',
+        }),
       ]);
 
-      const api =
-        await apiResponse.json();
+      const api = await apiResponse.json();
 
-      const portal =
-        await portalResponse.json();
+      const portal = await portalResponse.json();
 
       if (!apiResponse.ok) {
-        throw new Error(
-          api.error
-          || 'Palletways API failed'
-        );
+        throw new Error(api.error || 'Palletways API failed');
       }
 
       const result = {
         api,
-        portal:
-          portalResponse.ok
-            ? portal
-            : null,
+        portal: portalResponse.ok ? portal : null,
       };
 
-      palletwaysCache.set(
-        trackingId,
-        result
-      );
+      palletwaysCache.set(trackingId, result);
 
-      applyPalletwaysData(
-        delivery,
-        result
-      );
-
+      applyPalletwaysData(delivery, result);
     } catch (error) {
-      console.error(
-        'Palletways lookup failed',
-        error
-      );
-
+      console.error('Palletways lookup failed', error);
     } finally {
-      palletwaysLoading.delete(
-        trackingId
-      );
+      palletwaysLoading.delete(trackingId);
 
-      if (
-        String(sel)
-        === String(deliveryId)
-      ) {
+      if (String(sel) === String(deliveryId)) {
         render();
       }
     }
   }
 
-
-  function applyPalletwaysData(
-    delivery,
-    result
-  ) {
+  function applyPalletwaysData(delivery, result) {
     const api = result.api || {};
     const portal = result.portal || {};
 
-    const consignment =
-      api.consignment || {};
+    const consignment = api.consignment || {};
 
-    delivery.palletwaysEvents =
-      Array.isArray(api.events)
-        ? api.events.map(item => ({
-            ...item,
+    delivery.palletwaysEvents = Array.isArray(api.events)
+      ? api.events.map((item) => ({
+          ...item,
 
-            at:
-              item.at
-              || (
-                item.date
-                  ? `${item.date}${
-                      item.time
-                        ? `T${item.time}`
-                        : ''
-                    }`
-                  : ''
-              ),
-          }))
-        : [];
+          at: item.at || (item.date ? `${item.date}${item.time ? `T${item.time}` : ''}` : ''),
+        }))
+      : [];
 
-    delivery.palletwaysPortal =
-      portal;
+    delivery.palletwaysPortal = portal;
 
     delivery.palletwaysDetails = {
       ...(delivery.palletwaysDetails || {}),
 
-      trackingId:
-        api.trackingId || '',
+      trackingId: api.trackingId || '',
 
-      consignmentNumber:
-        consignment.Number || '',
+      consignmentNumber: consignment.Number || '',
 
-      customerRef:
-        consignment.Reference || '',
+      customerRef: consignment.Reference || '',
 
-      classification:
-        consignment.Classification || '',
+      classification: consignment.Classification || '',
 
-      weight:
-        consignment.Weight || '',
+      weight: consignment.Weight || '',
 
-      lifts:
-        consignment.Lifts || '',
+      lifts: consignment.Lifts || '',
 
-      collectionDepot:
-        consignment.CollectionDepot || '',
+      collectionDepot: consignment.CollectionDepot || '',
 
-      deliveryDepot:
-        consignment.DeliveryDepot || '',
+      deliveryDepot: consignment.DeliveryDepot || '',
 
-      dueDate:
-        consignment.DueDate || '',
+      dueDate: consignment.DueDate || '',
 
-      dueTime:
-        consignment.DueTime || '',
+      dueTime: consignment.DueTime || '',
 
-      bookedIn:
-        consignment.BookedIn || '',
+      bookedIn: consignment.BookedIn || '',
 
-      bookInRequest:
-        consignment.BookInRequest || '',
+      bookInRequest: consignment.BookInRequest || '',
 
-      bookInContactName:
-        consignment.BookInContactName || '',
+      bookInContactName: consignment.BookInContactName || '',
 
-      bookInReference:
-        consignment.BookInReference || '',
+      bookInReference: consignment.BookInReference || '',
 
-      manifestNote:
-        consignment.ManifestNote || '',
+      manifestNote: consignment.ManifestNote || '',
 
-      tailLift:
-        portal.tailLiftRequested
-        || consignment.TailLift
-        || '',
+      tailLift: portal.tailLiftRequested || consignment.TailLift || '',
 
-      handBall:
-        portal.handBallRequested
-        || consignment.HandBall
-        || '',
+      handBall: portal.handBallRequested || consignment.HandBall || '',
 
-      pallets:
-        consignment.Pallet || [],
+      pallets: consignment.Pallet || [],
 
-      billUnits:
-        consignment.BillUnit || [],
+      billUnits: consignment.BillUnit || [],
     };
 
     if (api.status?.status) {
-      delivery.st =
-        api.status.status;
+      delivery.st = api.status.status;
     }
 
     if (api.status?.label) {
-      delivery.palletwaysStatusLabel =
-        api.status.label;
+      delivery.palletwaysStatusLabel = api.status.label;
     }
 
-    delivery.statusSource =
-      'Palletways';
+    delivery.statusSource = 'Palletways';
   }
-
-
-
-
-
 
   const palletwaysPortalCache = new Map();
   const palletwaysPortalPending = new Set();
@@ -3534,8 +3642,10 @@ const DeliveryDetail = (() => {
     if (!delivery || !isPalletwaysDelivery(delivery)) return;
     const order = String(delivery.order || deliveryId).trim();
     if (force) {
-      for (const item of delivery.palletwaysPortal?.media || []) unavailablePalletwaysPhotos.delete(item.filename);
-      for (const item of delivery.palletwaysPhotos || []) unavailablePalletwaysPhotos.delete(item.filename);
+      for (const item of delivery.palletwaysPortal?.media || [])
+        unavailablePalletwaysPhotos.delete(item.filename);
+      for (const item of delivery.palletwaysPhotos || [])
+        unavailablePalletwaysPhotos.delete(item.filename);
     }
     const pendingKey = `order:${order}`;
     if (palletwaysPortalPending.has(pendingKey)) return;
@@ -3546,31 +3656,41 @@ const DeliveryDetail = (() => {
     let trackingId = '';
     try {
       const query = force ? '?refresh=1' : '';
-      const matched = await fetch(`/api/palletways/order-tracking/${encodeURIComponent(order)}${query}`, {cache: 'no-store'});
+      const matched = await fetch(
+        `/api/palletways/order-tracking/${encodeURIComponent(order)}${query}`,
+        { cache: 'no-store' },
+      );
       const mapping = await matched.json();
-      if (!matched.ok) throw new Error(mapping.error || 'Could not match this order in the Palletways tab.');
+      if (!matched.ok)
+        throw new Error(mapping.error || 'Could not match this order in the Palletways tab.');
       trackingId = String(mapping.trackingId || '').trim();
-      if (!/^\d{11}$/.test(trackingId)) throw new Error('The matched column B value is not a valid Palletways tracking ID.');
+      if (!/^\d{11}$/.test(trackingId))
+        throw new Error('The matched column B value is not a valid Palletways tracking ID.');
       delivery.trk = trackingId;
-      delivery.palletwaysDetails = {...(delivery.palletwaysDetails || {}), trackingId};
+      delivery.palletwaysDetails = { ...(delivery.palletwaysDetails || {}), trackingId };
       const current = get(deliveryId);
       if (current && current !== delivery) {
         current.trk = trackingId;
-        current.palletwaysDetails = {...(current.palletwaysDetails || {}), trackingId};
+        current.palletwaysDetails = { ...(current.palletwaysDetails || {}), trackingId };
       }
       loadPalletwaysLive(deliveryId);
       const cached = palletwaysPortalCache.get(trackingId);
       if (!force && cached && Date.now() - cached.fetchedAt < 120000) {
         delivery.palletwaysPortal = cached.data;
       } else {
-        const response = await fetch(`/api/palletways/portal/${encodeURIComponent(trackingId)}${query}`, {cache: 'no-store'});
+        const response = await fetch(
+          `/api/palletways/portal/${encodeURIComponent(trackingId)}${query}`,
+          { cache: 'no-store' },
+        );
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `Palletways portal HTTP ${response.status}`);
-        palletwaysPortalCache.set(trackingId, {data, fetchedAt: Date.now()});
+        if (!response.ok)
+          throw new Error(data.error || `Palletways portal HTTP ${response.status}`);
+        palletwaysPortalCache.set(trackingId, { data, fetchedAt: Date.now() });
         delivery.palletwaysPortal = data;
       }
     } catch (error) {
-      delivery.palletwaysPortalError = error.message || 'Could not load Palletways shipment photos.';
+      delivery.palletwaysPortalError =
+        error.message || 'Could not load Palletways shipment photos.';
     } finally {
       palletwaysPortalPending.delete(pendingKey);
       delivery.palletwaysPortalLoading = false;
@@ -3583,7 +3703,7 @@ const DeliveryDetail = (() => {
         });
         if (trackingId) {
           current.trk = trackingId;
-          current.palletwaysDetails = {...(current.palletwaysDetails || {}), trackingId};
+          current.palletwaysDetails = { ...(current.palletwaysDetails || {}), trackingId };
         }
       }
       if (String(sel) === String(deliveryId)) render();
@@ -3595,29 +3715,30 @@ const DeliveryDetail = (() => {
   const amazonShippingPending = new Set();
   const amazonShippingCacheTime = new Map();
 
-  const amazonShippingViewer =
-    `amz-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+  const amazonShippingViewer = `amz-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 
   let amazonShippingSelectionSerial = 0;
   const amazonShippingStarts = new Map();
   let amazonClaimOpenFor = '';
 
   function amazonShippingId(delivery) {
-    return String(
-      delivery?.trk || delivery?.owTrackingNo || ''
-    ).trim().toUpperCase();
+    return String(delivery?.trk || delivery?.owTrackingNo || '')
+      .trim()
+      .toUpperCase();
   }
 
   function isAmazonShippingDelivery(delivery) {
     if (!delivery) return false;
-    const carrier = String(delivery.carrier || '').trim().toLowerCase();
+    const carrier = String(delivery.carrier || '')
+      .trim()
+      .toLowerCase();
     return ['amz', 'amazon', 'amazon shipping'].includes(carrier);
   }
 
   function amazonProgressMarkup(delivery) {
     const progress = amazonShippingStarts.get(amazonShippingId(delivery))?.progress;
     const completed = Math.max(0, Math.min(7, Number(progress?.completed) || 0));
-    const percent = Math.round(completed * 100 / 7);
+    const percent = Math.round((completed * 100) / 7);
     const label = progress?.label || 'Waiting for Amazon lookup';
     return `<div class="qd-amazon-progress">
       <span class="qd-amazon-spinner" role="progressbar" aria-label="Amazon lookup steps completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="${completed} of 7 steps completed" style="--qd-amazon-progress: ${percent}%"></span>
@@ -3632,17 +3753,20 @@ const DeliveryDetail = (() => {
     const selected = sel ? get(sel) : null;
     if (amazonShippingId(selected) !== trackingId) return;
     const completed = Math.max(0, Math.min(7, Number(progress.completed) || 0));
-    const percent = Math.round(completed * 100 / 7);
-    container().querySelectorAll('.qd-amazon-spinner').forEach(bar => {
-      bar.style.setProperty('--qd-amazon-progress', `${percent}%`);
-      bar.setAttribute('aria-valuenow', String(percent));
-      bar.setAttribute('aria-valuetext', `${completed} of 7 steps completed`);
-    });
-    container().querySelectorAll('.qd-amazon-progress-label').forEach(label => {
-      label.textContent = `${percent}% · ${completed}/7 steps completed · ${progress.label || 'Loading Amazon updates'}`;
-    });
+    const percent = Math.round((completed * 100) / 7);
+    container()
+      .querySelectorAll('.qd-amazon-spinner')
+      .forEach((bar) => {
+        bar.style.setProperty('--qd-amazon-progress', `${percent}%`);
+        bar.setAttribute('aria-valuenow', String(percent));
+        bar.setAttribute('aria-valuetext', `${completed} of 7 steps completed`);
+      });
+    container()
+      .querySelectorAll('.qd-amazon-progress-label')
+      .forEach((label) => {
+        label.textContent = `${percent}% · ${completed}/7 steps completed · ${progress.label || 'Loading Amazon updates'}`;
+      });
   }
-
 
   function loadAmazonShipping(trackingId) {
     if (!/^[A-Z0-9-]{1,64}$/.test(trackingId)) return;
@@ -3651,10 +3775,7 @@ const DeliveryDetail = (() => {
 
     if (prior?.phase === 'active') return;
 
-    if (
-      prior?.phase === 'scheduled'
-      && prior.serial === amazonShippingSelectionSerial
-    ) {
+    if (prior?.phase === 'scheduled' && prior.serial === amazonShippingSelectionSerial) {
       return;
     }
 
@@ -3675,10 +3796,10 @@ const DeliveryDetail = (() => {
       const selected = sel ? get(sel) : null;
 
       if (
-        !isOrderDetailPage()
-        || !isAmazonShippingDelivery(selected)
-        || amazonShippingId(selected) !== trackingId
-        || serial !== amazonShippingSelectionSerial
+        !isOrderDetailPage() ||
+        !isAmazonShippingDelivery(selected) ||
+        amazonShippingId(selected) !== trackingId ||
+        serial !== amazonShippingSelectionSerial
       ) {
         amazonShippingPending.delete(trackingId);
         amazonShippingStarts.delete(trackingId);
@@ -3687,27 +3808,21 @@ const DeliveryDetail = (() => {
 
       amazonShippingStarts.get(trackingId).phase = 'active';
 
-      const endpoint =
-        `/api/amazon-shipping/live/${encodeURIComponent(trackingId)}`;
+      const endpoint = `/api/amazon-shipping/live/${encodeURIComponent(trackingId)}`;
 
-      const viewerParam =
-        `viewer=${encodeURIComponent(amazonShippingViewer)}`;
+      const viewerParam = `viewer=${encodeURIComponent(amazonShippingViewer)}`;
 
       async function readSavedAmazon() {
         try {
-          const response = await fetch(
-            `/api/amazon-shipping/${encodeURIComponent(trackingId)}`,
-            { cache: 'no-store' }
-          );
+          const response = await fetch(`/api/amazon-shipping/${encodeURIComponent(trackingId)}`, {
+            cache: 'no-store',
+          });
 
           if (!response.ok) return null;
 
           const result = await response.json();
 
-          return result?.available === true
-            && result.tracking_id === trackingId
-              ? result
-              : null;
+          return result?.available === true && result.tracking_id === trackingId ? result : null;
         } catch (_) {
           return null;
         }
@@ -3717,9 +3832,9 @@ const DeliveryDetail = (() => {
         const selectedOrder = sel ? get(sel) : null;
 
         if (
-          !isOrderDetailPage()
-          || !isAmazonShippingDelivery(selectedOrder)
-          || amazonShippingId(selectedOrder) !== trackingId
+          !isOrderDetailPage() ||
+          !isAmazonShippingDelivery(selectedOrder) ||
+          amazonShippingId(selectedOrder) !== trackingId
         ) {
           return null;
         }
@@ -3735,24 +3850,15 @@ const DeliveryDetail = (() => {
         updateAmazonProgress(trackingId, result.progress);
 
         if (!response.ok) {
-          throw new Error(
-            result.error || `Amazon lookup HTTP ${response.status}`
-          );
+          throw new Error(result.error || `Amazon lookup HTTP ${response.status}`);
         }
 
-        if (
-          result.state === 'queued'
-          || result.state === 'loading'
-        ) {
+        if (result.state === 'queued' || result.state === 'loading') {
           if (attempt >= 320) {
-            throw new Error(
-              'Amazon lookup timed out. Please retry.'
-            );
+            throw new Error('Amazon lookup timed out. Please retry.');
           }
 
-          await new Promise(resolve =>
-            setTimeout(resolve, 750)
-          );
+          await new Promise((resolve) => setTimeout(resolve, 750));
 
           return checkAmazon(attempt + 1);
         }
@@ -3760,19 +3866,15 @@ const DeliveryDetail = (() => {
         if (result.state === 'cancelled') return null;
 
         if (result.state === 'error') {
-          throw new Error(
-            result.error || 'Amazon lookup failed.'
-          );
+          throw new Error(result.error || 'Amazon lookup failed.');
         }
 
         if (
-          result.state !== 'ready'
-          || !result.data?.available
-          || result.data.tracking_id !== trackingId
+          result.state !== 'ready' ||
+          !result.data?.available ||
+          result.data.tracking_id !== trackingId
         ) {
-          throw new Error(
-            'No matching Amazon shipment was returned.'
-          );
+          throw new Error('No matching Amazon shipment was returned.');
         }
 
         return result.data;
@@ -3801,24 +3903,21 @@ const DeliveryDetail = (() => {
 
         const current = sel ? get(sel) : null;
 
-        const panel =
-          container()?.querySelector('.qd-tracking-view');
+        const panel = container()?.querySelector('.qd-tracking-view');
 
         if (
-          isOrderDetailPage()
-          && current
-          && isAmazonShippingDelivery(current)
-          && panel
-          && !panel.classList.contains('qd-closing')
-          && amazonShippingId(current) === trackingId
+          isOrderDetailPage() &&
+          current &&
+          isAmazonShippingDelivery(current) &&
+          panel &&
+          !panel.classList.contains('qd-closing') &&
+          amazonShippingId(current) === trackingId
         ) {
           render();
         }
       }
     }, 100);
   }
-
-
 
   function parseAmazonEventTimestamp(item) {
     const direct = String(item?.timestamp || '').trim();
@@ -3864,12 +3963,18 @@ const DeliveryDetail = (() => {
   }
 
   function stopstartDetailText(details) {
-    return [
-      details.expectedDelivery ? `Expected delivery: ${details.expectedDelivery}` : '',
-      details.window ? `Delivery window: ${details.window} (UK time)` : '',
-      details.driver ? `Driver: ${details.driver}` : '',
-      details.reference ? `Stop Start Ref: ${details.reference}` : '',
-    ].filter(Boolean).join('\n') || details.raw || '';
+    return (
+      [
+        details.expectedDelivery ? `Expected delivery: ${details.expectedDelivery}` : '',
+        details.window ? `Delivery window: ${details.window} (UK time)` : '',
+        details.driver ? `Driver: ${details.driver}` : '',
+        details.reference ? `Stop Start Ref: ${details.reference}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n') ||
+      details.raw ||
+      ''
+    );
   }
 
   function stopstartDetailsMarkup(delivery) {
@@ -3880,8 +3985,13 @@ const DeliveryDetail = (() => {
       <div class="qd-title-row"><div class="qd-title">${ico('truck', 18)}<h3>STOPSTART</h3></div></div>
       ${unavailable ? '<p class="mut">STOPSTART sheet unavailable; showing saved details when available.</p>' : ''}
       ${delivery.stopstartAmbiguous ? '<p class="mut">Multiple STOPSTART plans match this order. See the activity log for all plans.</p>' : ''}
-      ${details ? `<p class="qd-event-detail">${esc(stopstartDetailText(details)).replace(/\n/g, '<br>')}</p><small class="mut">Expected delivery window, not delivery confirmation. Times are UK local time (GMT/BST).</small>`
-        : !delivery.stopstartAmbiguous ? '<p class="mut">No matched STOPSTART details available.</p>' : ''}
+      ${
+        details
+          ? `<p class="qd-event-detail">${esc(stopstartDetailText(details)).replace(/\n/g, '<br>')}</p><small class="mut">Expected delivery window, not delivery confirmation. Times are UK local time (GMT/BST).</small>`
+          : !delivery.stopstartAmbiguous
+            ? '<p class="mut">No matched STOPSTART details available.</p>'
+            : ''
+      }
     </section>`;
   }
 
@@ -3889,30 +3999,32 @@ const DeliveryDetail = (() => {
     const owRaw = [];
     logMarkup(delivery, owRaw);
 
-    const amazonRaw = (
-      amazonData?.available && Array.isArray(amazonData.events)
-    ) ? amazonData.events : [];
+    const amazonRaw =
+      amazonData?.available && Array.isArray(amazonData.events) ? amazonData.events : [];
 
     const owItems = owRaw.map((item, index) => {
-      const title =
-        String(item?.title || item?.label || '').trim()
-        || 'OrderWise update';
+      const title = String(item?.title || item?.label || '').trim() || 'OrderWise update';
 
-      const detail =
-        String(item?.detail || item?.value || '').trim();
+      const detail = String(item?.detail || item?.value || '').trim();
 
       let timeLabel =
-        String(item?.timeLabel || item?.recordedLabel || '').trim()
-        || [
-          item?.date ? hd(item.date) : '',
-          item?.time || ''
-        ].filter(Boolean).join(', ');
+        String(item?.timeLabel || item?.recordedLabel || '').trim() ||
+        [item?.date ? hd(item.date) : '', item?.time || ''].filter(Boolean).join(', ');
 
-      if (delivery.carrier === 'Stopstart' && /(?:Z|[+-]\d{2}:\d{2})$/i.test(item.recordedAt || '')) {
+      if (
+        delivery.carrier === 'Stopstart' &&
+        /(?:Z|[+-]\d{2}:\d{2})$/i.test(item.recordedAt || '')
+      ) {
         const instant = Date.parse(item.recordedAt);
-        if (!Number.isNaN(instant)) timeLabel = `${timeLabel.startsWith('Recorded ') ? 'Recorded ' : ''}${new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
-        }).format(new Date(instant))} UK`;
+        if (!Number.isNaN(instant))
+          timeLabel = `${timeLabel.startsWith('Recorded ') ? 'Recorded ' : ''}${new Intl.DateTimeFormat(
+            'en-GB',
+            {
+              timeZone: 'Europe/London',
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            },
+          ).format(new Date(instant))} UK`;
       }
 
       return {
@@ -3926,32 +4038,38 @@ const DeliveryDetail = (() => {
       };
     });
 
-    const amazonItems = amazonRaw.map(item => ({
+    const amazonItems = amazonRaw.map((item) => ({
       source: 'amazon',
       sourceLabel: 'Amazon Shipping',
       sourceShort: 'AMZ',
       title: String(item?.description || 'Amazon Shipping update').trim(),
-      detail: [
-        String(item?.location || '').trim(),
-        String(item?.note || '').trim(),
-      ].filter(Boolean).join('\n'),
-      timeLabel: [
-        item?.date ? hd(item.date) : '',
-        item?.time || '',
-        item?.timezone_offset || '',
-      ].filter(Boolean).join(' · '),
+      detail: [String(item?.location || '').trim(), String(item?.note || '').trim()]
+        .filter(Boolean)
+        .join('\n'),
+      timeLabel: [item?.date ? hd(item.date) : '', item?.time || '', item?.timezone_offset || '']
+        .filter(Boolean)
+        .join(' · '),
       sortTime: parseAmazonEventTimestamp(item),
     }));
 
-    const stopstartItems = (delivery.carrier === 'Stopstart' && Array.isArray(delivery.stopstartEvents)
-      ? delivery.stopstartEvents : []).map(item => {
+    const stopstartItems = (
+      delivery.carrier === 'Stopstart' && Array.isArray(delivery.stopstartEvents)
+        ? delivery.stopstartEvents
+        : []
+    ).map((item) => {
       const instant = item.scheduledAt || item.observedAt;
       const parsed = Date.parse(instant);
-      const label = Number.isNaN(parsed) ? '' : new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short',
-      }).format(new Date(parsed));
+      const label = Number.isNaN(parsed)
+        ? ''
+        : new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/London',
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }).format(new Date(parsed));
       return {
-        source: 'stopstart', sourceLabel: 'STOPSTART', sourceShort: 'STOPSTART',
+        source: 'stopstart',
+        sourceLabel: 'STOPSTART',
+        sourceShort: 'STOPSTART',
         title: item.scheduledAt ? 'Expected delivery (planned)' : 'STOPSTART details observed',
         detail: stopstartDetailText(item),
         timeLabel: `${item.scheduledAt ? '' : 'Recorded '}${label} UK`,
@@ -3959,24 +4077,40 @@ const DeliveryDetail = (() => {
       };
     });
 
-    const xdpItems = (delivery.carrier === 'XDP' && Array.isArray(delivery.xdpEvents)
-      ? delivery.xdpEvents : []).map(item => {
-      const labels = {CREATE: 'Shipment created', PRINT: 'Print event', COLLECT: 'Collection update',
-        DELIVERY: 'Delivery update', SMS: 'SMS notification', 'NEXT STOP': 'Next stop', DELIVERED: 'Delivered'};
+    const xdpItems = (
+      delivery.carrier === 'XDP' && Array.isArray(delivery.xdpEvents) ? delivery.xdpEvents : []
+    ).map((item) => {
+      const labels = {
+        CREATE: 'Shipment created',
+        PRINT: 'Print event',
+        COLLECT: 'Collection update',
+        DELIVERY: 'Delivery update',
+        SMS: 'SMS notification',
+        'NEXT STOP': 'Next stop',
+        DELIVERED: 'Delivered',
+      };
       return {
-        source: 'xdp', sourceLabel: 'XDP Activity · column M', sourceShort: 'XDP',
+        source: 'xdp',
+        sourceLabel: 'XDP Activity · column M',
+        sourceShort: 'XDP',
         title: labels[String(item.type || '').toUpperCase()] || item.type || 'XDP update',
         markerTitle: `${item.type || ''} ${item.text || ''}`,
-        detail: [item.text, item.location ? `Location: ${item.location}` : '',
+        detail: [
+          item.text,
+          item.location ? `Location: ${item.location}` : '',
           item.barcode ? `Barcode: ${item.barcode}` : '',
-          item.consignment ? `Consignment: ${item.consignment}` : ''].filter(Boolean).join('\n'),
+          item.consignment ? `Consignment: ${item.consignment}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n'),
         timeLabel: `${hd(String(item.at || '').slice(0, 10))} · ${String(item.at || '').slice(11, 19)}`,
         sortTime: Date.parse(item.at) || 0,
       };
     });
 
-    return [...owItems, ...amazonItems, ...stopstartItems, ...xdpItems]
-      .sort((a, b) => a.sortTime - b.sortTime);
+    return [...owItems, ...amazonItems, ...stopstartItems, ...xdpItems].sort(
+      (a, b) => a.sortTime - b.sortTime,
+    );
   }
 
   function mergedTrackingActivityMarkup(delivery, amazonData) {
@@ -3994,7 +4128,9 @@ const DeliveryDetail = (() => {
           </div>
         </div>
 
-        ${isLoadingAmazon ? `
+        ${
+          isLoadingAmazon
+            ? `
           <div class="qd-amazon-fetching qd-merged-fetching"
                role="status"
                aria-live="polite">
@@ -4007,21 +4143,35 @@ const DeliveryDetail = (() => {
               </small>
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${amazonData?.error ? `
+        ${
+          amazonData?.error
+            ? `
           <p class="qd-amazon-empty" role="alert">
             ${esc(amazonData.error)}
           </p>
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${delivery.carrier === 'XDP' && delivery.xdpActivityError
-          ? `<p class="mut" role="alert">${esc(delivery.xdpActivityError)} Saved activity is shown below.</p>` : ''}
-        ${delivery.carrier === 'XDP' && !delivery.xdpEvents?.length && !delivery.xdpActivityError
-          ? '<p class="mut" role="status">No XDP Activity history has been loaded for this order yet.</p>' : ''}
+        ${
+          delivery.carrier === 'XDP' && delivery.xdpActivityError
+            ? `<p class="mut" role="alert">${esc(delivery.xdpActivityError)} Saved activity is shown below.</p>`
+            : ''
+        }
+        ${
+          delivery.carrier === 'XDP' && !delivery.xdpEvents?.length && !delivery.xdpActivityError
+            ? '<p class="mut" role="status">No XDP Activity history has been loaded for this order yet.</p>'
+            : ''
+        }
 
         <div class="qd-events">
-          ${items.map(item => `
+          ${items
+            .map(
+              (item) => `
             <div class="qd-event qd-event-neutral qd-merged-event qd-merged-event-${esc(item.source)}" data-activity-marker="${activityMarkerKind(item.source, item.markerTitle || item.title)}">
               <span class="qd-event-marker" aria-hidden="true"></span>
 
@@ -4043,23 +4193,26 @@ const DeliveryDetail = (() => {
                   </span>
                 </div>
 
-                ${item.detail
-                  ? `<p class="qd-event-detail">${esc(item.detail).replace(/\n/g, '<br>')}</p>`
-                  : ''}
+                ${
+                  item.detail
+                    ? `<p class="qd-event-detail">${esc(item.detail).replace(/\n/g, '<br>')}</p>`
+                    : ''
+                }
               </div>
             </div>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </div>
       </section>
     `;
   }
 
-
   function amazonClaimDraftMarkup(delivery) {
     if (!isAmazonShippingDelivery(delivery)) return '';
 
     const key = `dd-amazon-claim-demo:${encodeURIComponent(
-      String(delivery.id || delivery.order || amazonShippingId(delivery))
+      String(delivery.id || delivery.order || amazonShippingId(delivery)),
     )}`;
 
     let draft = {};
@@ -4106,12 +4259,16 @@ const DeliveryDetail = (() => {
           <label>
             Claim reason
             <select data-amazon-claim-field="reason">
-              ${reasons.map(([value, label]) => `
+              ${reasons
+                .map(
+                  ([value, label]) => `
                 <option value="${esc(value)}"
                   ${draft.reason === value ? 'selected' : ''}>
                   ${esc(label)}
                 </option>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </select>
           </label>
 
@@ -4148,13 +4305,8 @@ const DeliveryDetail = (() => {
     `;
   }
 
-
-
-
   function amazonShippingActivity(data) {
-    const events = (
-      data?.available && Array.isArray(data.events)
-    ) ? data.events : [];
+    const events = data?.available && Array.isArray(data.events) ? data.events : [];
 
     const message = !data
       ? 'Loading saved Amazon Shipping history…'
@@ -4174,15 +4326,19 @@ const DeliveryDetail = (() => {
         </div>
 
         <p class="qd-amazon-source">
-          ${data?.available
-            ? 'Amazon Shipping · Retrieved on demand'
-            : (!data
+          ${
+            data?.available
+              ? 'Amazon Shipping · Retrieved on demand'
+              : !data
                 ? 'Amazon Shipping · Loading additional updates'
-                : 'Amazon Shipping · Not available')}
+                : 'Amazon Shipping · Not available'
+          }
         </p>
 
         <div class="qd-events">
-          ${!data ? `
+          ${
+            !data
+              ? `
             <div class="qd-amazon-fetching"
                  role="status"
                  aria-live="polite">
@@ -4199,33 +4355,43 @@ const DeliveryDetail = (() => {
                 </small>
               </div>
             </div>
-          ` : ''}
-          ${events.length ? events.map(item => `
+          `
+              : ''
+          }
+          ${
+            events.length
+              ? events
+                  .map(
+                    (item) => `
             <div class="qd-event qd-event-neutral qd-amazon-event">
               <span class="qd-event-marker" aria-hidden="true"></span>
 
               <div class="qd-event-card">
                 <div class="qd-event-top">
                   <b>${esc(item.description || 'Amazon update')}</b>
-                  <time>${esc([
-                    item.date ? hd(item.date) : '',
-                    item.time,
-                    item.timezone_offset,
-                  ].filter(Boolean).join(' · '))}</time>
+                  <time>${esc(
+                    [item.date ? hd(item.date) : '', item.time, item.timezone_offset]
+                      .filter(Boolean)
+                      .join(' · '),
+                  )}</time>
                 </div>
 
-                ${item.location
-                  ? `<p class="qd-event-detail">${esc(item.location)}</p>`
-                  : ''}
+                ${item.location ? `<p class="qd-event-detail">${esc(item.location)}</p>` : ''}
 
-                ${item.note
-                  ? `<p class="qd-event-detail qd-amazon-note">${esc(item.note)}</p>`
-                  : ''}
+                ${
+                  item.note ? `<p class="qd-event-detail qd-amazon-note">${esc(item.note)}</p>` : ''
+                }
               </div>
             </div>
-          `).join('') : (data ? `
+          `,
+                  )
+                  .join('')
+              : data
+                ? `
             <p class="qd-amazon-empty">${esc(message)}</p>
-          ` : '')}
+          `
+                : ''
+          }
         </div>
       </section>
     `;
@@ -4236,7 +4402,6 @@ const DeliveryDetail = (() => {
 
     const available = Boolean(data?.available);
     const pdf = available && docs.pod_available;
-
 
     if (!pdf) {
       return '<section class="qd-documents-empty" role="status">No document found</section>';
@@ -4261,7 +4426,9 @@ const DeliveryDetail = (() => {
           <article class="qd-amazon-doc-card">
             <h4><a href="${esc(docs.pod_view_url)}" target="_blank" rel="noopener noreferrer" aria-label="Open proof of delivery PDF">Proof of Delivery PDF</a>${documentViewButton(docs.pod_view_url, 'Proof of Delivery PDF')}</h4>
 
-            ${pdf ? `
+            ${
+              pdf
+                ? `
               <a
                 class="qd-amazon-doc-preview"
                 data-preview-state="loading"
@@ -4281,24 +4448,30 @@ const DeliveryDetail = (() => {
                   tabindex="0">
                 </iframe>
               </a>
-            ` : `
+            `
+                : `
               <div class="qd-amazon-doc-preview qd-amazon-doc-missing">
                 ${ico('note', 35, 1.5)}
                 <span>No document found</span>
               </div>
-            `}
+            `
+            }
 
             <div class="qd-amazon-doc-footer">
               <span>${pdf ? 'Actual saved PDF' : 'Unavailable'}</span>
 
-              ${pdf ? `
+              ${
+                pdf
+                  ? `
                 <a
                   class="qd-amazon-doc-download"
                   href="${esc(docs.pod_download_url)}">
                   ${ico('download', 15)}
                   Download
                 </a>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
           </article>
 
@@ -4310,10 +4483,7 @@ const DeliveryDetail = (() => {
   }
 
   function renderAmazonShippingContent(delivery) {
-    if (
-      !isOrderDetailPage()
-      || !isAmazonShippingDelivery(delivery)
-    ) {
+    if (!isOrderDetailPage() || !isAmazonShippingDelivery(delivery)) {
       return;
     }
 
@@ -4324,9 +4494,7 @@ const DeliveryDetail = (() => {
     const trackingId = amazonShippingId(delivery);
     const validId = /^[A-Z0-9-]{1,64}$/.test(trackingId);
 
-    const data = validId
-      ? amazonShippingCache.get(trackingId)
-      : null;
+    const data = validId ? amazonShippingCache.get(trackingId) : null;
 
     if (validId && !data) {
       loadAmazonShipping(trackingId);
@@ -4339,11 +4507,8 @@ const DeliveryDetail = (() => {
     if (activity) {
       activity.outerHTML = mergedTrackingActivityMarkup(
         delivery,
-        data || (
-          validId
-            ? null
-            : { error: 'No valid Amazon Shipping tracking ID for this order.' }
-        )
+        data ||
+          (validId ? null : { error: 'No valid Amazon Shipping tracking ID for this order.' }),
       );
     }
 
@@ -4364,10 +4529,7 @@ const DeliveryDetail = (() => {
     if (tabs && data) {
       panel.querySelector('.qd-documents-empty')?.remove();
 
-      tabs.insertAdjacentHTML(
-        'afterend',
-        amazonShippingDocuments(data)
-      );
+      tabs.insertAdjacentHTML('afterend', amazonShippingDocuments(data));
     }
 
     if (!data?.available) return;
@@ -4386,19 +4548,22 @@ const DeliveryDetail = (() => {
       ['Total charge', data.total_charge],
     ].filter(([, value]) => String(value || '').trim());
 
-    const markup = rows.map(([label, value]) => `
+    const markup = rows
+      .map(
+        ([label, value]) => `
       <div class="qd-summary-item qd-amazon-detail-row">
         <div>
           <span>${esc(label)}</span>
           <b>${esc(value)}</b>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join('');
 
-    const sourceRow = [...summary.querySelectorAll('.qd-summary-item')]
-      .find(
-        item => item.querySelector('span')?.textContent.trim() === 'Source'
-      );
+    const sourceRow = [...summary.querySelectorAll('.qd-summary-item')].find(
+      (item) => item.querySelector('span')?.textContent.trim() === 'Source',
+    );
 
     if (sourceRow) {
       sourceRow.insertAdjacentHTML('afterend', markup);
@@ -4422,13 +4587,11 @@ const DeliveryDetail = (() => {
     const amazonDelivery = get(id);
     const selectedDelivery = get(id);
 
-
     if (isOrderDetailPage() && isAmazonShippingDelivery(amazonDelivery)) {
       const trackingId = amazonShippingId(amazonDelivery);
       const cached = amazonShippingCache.get(trackingId);
 
-      const age = Date.now()
-        - (amazonShippingCacheTime.get(trackingId) || 0);
+      const age = Date.now() - (amazonShippingCacheTime.get(trackingId) || 0);
 
       // Successful results last for this page session.
       // Refreshing the browser creates a new page session.
@@ -4446,20 +4609,21 @@ const DeliveryDetail = (() => {
     focusedSection = section;
 
     if (
-      isOrderDetailPage()
-      && String(
-        get(id)?.carrier || ''
-      ).trim().toLowerCase() === 'palletways'
+      isOrderDetailPage() &&
+      String(get(id)?.carrier || '')
+        .trim()
+        .toLowerCase() === 'palletways'
     ) {
       loadPalletwaysPortal(id);
     }
 
-    trackingTab = ['activity', 'details', 'documents', 'action'].includes(section) ? section : (
-      isOrderDetailPage()
-      && isAmazonShippingDelivery(get(id))
-    )
-      ? 'activity'
-      : (section === 'activity' ? 'activity' : 'details');
+    trackingTab = ['activity', 'details', 'documents', 'action'].includes(section)
+      ? section
+      : isOrderDetailPage() && isAmazonShippingDelivery(get(id))
+        ? 'activity'
+        : section === 'activity'
+          ? 'activity'
+          : 'details';
     const app = $('.app');
     if (sidebarCollapsedBeforeOpen === null) {
       sidebarCollapsedBeforeOpen = app.classList.contains('cl');
@@ -4480,19 +4644,20 @@ const DeliveryDetail = (() => {
       panel.classList.remove('sl');
       panel.classList.add('qd-closing');
 
-      const reducedMotion = window.matchMedia(
-        '(prefers-reduced-motion: reduce)'
-      ).matches;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      detailCloseTimer = window.setTimeout(() => {
-        detailCloseTimer = null;
+      detailCloseTimer = window.setTimeout(
+        () => {
+          detailCloseTimer = null;
 
-        sel = null;
-        galleryIndex = null;
-        focusedSection = '';
+          sel = null;
+          galleryIndex = null;
+          focusedSection = '';
 
-        render();
-      }, reducedMotion ? 0 : 320);
+          render();
+        },
+        reducedMotion ? 0 : 320,
+      );
 
       return;
     }
@@ -4528,40 +4693,48 @@ const DeliveryDetail = (() => {
 
     const previousPanel = container().querySelector('.dr.qd');
     const sameDelivery = previousPanel?.dataset.deliveryId === String(sel);
-    const previousScrollTop = sameDelivery
-      ? previousPanel.querySelector('.db')?.scrollTop || 0
-      : 0;
+    const previousScrollTop = sameDelivery ? previousPanel.querySelector('.db')?.scrollTop || 0 : 0;
 
     const url = tlink(delivery);
     const trackingNumber = delivery.trk || delivery.owTrackingNo || '';
     const podItems = podItemsFor(delivery);
-    const postcode = delivery.palletwaysDetails?.deliveryPostcode
-      || delivery.postcode
-      || splitDeliveryAddress(delivery.addr || '').secondary;
-    const failed = trackingStatus(delivery.st) === 'Failed'
-      || (delivery.statusSource !== 'Routine Dashboard - Live' && Boolean(delivery.reason));
+    const postcode =
+      delivery.palletwaysDetails?.deliveryPostcode ||
+      delivery.postcode ||
+      splitDeliveryAddress(delivery.addr || '').secondary;
+    const failed =
+      trackingStatus(delivery.st) === 'Failed' ||
+      (delivery.statusSource !== 'Routine Dashboard - Live' && Boolean(delivery.reason));
     const scheduledDate = delivery.date || delivery.providerPlannedDate || '';
     const window = deliveryWindow(delivery);
     const scheduledValue = delivery.amazonScheduledAt
       ? `${detailDateTime(delivery.amazonScheduledAt)} UK time`
       : delivery.providerScheduledAt
-      ? detailDateTime(delivery.providerScheduledAt)
-      : delivery.palletwaysDetails?.dueAt
-        ? `Due by ${detailDateTime(delivery.palletwaysDetails.dueAt)}`
-      : scheduledDate
-        ? `${hd(scheduledDate)}${window.short !== 'TBD' ? `, ${window.short}` : ''}`
-      : delivery.statusSource === 'Routine Dashboard - Live' && trackingStatus(delivery.st) === 'Scheduled'
-        ? 'Date unavailable' : 'Not scheduled';
-    const completedValue = trackingStatus(delivery.st) === 'Delivered'
-      ? detailDateTime(delivery.providerEndedAt || delivery.completedAt || delivery.palletwaysDetails?.dateCompleted) || 'Date unavailable'
-      : 'Not completed yet';
+        ? detailDateTime(delivery.providerScheduledAt)
+        : delivery.palletwaysDetails?.dueAt
+          ? `Due by ${detailDateTime(delivery.palletwaysDetails.dueAt)}`
+          : scheduledDate
+            ? `${hd(scheduledDate)}${window.short !== 'TBD' ? `, ${window.short}` : ''}`
+            : delivery.statusSource === 'Routine Dashboard - Live' &&
+                trackingStatus(delivery.st) === 'Scheduled'
+              ? 'Date unavailable'
+              : 'Not scheduled';
+    const completedValue =
+      trackingStatus(delivery.st) === 'Delivered'
+        ? detailDateTime(
+            delivery.providerEndedAt ||
+              delivery.completedAt ||
+              delivery.palletwaysDetails?.dateCompleted,
+          ) || 'Date unavailable'
+        : 'Not completed yet';
     const provider = carName(delivery.carrier);
     const ownVan = delivery.carrier === 'Own van';
     const courierNotice = courierIssueFollowUpNotice(delivery);
-      const customerAddress = delivery.providerAddress
-      || delivery.palletwaysDetails?.deliveryAddress
-      || delivery.addr
-      || '';
+    const customerAddress =
+      delivery.providerAddress ||
+      delivery.palletwaysDetails?.deliveryAddress ||
+      delivery.addr ||
+      '';
 
     const customerCopyButton = (field, value, label) =>
       isOrderDetailPage() && String(value || '').trim()
@@ -4617,41 +4790,72 @@ const DeliveryDetail = (() => {
 
 
           </div>
-          ${isOrderDetailPage() ? `<div class="qd-purchase-block">
+          ${
+            isOrderDetailPage()
+              ? `<div class="qd-purchase-block">
             <div class="qd-title-row"><div class="qd-title">${ico('pkg', 18, 1.9)}<h3>Purchased from</h3></div></div>
             <div class="qd-customer"><span>${esc(purchaseChannel(delivery) || 'Not available')}</span></div>
             <div class="qd-purchase-actions-row">
             ${purchaseStoreLogo(delivery, 'purchase-store-logo-detail')}
             </div>
             <div class="qd-purchase-skus"><span class="mut">SKU of items</span><div>${deliverySkuMarkup(delivery)}</div></div>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
           <div class="qd-tracking">
             <div class="qd-title-row">
               <div class="qd-title">${ico('link', 18, 1.9)}<h3>Tracking</h3></div>
             </div>
             <span class="qd-tracking-number">Tracking No: <strong>${esc(trackingNumber || '—')}${customerCopyButton('trackingNumber', trackingNumber, 'tracking number')}</strong></span>
-            ${url ? `<div class="qd-tracking-actions">
+            ${
+              url
+                ? `<div class="qd-tracking-actions">
               ${url ? `<a class="qd-text qd-inline-action" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${ico('right', 15, 1.8)} Open link</a><button class="qd-text" type="button" data-detail-action="copy-tracking-link">${ico('copy', 15, 1.8)} Copy link</button>` : ''}
-            </div>` : ''}
+            </div>`
+                : ''
+            }
             ${delivery.carrier === 'Palletways' && postcode ? `<span class="qd-tracking-postcode">Customer delivery postcode: <strong>${esc(postcode)}</strong></span>` : ''}
           </div>
         </section>
         ${palletwaysDetails(delivery, customerCopyButton)}
         ${stopstartDetailsMarkup(delivery)}
-        ${delivery.carrier === 'XDP' ? `<section class="qd-block qd-order-facts qd-provider qd-xdp-details" aria-label="XDP details">
-          <dl class="qd-facts"><div><dt>Latest detail</dt><dd>${delivery.xdpLatestDetail
-            ? esc(delivery.xdpLatestDetail).replace(/\r?\n/g, '<br>') : '—'}</dd></div>
-          <div><dt>Parcel barcode</dt><dd>${delivery.xdpParcelBarcodes?.length
-            ? delivery.xdpParcelBarcodes.map(barcode => `<span class="tracking-cell-line">${esc(barcode)}</span>`).join('')
-            : '—'}</dd></div></dl>
-        </section>` : ''}
-        ${delivery.carrier !== 'XDP' && (podItems.length || delivery.providerPodNote) ? `<section class="qd-block qd-pod">
+        ${
+          delivery.carrier === 'XDP'
+            ? `<section class="qd-block qd-order-facts qd-provider qd-xdp-details" aria-label="XDP details">
+          <dl class="qd-facts"><div><dt>Latest detail</dt><dd>${
+            delivery.xdpLatestDetail ? esc(delivery.xdpLatestDetail).replace(/\r?\n/g, '<br>') : '—'
+          }</dd></div>
+          <div><dt>Parcel barcode</dt><dd>${
+            delivery.xdpParcelBarcodes?.length
+              ? delivery.xdpParcelBarcodes
+                  .map((barcode) => `<span class="tracking-cell-line">${esc(barcode)}</span>`)
+                  .join('')
+              : '—'
+          }</dd></div></dl>
+        </section>`
+            : ''
+        }
+        ${
+          delivery.carrier !== 'XDP' && (podItems.length || delivery.providerPodNote)
+            ? `<section class="qd-block qd-pod">
           <div class="qd-title-row"><div class="qd-title">${ico('check', 18, 1.9)}<h3>Proof of delivery</h3></div>${podItems.length > 1 ? `<span class="qd-pod-count">${podItems.length} images</span>` : ''}</div>
           ${delivery.providerPodNote ? `<p class="qd-pod-note"><strong>Delivery note:</strong> ${esc(delivery.providerPodNote)}</p>` : ''}
           <div class="qd-pod-gallery qd-pod-tiles">
-            ${podItems.slice(0, 3).map((item, index) => podPreviewMarkup(delivery, item, index, index === 2 ? Math.max(0, podItems.length - 3) : 0)).join('')}
+            ${podItems
+              .slice(0, 3)
+              .map((item, index) =>
+                podPreviewMarkup(
+                  delivery,
+                  item,
+                  index,
+                  index === 2 ? Math.max(0, podItems.length - 3) : 0,
+                ),
+              )
+              .join('')}
           </div>
-        </section>` : ''}
+        </section>`
+            : ''
+        }
         ${palletwaysDocuments(delivery)}
         ${xdpDocuments(delivery)}
         ${['Stopstart', 'XDP'].includes(delivery.carrier) ? mergedTrackingActivityMarkup(delivery, null) : `<section class="qd-block qd-activity" tabindex="-1">${logMarkup(delivery)}</section>`}
@@ -4669,7 +4873,8 @@ const DeliveryDetail = (() => {
       const scrollArea = container().querySelector('.db');
       const activity = container().querySelector('.qd-activity');
       if (scrollArea && activity) {
-        scrollArea.scrollTop += AtlasViewport.rect(activity).top - AtlasViewport.rect(scrollArea).top - 16;
+        scrollArea.scrollTop +=
+          AtlasViewport.rect(activity).top - AtlasViewport.rect(scrollArea).top - 16;
         activity.focus({ preventScroll: true });
       }
     }
@@ -4679,7 +4884,7 @@ const DeliveryDetail = (() => {
   container().addEventListener('load', settlePalletwaysPreview, true);
   container().addEventListener('error', settlePalletwaysPreview, true);
 
-  container().addEventListener('input', event => {
+  container().addEventListener('input', (event) => {
     const panel = event.target.closest('.qd-amazon-claim-panel');
 
     if (!panel || !isOrderDetailPage()) return;
@@ -4690,25 +4895,19 @@ const DeliveryDetail = (() => {
 
     const draft = {};
 
-    panel.querySelectorAll('[data-amazon-claim-field]').forEach(field => {
+    panel.querySelectorAll('[data-amazon-claim-field]').forEach((field) => {
       draft[field.dataset.amazonClaimField] = field.value;
     });
 
     try {
-      localStorage.setItem(
-        panel.dataset.amazonDraftKey,
-        JSON.stringify(draft)
-      );
+      localStorage.setItem(panel.dataset.amazonDraftKey, JSON.stringify(draft));
     } catch (_) {
       // Local storage unavailable. The form remains a demo.
     }
   });
 
-
-
-  container().addEventListener('click', event => {
+  container().addEventListener('click', (event) => {
     const button = event.target.closest('[data-detail-action]');
-
 
     if (!button) return;
 
@@ -4718,42 +4917,30 @@ const DeliveryDetail = (() => {
     }
 
     if (
-      button.dataset.detailAction === 'amazon-claim-toggle'
-      || button.dataset.detailAction === 'amazon-claim-close'
+      button.dataset.detailAction === 'amazon-claim-toggle' ||
+      button.dataset.detailAction === 'amazon-claim-close'
     ) {
       const delivery = sel ? get(sel) : null;
 
-      if (
-        !isOrderDetailPage()
-        || !isAmazonShippingDelivery(delivery)
-      ) {
+      if (!isOrderDetailPage() || !isAmazonShippingDelivery(delivery)) {
         return;
       }
 
-      const panel =
-        container().querySelector('.qd-tracking-view');
+      const panel = container().querySelector('.qd-tracking-view');
 
-      const form =
-        panel?.querySelector('.qd-amazon-claim-panel');
+      const form = panel?.querySelector('.qd-amazon-claim-panel');
 
-      const trigger =
-        panel?.querySelector('.qd-amazon-claim-button');
+      const trigger = panel?.querySelector('.qd-amazon-claim-button');
 
       if (!form) return;
 
-      const opening =
-        button.dataset.detailAction === 'amazon-claim-toggle'
-        && form.hidden;
+      const opening = button.dataset.detailAction === 'amazon-claim-toggle' && form.hidden;
 
       form.hidden = !opening;
 
-      amazonClaimOpenFor =
-        opening ? String(delivery.id) : '';
+      amazonClaimOpenFor = opening ? String(delivery.id) : '';
 
-      trigger?.setAttribute(
-        'aria-expanded',
-        String(opening)
-      );
+      trigger?.setAttribute('aria-expanded', String(opening));
 
       if (opening) {
         form.scrollIntoView({
@@ -4770,7 +4957,11 @@ const DeliveryDetail = (() => {
       if (!current) return;
 
       const values = {
-        address: current.providerAddress || current.palletwaysDetails?.deliveryAddress || current.addr || '',
+        address:
+          current.providerAddress ||
+          current.palletwaysDetails?.deliveryAddress ||
+          current.addr ||
+          '',
         phone: current.phone || '',
         email: current.email || '',
         trackingNumber: current.trk || current.owTrackingNo || '',
@@ -4800,7 +4991,6 @@ const DeliveryDetail = (() => {
       return;
     }
 
-
     if (button.dataset.detailAction === 'tracking-tab') {
       if (!isOrderDetailPage()) return;
 
@@ -4819,11 +5009,8 @@ const DeliveryDetail = (() => {
 
       panel.dataset.qdTab = nextTab;
 
-      panel.querySelectorAll('[data-detail-action="tracking-tab"]').forEach(tab => {
-        tab.setAttribute(
-          'aria-pressed',
-          String(tab.dataset.qdTab === nextTab)
-        );
+      panel.querySelectorAll('[data-detail-action="tracking-tab"]').forEach((tab) => {
+        tab.setAttribute('aria-pressed', String(tab.dataset.qdTab === nextTab));
       });
 
       // Smoothly scroll the sidebar to the bottom
@@ -4838,7 +5025,7 @@ const DeliveryDetail = (() => {
         const duration = 650;
         const startTime = performance.now();
 
-        const animateScroll = now => {
+        const animateScroll = (now) => {
           const progress = Math.min((now - startTime) / duration, 1);
           const eased = 1 - Math.pow(1 - progress, 3);
 
@@ -4856,13 +5043,12 @@ const DeliveryDetail = (() => {
     }
 
     if (button.dataset.detailAction === 'close') close();
-    if (button.dataset.detailAction === 'refresh-palletways-photos' && sel) loadPalletwaysPortal(sel, true);
-
-
-
+    if (button.dataset.detailAction === 'refresh-palletways-photos' && sel)
+      loadPalletwaysPortal(sel, true);
 
     if (button.dataset.detailAction === 'close-gallery') closeGallery();
-    if (button.dataset.detailAction === 'open-pod-gallery') showGallery(Number(button.dataset.podIndex));
+    if (button.dataset.detailAction === 'open-pod-gallery')
+      showGallery(Number(button.dataset.podIndex));
     if (button.dataset.detailAction === 'previous-pod') showGallery(galleryIndex - 1);
     if (button.dataset.detailAction === 'next-pod') showGallery(galleryIndex + 1);
     if (button.dataset.detailAction === 'zoom-pod-in') zoomGallery(1.25);
@@ -4883,35 +5069,61 @@ const DeliveryDetail = (() => {
     }
     if (button.dataset.detailAction === 'copy-pod-link') {
       const delivery = sel ? get(sel) : null;
-      const podUrl = delivery?.podPhotos?.[Number(button.dataset.podIndex)]?.url || delivery?.podUrl || delivery?.proofUrl;
+      const podUrl =
+        delivery?.podPhotos?.[Number(button.dataset.podIndex)]?.url ||
+        delivery?.podUrl ||
+        delivery?.proofUrl;
       if (podUrl) copyText(new URL(podUrl, location.href).href, 'PoD link copied');
     }
-    if (button.dataset.detailAction === 'download-pod-image') downloadPodImage(Number(button.dataset.podIndex));
+    if (button.dataset.detailAction === 'download-pod-image')
+      downloadPodImage(Number(button.dataset.podIndex));
   });
 
-  container().addEventListener('wheel', event => {
-    const image = event.target.closest('.qd-gallery-image');
-    if (!image?.complete || !image.naturalWidth || !event.deltaY) return;
-    event.preventDefault();
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? image.closest('.qd-gallery-canvas').clientHeight : 1;
-    zoomGallery(Math.exp(-event.deltaY * unit * 0.002), AtlasViewport.x(event), AtlasViewport.y(event));
-  }, { passive: false });
+  container().addEventListener(
+    'wheel',
+    (event) => {
+      const image = event.target.closest('.qd-gallery-image');
+      if (!image?.complete || !image.naturalWidth || !event.deltaY) return;
+      event.preventDefault();
+      const unit =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? image.closest('.qd-gallery-canvas').clientHeight
+            : 1;
+      zoomGallery(
+        Math.exp(-event.deltaY * unit * 0.002),
+        AtlasViewport.x(event),
+        AtlasViewport.y(event),
+      );
+    },
+    { passive: false },
+  );
 
-  container().addEventListener('pointerdown', event => {
+  container().addEventListener('pointerdown', (event) => {
     const image = event.target.closest('.qd-gallery-image');
-    if (!image?.complete || !image.naturalWidth || galleryTransform.scale <= 1 || event.button !== 0) return;
+    if (
+      !image?.complete ||
+      !image.naturalWidth ||
+      galleryTransform.scale <= 1 ||
+      event.button !== 0
+    )
+      return;
     event.preventDefault();
     endGalleryDrag();
     galleryDrag = {
-      image, pointerId: event.pointerId,
-      clientX: AtlasViewport.x(event), clientY: AtlasViewport.y(event),
-      x: galleryTransform.x, y: galleryTransform.y,
+      image,
+      pointerId: event.pointerId,
+      clientX: AtlasViewport.x(event),
+      clientY: AtlasViewport.y(event),
+      x: galleryTransform.x,
+      y: galleryTransform.y,
     };
     image.setPointerCapture(event.pointerId);
     image.classList.add('is-dragging');
   });
 
-  container().addEventListener('pointermove', event => {
+  container().addEventListener('pointermove', (event) => {
     if (!galleryDrag || event.pointerId !== galleryDrag.pointerId) return;
     if (!galleryDrag.image.isConnected) {
       endGalleryDrag();
@@ -4924,46 +5136,52 @@ const DeliveryDetail = (() => {
   });
 
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    container().addEventListener(type, event => {
+    container().addEventListener(type, (event) => {
       if (galleryDrag?.pointerId === event.pointerId) endGalleryDrag();
     });
   }
 
   window.addEventListener('resize', applyGalleryTransform);
 
-
   // Close the Tracking sidebar when clicking outside it.
-  document.addEventListener('pointerdown', event => {
-    if (!isOrderDetailPage() || !sel) return;
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      if (!isOrderDetailPage() || !sel) return;
 
-    // Do not interfere with the proof-of-delivery gallery.
-    if (galleryIndex !== null) return;
+      // Do not interfere with the proof-of-delivery gallery.
+      if (galleryIndex !== null) return;
 
-    const panel = container().querySelector('.dr.qd.qd-tracking-view');
+      const panel = container().querySelector('.dr.qd.qd-tracking-view');
 
-    if (!panel || panel.classList.contains('qd-closing')) return;
+      if (!panel || panel.classList.contains('qd-closing')) return;
 
-    // Clicking inside the sidebar must not close it.
-    if (panel.contains(event.target)) return;
+      // Clicking inside the sidebar must not close it.
+      if (panel.contains(event.target)) return;
 
-    close();
-  }, true);
+      close();
+    },
+    true,
+  );
 
-
-  document.addEventListener('keydown', event => {
-    if (galleryIndex === null) return;
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      closeGallery();
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      showGallery(galleryIndex - 1);
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      showGallery(galleryIndex + 1);
-    }
-  }, true);
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (galleryIndex === null) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeGallery();
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        showGallery(galleryIndex - 1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        showGallery(galleryIndex + 1);
+      }
+    },
+    true,
+  );
 
   function openImages(photos, index = 0, title = 'Claim pictures', opener = null) {
     closeGallery();
@@ -4971,10 +5189,13 @@ const DeliveryDetail = (() => {
     if (dialog && !dialog.contains(container())) {
       // Keep the shared gallery and its existing event listeners in the modal's
       // active top layer, then restore the detail root when the viewer closes.
-      galleryPortal = {parent: container().parentNode, next: container().nextSibling};
+      galleryPortal = { parent: container().parentNode, next: container().nextSibling };
       dialog.append(container());
     }
-    externalGallery = {order: title, podPhotos: photos.map(photo => ({url:photo.url, imageUrl:photo.url, kind:'Photo'}))};
+    externalGallery = {
+      order: title,
+      podPhotos: photos.map((photo) => ({ url: photo.url, imageUrl: photo.url, kind: 'Photo' })),
+    };
     galleryOpener = opener;
     showGallery(index);
   }
@@ -4985,26 +5206,38 @@ let detailOpenRequest = 0;
 function op(id, section = '') {
   const request = ++detailOpenRequest;
   const targetPage = page;
-  const cached = get(id) || [...trackingLoaded, ...failedLoaded, ...D,
-    ...(liveSummary?.today || []), ...(liveSummary?.failedPreview || [])]
-    .find(delivery => String(delivery.id) === String(id));
+  const cached =
+    get(id) ||
+    [
+      ...trackingLoaded,
+      ...failedLoaded,
+      ...D,
+      ...(liveSummary?.today || []),
+      ...(liveSummary?.failedPreview || []),
+    ].find((delivery) => String(delivery.id) === String(id));
   if (cached && !get(id)) DeliveryStore.add({ ...cached, id });
   if (cached) DeliveryDetail.open(id, section);
   if (document.body.dataset.live === 'true') {
-    DeliveryApi.get(id).then(delivery => {
-      if (delivery.error) throw new Error(delivery.error);
-      if (page !== targetPage || request !== detailOpenRequest) return;
-      const previous = get(id);
-      const changed = JSON.stringify(previous) !== JSON.stringify({ ...previous, ...delivery });
-      if (previous) DeliveryStore.update(id, delivery);
-      else DeliveryStore.add({ ...delivery, id });
-      if (!cached) DeliveryDetail.open(id, section);
-      else if (sel === id && changed) DeliveryDetail.render();
-    }).catch(error => {
-      if (page === targetPage && request === detailOpenRequest) {
-        toast(cached ? 'Live details unavailable; showing saved order details.' : error.message || 'Could not load order details. Try again.');
-      }
-    });
+    DeliveryApi.get(id)
+      .then((delivery) => {
+        if (delivery.error) throw new Error(delivery.error);
+        if (page !== targetPage || request !== detailOpenRequest) return;
+        const previous = get(id);
+        const changed = JSON.stringify(previous) !== JSON.stringify({ ...previous, ...delivery });
+        if (previous) DeliveryStore.update(id, delivery);
+        else DeliveryStore.add({ ...delivery, id });
+        if (!cached) DeliveryDetail.open(id, section);
+        else if (sel === id && changed) DeliveryDetail.render();
+      })
+      .catch((error) => {
+        if (page === targetPage && request === detailOpenRequest) {
+          toast(
+            cached
+              ? 'Live details unavailable; showing saved order details.'
+              : error.message || 'Could not load order details. Try again.',
+          );
+        }
+      });
   } else if (!cached) {
     toast('Order details unavailable. Refresh the delivery list.');
   }

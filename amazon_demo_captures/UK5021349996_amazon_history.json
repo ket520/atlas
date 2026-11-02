@@ -1,0 +1,139 @@
+{
+  "source": "amazon_shipping_live_browser_capture",
+  "tracking_id": "UK5021349996",
+  "shipment_status": "Delivered",
+  "reference": "619335-621676",
+  "shipping_speed": "One day",
+  "package_size": "40 x 30 x 15 cm",
+  "package_weight": "1.52 kg",
+  "total_charge": "£3.31",
+  "events_count": 14,
+  "events": [
+    {
+      "date": "2026-10-30",
+      "time": "21:25",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-30T21:25:00+08:00",
+      "description": "Package delivered",
+      "location": "Hove, East Sussex, GB",
+      "note": "Package was left with household member"
+    },
+    {
+      "date": "2026-10-30",
+      "time": "19:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-30T19:44:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-30",
+      "time": "19:44",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-30T19:44:00+08:00",
+      "description": "Out for delivery",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-30",
+      "time": "08:47",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-30T08:47:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-30",
+      "time": "02:53",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-30T02:53:00+08:00",
+      "description": "First delivery attempt made",
+      "location": "",
+      "note": "The recipient was unavailable. BOGNOR REGIS, WEST SUSSEX, UK"
+    },
+    {
+      "date": "2026-10-29",
+      "time": "19:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-29T19:57:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-29",
+      "time": "19:57",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-29T19:57:00+08:00",
+      "description": "Out for delivery",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-29",
+      "time": "15:39",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-29T15:39:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "BOGNOR REGIS, WEST SUSSEX, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-29",
+      "time": "10:59",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-29T10:59:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-28",
+      "time": "10:56",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-28T10:56:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "Weybridge, Surrey, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-28",
+      "time": "08:03",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-28T08:03:00+08:00",
+      "description": "Package has left the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-28",
+      "time": "03:51",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-28T03:51:00+08:00",
+      "description": "Package arrived at the carrier facility",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-28",
+      "time": "03:51",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-28T03:51:00+08:00",
+      "description": "Package picked up",
+      "location": "REDDITCH, West Midlands, UK",
+      "note": ""
+    },
+    {
+      "date": "2026-10-27",
+      "time": "21:21",
+      "timezone_offset": "+08:00",
+      "timestamp": "2026-10-27T21:21:00+08:00",
+      "description": "Shipping label created",
+      "location": "",
+      "note": ""
+    }
+  ]
+}

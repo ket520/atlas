@@ -1,3 +1,2 @@
-2026/10/30-18:09:43.122 c60 Reusing MANIFEST C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\GCM Store/MANIFEST-000001
-2026/10/30-18:09:43.122 c60 Recovering log #3
-2026/10/30-18:09:43.123 c60 Reusing old log C:\Users\kaket\Downloads\DeliveryDesk_2026-10-10\CustomerServiceDeliveryInterface\data\palletways-portal-profile\Default\GCM Store/000003.log 
+2026/11/02-17:27:21.347 7e90 Creating DB C:\atlas\data\palletways-portal-profile\Default\GCM Store since it was missing.
+2026/11/02-17:27:21.354 7e90 Reusing MANIFEST C:\atlas\data\palletways-portal-profile\Default\GCM Store/MANIFEST-000001

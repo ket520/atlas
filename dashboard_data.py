@@ -3,8 +3,19 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 
-WIDGET_KEYS = ('cancelled', 'hold', 'out-of-stock', 'charge-pending', 'collect',
-               'palletways-next-day', 'palletways-unbooked', 'van-unscheduled', 'returns', 'awaiting-dispatch')
+WIDGET_KEYS = (
+    "palletways-depot-3days",
+    "cancelled",
+    "hold",
+    "out-of-stock",
+    "charge-pending",
+    "collect",
+    "palletways-next-day",
+    "palletways-unbooked",
+    "van-unscheduled",
+    "returns",
+    "awaiting-dispatch",
+)
 
 
 def widget_condition(key):
@@ -16,20 +27,43 @@ def widget_condition(key):
     booking = "lower(trim(coalesce(json_extract(payload, '$.bookingStatus'), '')))"
     uk_day = datetime.now(ZoneInfo('Europe/London')).date()
     conditions = {
-        'awaiting-dispatch': ("upper(trim(coalesce(json_extract(payload, '$.rawStatus'), ''))) IN ('W', 'AWAITING DESPATCH', 'AWAITING DISPATCH')", []),
-        'cancelled': (f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,10)=?",
-                      [uk_day.isoformat()]),
-        'cancelled-month': (f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,7)=?",
-                            [uk_day.strftime('%Y-%m')]),
-        'hold': (f"({carrier}='On Hold' OR {status}='Unassigned')", []),
-        'out-of-stock': (f"({booking} LIKE '%out of stock%' OR {booking}='o/s') AND {status} NOT IN ('Delivered','Cancelled','Return')", []),
-        'charge-pending': (f"{carrier}='Charge Pending (Remote Postcode)'", []),
-        'collect': (f"{carrier}='Collect in Person'", []),
-        'palletways-next-day': (f"{carrier}='Palletways' AND lower(json_extract(payload, '$.deliveryMethodRaw')) LIKE '%next day%' AND {status} NOT IN ('Delivered','Cancelled','Return')", []),
-        'palletways-unbooked': (f"{carrier}='Palletways' AND lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))='no' AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'), '')))!='delivered' AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id=deliveries.order_id)", []),
-        'van-unscheduled': (f"{carrier} IN ('Own van','Self Delivery','LOCAL MULTIDROP') AND ({status}='Unscheduled' OR {booking} IN ('o/s','out of stock','on hold','open')) AND {status} NOT IN ('Delivered','Cancelled','Return')", []),
+        "palletways-depot-3days": (
+            f"{carrier}='Palletways' AND {status} NOT IN ('Delivered','Cancelled','Return') AND json_extract(payload, '$.palletwaysDepotStay.verified')=1 AND julianday('now')-julianday(json_extract(payload, '$.palletwaysDepotStay.arrivedAt'))>3",
+            [],
+        ),
+        "awaiting-dispatch": (
+            "upper(trim(coalesce(json_extract(payload, '$.rawStatus'), ''))) IN ('W', 'AWAITING DESPATCH', 'AWAITING DISPATCH')",
+            [],
+        ),
+        "cancelled": (
+            f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,10)=?",
+            [uk_day.isoformat()],
+        ),
+        "cancelled-month": (
+            f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,7)=?",
+            [uk_day.strftime("%Y-%m")],
+        ),
+        "hold": (f"({carrier}='On Hold' OR {status}='Unassigned')", []),
+        "out-of-stock": (
+            f"({booking} LIKE '%out of stock%' OR {booking}='o/s') AND {status} NOT IN ('Delivered','Cancelled','Return')",
+            [],
+        ),
+        "charge-pending": (f"{carrier}='Charge Pending (Remote Postcode)'", []),
+        "collect": (f"{carrier}='Collect in Person'", []),
+        "palletways-next-day": (
+            f"{carrier}='Palletways' AND lower(json_extract(payload, '$.deliveryMethodRaw')) LIKE '%next day%' AND {status} NOT IN ('Delivered','Cancelled','Return')",
+            [],
+        ),
+        "palletways-unbooked": (
+            f"{carrier}='Palletways' AND lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))='no' AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'), '')))!='delivered' AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id=deliveries.order_id)",
+            [],
+        ),
+        "van-unscheduled": (
+            f"{carrier} IN ('Own van','Self Delivery','LOCAL MULTIDROP') AND ({status}='Unscheduled' OR {booking} IN ('o/s','out of stock','on hold','open')) AND {status} NOT IN ('Delivered','Cancelled','Return')",
+            [],
+        ),
         # Processing state belongs to the planned Returns workflow, not shipment status.
-        'returns': ('0', []),
+        "returns": ("0", []),
     }
     if key not in conditions:
         raise ValueError('Unknown dashboard widget.')
@@ -56,12 +90,51 @@ def snapshot(store='', carrier='', **visibility):
             {name: row.get(name, '') for name in ('id', 'order', 'orderDate', 'date', 'cust', 'st')}
             for row in result['deliveries'][:3]
         ]}
-        widgets[key]['rows'] = [{name: row.get(name, '') for name in ('id', 'order', 'orderDate', 'orderDateTime', 'cust', 'orderRef', 'deliveryMethodRaw', 'carrier', 'postcode', 'palletwaysSheetStatus', 'st')}
-                                for row in result['deliveries']]
+        widgets[key]["rows"] = [
+            {
+                name: row.get(name, "")
+                for name in (
+                    "id",
+                    "order",
+                    "orderDate",
+                    "orderDateTime",
+                    "cust",
+                    "orderRef",
+                    "deliveryMethodRaw",
+                    "carrier",
+                    "postcode",
+                    "palletwaysSheetStatus",
+                    "st",
+                    "bookingStatus",
+                    "skuItems",
+                    "specialInstructions",
+                    "palletwaysDepotStay",
+                )
+            }
+            for row in result["deliveries"]
+        ]
         if key == 'cancelled':
             widgets[key]['scope'] = 'today'
         elif key == 'palletways-unbooked':
             widgets[key]['scope'] = 'booked-in-no-current-ow-not-delivered'
+    with connect() as db:
+        checks = db.execute("""
+            SELECT COUNT(*) AS total,
+                   COUNT(json_extract(payload, '$.palletwaysDepotStay.checkedAt')) AS checked,
+                   MIN(json_extract(payload, '$.palletwaysDepotStay.checkedAt')) AS checked_at,
+                   SUM(coalesce(json_extract(payload, '$.palletwaysDepotStay.unavailable'), 0)) AS failures
+            FROM deliveries WHERE json_extract(payload, '$.carrier')='Palletways'
+              AND coalesce(json_extract(payload, '$.st'), '') NOT IN ('Delivered','Cancelled','Return')
+              AND (length(json_extract(payload, '$.palletwaysSheetTrackingNumber'))=11
+                   OR length(json_extract(payload, '$.trk'))=11
+                   OR length(json_extract(payload, '$.owTrackingNo'))=11)
+        """).fetchone()
+    widgets["palletways-depot-3days"]["monitor"] = {
+        "checked": checks["checked"],
+        "total": checks["total"],
+        "checkedAt": checks["checked_at"],
+        "failures": checks["failures"] or 0,
+    }
     return {'widgets': widgets}
 
 

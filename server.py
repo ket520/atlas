@@ -897,6 +897,10 @@ if __name__ == "__main__":
         from amazon_background_prefetch import start_amazon_prefetch
         start_amazon_prefetch()
 
+        from palletways_depot import start_depot_monitor
+
+        start_depot_monitor()
+
         try:
             server.serve_forever()
         except KeyboardInterrupt:
