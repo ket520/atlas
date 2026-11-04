@@ -25,10 +25,18 @@ def widget_condition(key):
     status = "coalesce(json_extract(payload, '$.st'), '')"
     carrier = "coalesce(json_extract(payload, '$.carrier'), '')"
     booking = "lower(trim(coalesce(json_extract(payload, '$.bookingStatus'), '')))"
+    palletways_booked_in = (
+        "lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))"
+    )
     uk_day = datetime.now(ZoneInfo('Europe/London')).date()
     conditions = {
         "palletways-depot-3days": (
-            f"{carrier}='Palletways' AND {status} NOT IN ('Delivered','Cancelled','Return') AND json_extract(payload, '$.palletwaysDepotStay.verified')=1 AND julianday('now')-julianday(json_extract(payload, '$.palletwaysDepotStay.arrivedAt'))>3",
+            f"{carrier} = 'Palletways' "
+            f"AND {status} NOT IN ('Delivered', 'Cancelled', 'Return') "
+            f"AND {palletways_booked_in} <> 'yes' "
+            "AND json_extract(payload, '$.palletwaysDepotStay.verified') = 1 "
+            "AND julianday('now') "
+            "- julianday(json_extract(payload, '$.palletwaysDepotStay.arrivedAt')) > 3",
             [],
         ),
         "awaiting-dispatch": (
@@ -55,7 +63,11 @@ def widget_condition(key):
             [],
         ),
         "palletways-unbooked": (
-            f"{carrier}='Palletways' AND lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))='no' AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'), '')))!='delivered' AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id=deliveries.order_id)",
+            f"{carrier} = 'Palletways' "
+            f"AND {palletways_booked_in} = 'no' "
+            "AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), "
+            "json_extract(payload, '$.st'), ''))) != 'delivered' "
+            "AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id = deliveries.order_id)",
             [],
         ),
         "van-unscheduled": (

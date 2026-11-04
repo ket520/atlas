@@ -701,6 +701,9 @@ const DashboardHome = (() => {
       const booking = String(item.bookingStatus || '')
         .trim()
         .toLowerCase();
+      const palletwaysBookedIn = String(item.palletwaysSheetBookedIn || '')
+        .trim()
+        .toLowerCase();
       const active = !['Delivered', 'Cancelled', 'Return'].includes(item.st);
       if (key === 'cancelled')
         return (
@@ -724,6 +727,7 @@ const DashboardHome = (() => {
         return (
           active &&
           item.carrier === 'Palletways' &&
+          palletwaysBookedIn !== 'yes' &&
           item.palletwaysDepotStay?.verified &&
           Date.now() - Date.parse(item.palletwaysDepotStay.arrivedAt) > 72 * 3600000
         );
@@ -738,9 +742,7 @@ const DashboardHome = (() => {
             .trim()
             .toLowerCase() !== 'delivered' &&
           item.carrier === 'Palletways' &&
-          String(item.palletwaysSheetBookedIn || '')
-            .trim()
-            .toLowerCase() === 'no' &&
+          palletwaysBookedIn === 'no' &&
           (!unbookedClass ||
             String(item.palletwaysDetails?.classification || '')
               .trim()
