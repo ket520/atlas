@@ -838,7 +838,8 @@ body[data-page="Collective Note"] .rt,
 
 #collection-note-root .cn-button.cn-button-danger:hover:not(:disabled) { background: #ffe1e5;}
 
-#collection-note-root .cn-button[data-collection-delete][hidden] { display: none;}
+#collection-note-root .cn-button[data-collection-delete][hidden],
+#collection-note-root tr[hidden] { display: none !important; }
 
 #collection-note-root .cn-toolbar [data-collection-delete] {
   margin-left: auto;

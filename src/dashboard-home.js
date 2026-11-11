@@ -2,7 +2,7 @@ const DashboardHome = (() => {
   const definitions = [
     [
       'palletways-depot-3days',
-      'Palletways · At Depot 3> Days',
+      'Palletways · At Depot >3 Days',
       'At delivery depot for over 72 hours',
       'truck',
       'purple',
@@ -11,7 +11,7 @@ const DashboardHome = (() => {
     ],
     [
       'cancelled',
-      "Today's OW Cancelled Orders",
+      "Today's OW Cancelled Van Orders",
       'Today only · UK order date',
       'x',
       'red',
@@ -126,11 +126,13 @@ const DashboardHome = (() => {
           ![
             'palletways-depot-3days',
             'collection-generator',
+            'order-identifier',
             'order-flow-tracker',
             'returns',
           ].includes(item.key),
       )
-      .map((item) => item.key);
+      .map((item) => item.key)
+      .concat('palletways-depot-3days');
   const widgetType = (key) => key.replace(/--[123]x[123]$/, '');
   const previousDefaultOrder = [
     'cancelled',
@@ -168,10 +170,12 @@ const DashboardHome = (() => {
     sizes = JSON.parse(localStorage.getItem(preferenceKey + '-sizes')) || {};
   } catch {}
   let resizeDrag = null;
-  const widgetSizes = ['1x1', '2x1', '3x1', '1x2', '2x2', '3x2', '1x3', '2x3', '3x3'];
+  // Gallery choices only; dragging can still resize widgets to any size up to 3x3.
+  const widgetSizes = ['1x1', '2x1', '3x1', '1x3'];
   const sizeColumns = (size) => Number(size?.split('x')[0]) || 1;
   const sizeUnits = (size) => Number(size?.split('x')[1]) || 1;
-  const widgetSize = (key) => sizes[key] || /--([123]x[123])$/.exec(key)?.[1] || '1x1';
+  const isUtilityWidget = (key) => ['collection-generator', 'order-identifier', 'order-flow-tracker'].includes(widgetType(key));
+  const widgetSize = (key) => isUtilityWidget(key) ? '1x1' : sizes[key] || /--([123]x[123])$/.exec(key)?.[1] || '1x1';
   const units = (key) => sizeUnits(widgetSize(key));
   const columns = (key) => Number(widgetSize(key).split('x')[0]) || 1;
   const gridRow = (row, span) => (span > 1 ? `${row} / span ${span}` : String(row));
@@ -203,6 +207,7 @@ const DashboardHome = (() => {
   }
 
   function growthTarget(key, direction, amount = 1) {
+    if (isUtilityWidget(key)) return null;
     const position = widgetPositions()[key];
     if (!position) return null;
     let row = parseInt(position.row, 10),
@@ -243,7 +248,7 @@ const DashboardHome = (() => {
   }
 
   function resizeControls(instance) {
-    if (!editing) return '';
+    if (!editing || isUtilityWidget(instance)) return '';
     return ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
       .map((edge) => {
         const icon =
@@ -410,6 +415,7 @@ const DashboardHome = (() => {
   }
 
   function applyWidgetSize(key, target) {
+    if (isUtilityWidget(key)) return;
     clearGrowthPreview();
     pinWidgetPositions();
     const positions = widgetPositions();
@@ -682,7 +688,6 @@ const DashboardHome = (() => {
   function localData(period = 'daily', unbookedClass = '') {
     const scoped = D.filter(
       (item) =>
-        matchesDeliveryCarrier(item.carrier, carrier) &&
         TrackingVisibility.includesOrderType(item.salesActivityDetails?.['Order Type']) &&
         TrackingVisibility.includesCarrier(item.carrier) &&
         TrackingVisibility.includesStore(purchaseChannel(item)) &&
@@ -704,7 +709,7 @@ const DashboardHome = (() => {
       const active = !['Delivered', 'Cancelled', 'Return'].includes(item.st);
       if (key === 'cancelled')
         return (
-          (item.st === 'Cancelled' || item.carrier === 'Cancelled') &&
+          isOwCancelledVan(item) &&
           (period === 'month'
             ? String(item.orderDate || '').slice(0, 7) === ukToday.slice(0, 7)
             : String(item.orderDate || '').slice(0, 10) === ukToday)
@@ -734,6 +739,7 @@ const DashboardHome = (() => {
       if (key === 'palletways-unbooked')
         return (
           item.salesActivityPresent === true &&
+          !/next day/i.test(item.deliveryMethodRaw || '') &&
           String(String(item.palletwaysSheetStatus || '').trim() || item.st || '')
             .trim()
             .toLowerCase() !== 'delivered' &&
@@ -758,7 +764,10 @@ const DashboardHome = (() => {
     return {
       widgets: Object.fromEntries(
         definitions.map((definition) => {
-          const rows = scoped.filter((item) => match(item, definition.key));
+          const rows = scoped.filter((item) =>
+            (matchesDeliveryCarrier(item.carrier, carrier) ||
+              (definition.key === 'cancelled' && ['Own van', 'Own van / Self Delivery'].includes(carrier) && isOwCancelledVan(item))) &&
+            match(item, definition.key));
           return [
             definition.key,
             {
@@ -766,6 +775,7 @@ const DashboardHome = (() => {
               total: rows.length,
               preview: rows.slice(0, 3),
               rows: rows.slice(0, 30),
+              allRows: rows,
             },
           ];
         }),
@@ -867,7 +877,7 @@ const DashboardHome = (() => {
           total = Infinity;
         while (offset < total) {
           const payload = await ApiClient.get(
-            `/deliveries?${new URLSearchParams({ general_scope: 'Cancelled', carrier: scopeCarrier, limit: '100', offset: String(offset), ...scopeVisibility })}`,
+            `/deliveries?${new URLSearchParams({ dashboard_widget: 'cancelled-month', carrier: scopeCarrier, limit: '100', offset: String(offset), ...scopeVisibility })}`,
           );
           if (!Array.isArray(payload.deliveries)) throw Error('Invalid cancelled orders');
           total = Number(payload.total);
@@ -893,6 +903,7 @@ const DashboardHome = (() => {
           available: true,
           total: matches.length,
           rows: matches.slice(0, 30),
+          allRows: matches,
           preview: matches.slice(0, 3),
         });
       })()
@@ -909,6 +920,49 @@ const DashboardHome = (() => {
     return state;
   }
   const tableSearch = new Map();
+  const tableCreatedSort = new Map();
+  const sortedTableCache = new Map();
+
+  function tableCreatedHeading(instance, label = 'Order date') {
+    return `<button type="button" class="table-date-sort" data-dash-sort-created="${esc(instance)}" aria-label="Sort ${esc(label.toLowerCase())}">${esc(label)} <span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(tableCreatedSort.get(instance) || '')}</span></button>`;
+  }
+
+  function tableCreatedSortAttribute(instance) {
+    const direction = tableCreatedSort.get(instance);
+    return `aria-sort="${direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : 'none'}"`;
+  }
+
+  function sortedTableRows(state, instance) {
+    const direction = tableCreatedSort.get(instance);
+    const base = state?.allRows || state?.rows || state?.preview || [];
+    if (!direction) return state?.rows || state?.preview || [];
+    if (!live()) return sortDeliveriesByDate(base, direction, orderCreatedDate).slice(0, 30);
+    const definition = selectedDefinition(instance);
+    const cohort = definition.key === 'cancelled' && sizes[instance + '-period'] === 'month' ? 'cancelled-month'
+      : definition.key === 'palletways-unbooked'
+        ? 'palletways-unbooked-' + (!TrackingVisibility.palletwaysB2bEnabled() && sizes[instance + '-class'] === 'B2B' ? 'b2b' : 'b2c')
+        : definition.key;
+    const key = JSON.stringify([cohort, direction, carrier, visibility(), liveSummary?.syncedAt]);
+    let saved = sortedTableCache.get(key);
+    if (!saved) {
+      saved = {rows: null};
+      sortedTableCache.set(key, saved);
+      ApiClient.get(`/deliveries?${new URLSearchParams({dashboard_widget: cohort, carrier,
+        date_sort: 'created_' + direction, limit: '30', ...visibility()})}`)
+        .then(payload => { saved.rows = payload.deliveries; })
+        .catch(error => { saved.error = true; toast(error.message || 'Could not sort orders'); })
+        .finally(() => { if (page === 'Dashboard') paint(); });
+    }
+    return saved.rows || sortDeliveriesByDate(base, direction, orderCreatedDate).slice(0, 30);
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-dash-sort-created]');
+    if (!button) return;
+    const instance = button.dataset.dashSortCreated;
+    tableCreatedSort.set(instance, tableCreatedSort.get(instance) === 'desc' ? 'asc' : 'desc');
+    paint();
+  });
 
   function tableOrderHeading(instance) {
     const search = tableSearch.get(instance);
@@ -921,7 +975,7 @@ const DashboardHome = (() => {
 
   function tableRows(state, instance) {
     const query = (tableSearch.get(instance)?.query || '').trim().toLowerCase();
-    return (state?.rows || state?.preview || []).filter(
+    return exactOrderMatches(sortedTableRows(state, instance), query).filter(
       (row) =>
         !query ||
         String(row.order || row.id || '')
@@ -988,8 +1042,39 @@ const DashboardHome = (() => {
   });
   const orderViewIcon = () =>
     '<svg class="dash-order-view-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>';
-  const orderLabel = (item) =>
-    `<span class="dash-order-id-value">${esc(item.order)}</span>${orderViewIcon()}`;
+  const widgetOrderDetails = new Map();
+  function rememberWidgetOrder(item) {
+    const id = String(item.id || item.order || '');
+    if (id) widgetOrderDetails.set(id, { ...item, id, order: item.order || id });
+    return id;
+  }
+  const orderLabel = (item) => {
+    rememberWidgetOrder(item);
+    return `<span class="dash-order-id-value">${esc(item.order || item.id)}</span>${orderViewIcon()}`;
+  };
+
+  function palletwaysWidgetStatus(value) {
+    const label = palletwaysSpecificStatus(value);
+    if (!label) return '<span class="dash-palletways-status is-unknown">&mdash;</span>';
+    const colours = {
+      'unscheduled': 'unscheduled',
+      'consignment created': 'created',
+      'scheduled': 'scheduled',
+      'in transit': 'transit',
+      'out for delivery': 'out',
+      'delivered': 'delivered',
+      'return': 'return',
+      'cancelled': 'cancelled',
+      'failed': 'exception',
+      'rejected': 'exception',
+      'refused': 'exception',
+      'damaged': 'exception',
+      'lost': 'exception',
+      'palletways look up failed': 'exception',
+      'credit/refund': 'credit',
+    };
+    return `<span class="dash-palletways-status is-${colours[label.toLowerCase()] || 'unknown'}">${esc(label)}</span>`;
+  }
 
   function widgetTableColumns(definition, instance) {
     const width = columns(instance);
@@ -1006,6 +1091,10 @@ const DashboardHome = (() => {
         {
           label: 'Time at depot',
           key: 'depotDuration',
+        },
+        {
+          label: 'Status',
+          key: 'palletwaysSheetStatus',
         },
       ];
       if (width >= 2)
@@ -1077,7 +1166,7 @@ const DashboardHome = (() => {
     const rows = tableRows(state, instance);
     const headings = fields
       .map(
-        (field) => `<th>${field.key === 'order' ? tableOrderHeading(instance) : field.label}</th>`,
+        (field) => `<th ${field.key === 'orderDate' ? tableCreatedSortAttribute(instance) : ''}>${field.key === 'order' ? tableOrderHeading(instance) : field.key === 'orderDate' ? tableCreatedHeading(instance) : field.label}</th>`,
       )
       .join('');
     const body = rows
@@ -1112,9 +1201,14 @@ const DashboardHome = (() => {
                 };
                 return '<td>' + esc(values[field.key] || '—') + '</td>';
               }
+              if (field.key === 'palletwaysSheetStatus' &&
+                  ['palletways-unbooked', 'palletways-depot-3days', 'palletways-next-day'].includes(definition.key))
+                return '<td>' + palletwaysWidgetStatus(item.palletwaysSheetStatus) + '</td>';
               const value =
                 field.key === 'palletwaysSheetStatus'
-                  ? item.palletwaysSheetStatus || item.st
+                  ? definition.key === 'palletways-depot-3days'
+                    ? palletwaysSpecificStatus(item.palletwaysSheetStatus)
+                    : item.palletwaysSheetStatus || item.st
                   : item[field.key];
               return '<td>' + esc(value || '—') + '</td>';
             })
@@ -1129,7 +1223,7 @@ const DashboardHome = (() => {
   }
   function cancelledTableMarkup(state, month, detail, instance) {
     const rows = tableRows(state, instance);
-    return `<div class="dash-table-scroll"><table class="dash-cancelled-table"><colgroup><col style="width:44%"><col style="width:31%"><col style="width:25%"></colgroup><thead><tr><th>${tableOrderHeading(instance)}</th><th>Reference No.</th><th>Time &amp; Date</th></tr></thead><tbody>${
+    return `<div class="dash-table-scroll"><table class="dash-cancelled-table"><colgroup><col style="width:44%"><col style="width:31%"><col style="width:25%"></colgroup><thead><tr><th>${tableOrderHeading(instance)}</th><th>Reference No.</th><th ${tableCreatedSortAttribute(instance)}>${tableCreatedHeading(instance, 'Time & Date')}</th></tr></thead><tbody>${
       rows
         .map((item) => {
           const raw = String(item.orderDateTime || ''),
@@ -1155,7 +1249,7 @@ const DashboardHome = (() => {
           const reference = item.orderRef || item.orderReference || '-';
           const dateMarkup = month ? '<span class="dash-order-date">' + esc(date) + '</span>' : '';
           const datetime = valid ? 'datetime="' + esc(raw) + '"' : '';
-          return `<tr><td><button type="button" data-dash-order="${esc(item.id || item.order)}">${orderLabel(item)}</button><span class="dash-order-customer">${esc(item.cust || '-')}</span></td><td>${esc(reference)}</td><td>${dateMarkup}<time class="dash-order-time" ${datetime}>${esc(time)}</time></td></tr>`;
+          return `<tr><td><button type="button" data-dash-order="${esc(item.id || item.order)}">${orderLabel(item)}</button><span class="dash-order-customer">${esc(item.cust || '-')}</span></td><td>${esc(reference)}${replacementBadge(item)}</td><td>${dateMarkup}<time class="dash-order-time" ${datetime}>${esc(time)}</time></td></tr>`;
         })
         .join('') ||
       `<tr><td colspan="3">${esc(tableSearch.get(instance)?.query ? 'No matching order IDs' : detail)}</td></tr>`
@@ -1225,6 +1319,7 @@ const DashboardHome = (() => {
       available: true,
       total: rows.length,
       rows: rows.slice(0, 30),
+      allRows: rows,
       preview: rows.slice(0, 3),
       scope: 'booked-in-no-current-ow-not-delivered',
     };
@@ -1247,6 +1342,7 @@ const DashboardHome = (() => {
     if (!state.result) return `<span>${esc(state.message)}</span>`;
     const result = state.result;
     if (result.flow) {
+      for (const node of result.flow.nodes || []) rememberWidgetOrder(node);
       const map = trackingOrderFlowMarkup(
         {
           order: result.order,
@@ -1254,6 +1350,7 @@ const DashboardHome = (() => {
         },
         {
           compact: true,
+          dashboardOrders: true,
           markerId: `utility-flow-arrow-${instance}`,
         },
       );
@@ -1275,7 +1372,7 @@ const DashboardHome = (() => {
         .split(/\r?\n/)
         .map(
           (number) =>
-            `<span class="dash-identifier-value"><span>${esc(number || 'Not recorded')}</span>${number ? `<button type="button" class="qd-customer-copy dash-identifier-copy" ${attribute}="${esc(number)}" aria-label="Copy ${label} ${esc(number)}" title="Copy ${label}">${ico('copy', 13, 1.8)}</button>` : ''}</span>`,
+            `<span class="dash-identifier-value">${label === 'Order ID' && number ? `<button type="button" class="dash-identifier-order" data-dash-order="${esc(number)}" aria-label="Open order ${esc(number)}">${esc(number)}${orderViewIcon()}</button>` : `<span>${esc(number || 'Not recorded')}</span>`}${number ? `<button type="button" class="qd-customer-copy dash-identifier-copy" ${attribute}="${esc(number)}" aria-label="Copy ${label} ${esc(number)}" title="Copy ${label}">${ico('copy', 13, 1.8)}</button>` : ''}</span>`,
         )
         .join('')}</dd></div>`;
     const carrierIcon = {
@@ -1283,6 +1380,7 @@ const DashboardHome = (() => {
       AMZ: 'amazonicon.webp',
       XDP: 'XDPiocn.png',
     }[result.courier];
+    rememberWidgetOrder({ ...result, id: result.order, carrier: result.courier });
     const fields = [identifier('Order ID', result.order, 'data-copy-order-number')];
     if (['Palletways', 'AMZ'].includes(result.courier))
       fields.push(
@@ -1440,7 +1538,7 @@ const DashboardHome = (() => {
       : definition.key === 'palletways-unbooked'
         ? 'palletways-unbooked-' + unbookedClass.toLowerCase()
         : definition.key;
-    const title = month ? "This Month's OW Cancelled Orders" : definition.title;
+    const title = month ? "This Month's OW Cancelled Van Orders" : definition.title;
     const savedState =
       definition.key === 'palletways-unbooked'
         ? unbookedWidgetData(unbookedClass)
@@ -1785,8 +1883,9 @@ const DashboardHome = (() => {
   }
   async function load(force = false) {
     if (!live() || page !== 'Dashboard') return;
-    const key = JSON.stringify([carrier, liveSummary?.syncedAt, visibility()]);
-    if (!force && key === loadedKey && (loading || Date.now() - checkedAt < 300000)) {
+    const scopeCarrier = carrier, scopeVisibility = visibility();
+    const key = JSON.stringify([scopeCarrier, liveSummary?.syncedAt, scopeVisibility]);
+    if (!force && key === loadedKey && (loading || (!error && result && Date.now() - checkedAt < 300000))) {
       paint();
       return;
     }
@@ -1797,7 +1896,7 @@ const DashboardHome = (() => {
     paint();
     try {
       const payload = await ApiClient.get(
-        `/dashboard?${new URLSearchParams({ carrier, ...visibility() })}`,
+        `/dashboard?${new URLSearchParams({ carrier: scopeCarrier, ...scopeVisibility })}`,
       );
       if (
         !payload.widgets ||
@@ -1829,7 +1928,7 @@ const DashboardHome = (() => {
           )
             return;
           const rows = await ApiClient.get(
-            `/deliveries?${new URLSearchParams({ dashboard_widget: definition.key, carrier, limit: '30', ...visibility() })}`,
+            `/deliveries?${new URLSearchParams({ dashboard_widget: definition.key, carrier: scopeCarrier, limit: '30', ...scopeVisibility })}`,
           );
           if (Array.isArray(rows.deliveries)) state.rows = rows.deliveries;
         }),
@@ -1846,6 +1945,18 @@ const DashboardHome = (() => {
         if (page === 'Dashboard') paint();
       }
     }
+  }
+
+  function invalidateVisibility() {
+    request++;
+    result = null;
+    loading = false;
+    error = false;
+    checkedAt = 0;
+    loadedKey = '';
+    monthlyCache.clear();
+    unbookedCache.clear();
+    sortedTableCache.clear();
   }
 
   function filters(label, icon, options, selected, kind) {
@@ -1914,6 +2025,7 @@ const DashboardHome = (() => {
       widgetSizes
         .filter(
           (size) =>
+            (!isUtilityWidget(def.key) || size === '1x1') &&
             (pickerFilter === 'all' || size === pickerFilter) &&
             !order.some((key) => widgetType(key) === def.key && widgetSize(key) === size),
         )
@@ -2000,11 +2112,15 @@ const DashboardHome = (() => {
     const steps = [
       [
         'Add a widget',
-        'Drag a widget from the gallery into a dashboard slot. Choose a 1×1 card, 1×2 widget or 1×3 table.',
+        'Drag a widget from the gallery into a dashboard slot. Use the size filters to find the layout you want.',
       ],
       [
         'Make it your own',
         'Drag your dashboard cards to rearrange them. Use the × on a card to remove it and return it to the gallery.',
+      ],
+      [
+        'Choose your widget size',
+        'In Customize Widgets, drag any edge or corner to resize a widget. Choose any of the nine sizes, from 1 by 1 to 3 by 3, to fit your dashboard. The grey preview shows where it will fit. Utility widgets stay at 1 by 1.',
       ],
       [
         'You’re all set',
@@ -2020,8 +2136,8 @@ const DashboardHome = (() => {
       dialog.dataset.step = step;
       dialog.innerHTML = `<button type="button" class="dash-tour-close" data-tour-close aria-label="Close widget walkthrough">${ico('x', 18)}</button>
         <div class="dash-tour-scene" aria-hidden="true"><div class="dash-tour-gallery"><span>${ico('pkg', 22)}</span><span>${ico('truck', 22)}</span><span>${ico('cal', 22)}</span></div><div class="dash-tour-board"><div><b>12</b><i></i></div><div><b>8</b><i></i></div><div class="dash-tour-slot">+</div></div><div class="dash-tour-demo-card">${ico('pkg', 22)}<b>24</b><span>×</span></div><div class="dash-tour-pointer">${ico('right', 22)}</div><span class="dash-tour-saved">${ico('check', 14)} Saved automatically</span></div>
-        <div class="dash-tour-copy" aria-live="polite"><small>WIDGET WALKTHROUGH · ${step + 1} OF 3</small><h2 id="dash-widget-tour-title">${steps[step][0]}</h2><p id="dash-widget-tour-text">${steps[step][1]}</p></div>
-        <footer><button type="button" class="dash-tour-secondary" ${step ? 'data-tour-back' : 'data-tour-close'}>${step ? 'Back' : 'Skip tour'}</button><div class="dash-tour-dots" aria-hidden="true">${steps.map((_, index) => `<i class="${index === step ? 'is-current' : ''}"></i>`).join('')}</div><button type="button" class="dash-tour-next" data-tour-next>${step === 2 ? 'Start customizing' : 'Next'} ${ico('right', 14)}</button></footer>`;
+        <div class="dash-tour-copy" aria-live="polite"><small>WIDGET WALKTHROUGH · ${step + 1} OF ${steps.length}</small><h2 id="dash-widget-tour-title">${steps[step][0]}</h2><p id="dash-widget-tour-text">${steps[step][1]}</p></div>
+        <footer><button type="button" class="dash-tour-secondary" ${step ? 'data-tour-back' : 'data-tour-close'}>${step ? 'Back' : 'Skip tour'}</button><div class="dash-tour-dots" aria-hidden="true">${steps.map((_, index) => `<i class="${index === step ? 'is-current' : ''}"></i>`).join('')}</div><button type="button" class="dash-tour-next" data-tour-next>${step === steps.length - 1 ? 'Start customizing' : 'Next'} ${ico('right', 14)}</button></footer>`;
     };
     const dismiss = () => dialog.close();
     dialog.addEventListener('click', (event) => {
@@ -2161,6 +2277,7 @@ const DashboardHome = (() => {
   }
 
   function addPickerWidget(key, size, target, dropColumn, dropRow = 1) {
+    if (isUtilityWidget(key) && size !== '1x1') return;
     pinWidgetPositions();
     const positions = widgetPositions();
     const column = Math.min(
@@ -2306,6 +2423,7 @@ const DashboardHome = (() => {
     layer.inert = true;
     const slots = [],
       slotElements = [];
+    const occupied = occupiedWidgetCells(order, widgetPositions());
     for (let row = 0; row < rows + 1 - span; row++)
       for (let col = 0; col < 4 - columnSpan; col++) {
         const left = col * (cellWidth + gap),
@@ -2319,7 +2437,11 @@ const DashboardHome = (() => {
           row: row + 1,
         });
         const slot = document.createElement('div');
-        slot.className = 'dash-widget-slot';
+        const start = row * 3 + col;
+        const empty = Array.from({ length: span }, (_, r) =>
+          Array.from({ length: columnSpan }, (_, c) => start + r * 3 + c),
+        ).flat().every((cell) => !occupied.has(cell));
+        slot.className = 'dash-widget-slot' + (empty ? ' is-available-drop' : '');
         Object.assign(slot.style, {
           left: left + 'px',
           top: top + 'px',
@@ -2584,7 +2706,13 @@ const DashboardHome = (() => {
         carrier,
       });
     const preview = event.target.closest('[data-dash-order]');
-    if (preview) op(preview.dataset.dashOrder);
+    if (preview) {
+      event.preventDefault();
+      const id = preview.dataset.dashOrder;
+      const record = widgetOrderDetails.get(id);
+      if (record && !get(id)) DeliveryStore.add(record);
+      op(id);
+    }
     const planned = event.target.closest('[data-dash-planned]');
     if (planned) toast(`Planned for Version ${planned.dataset.dashPlanned}. Not available yet.`);
     if (event.target.closest('[data-dash-customize]')) customize();
@@ -2602,6 +2730,13 @@ const DashboardHome = (() => {
       refreshPicker();
     }
     if (event.target.closest('[data-dash-retry]')) load(true);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (!['Enter', ' '].includes(event.key)) return;
+    const node = event.target.closest('.dash-order-flow [data-dash-order]');
+    if (!node) return;
+    event.preventDefault();
+    node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
   document.addEventListener('pointerover', (event) => {
     const button = event.target.closest('.dash-filter-chips button');
@@ -2677,7 +2812,19 @@ const DashboardHome = (() => {
       occupied = new Set();
     const slotOf = (key) =>
       (parseInt(positions[key].row, 10) - 1) * 3 + parseInt(positions[key].column, 10) - 1;
+    const fullWidth = columns(source) === 3 ? source : columns(target) === 3 ? target : null;
     const preferred = (key) => {
+      if (fullWidth && (key === source || key === target)) {
+        // Exchange whole row regions, keeping smaller widgets in their own columns.
+        const other = fullWidth === source ? target : source;
+        const fullRow = Math.floor(slotOf(fullWidth) / 3);
+        const otherRow = Math.floor(slotOf(other) / 3);
+        const movingDown = fullRow < otherRow;
+        const row = key === fullWidth
+          ? movingDown ? otherRow + units(other) - units(fullWidth) : otherRow
+          : movingDown ? fullRow : fullRow + units(fullWidth) - units(other);
+        return Math.max(0, Math.min(row, 3 - units(key))) * 3 + slotOf(key) % 3;
+      }
       const slot = key === source ? slotOf(target) : key === target ? slotOf(source) : slotOf(key);
       const horizontalSwap =
         parseInt(positions[source].column, 10) !== parseInt(positions[target].column, 10);
@@ -3104,6 +3251,7 @@ const DashboardHome = (() => {
   return {
     render,
     load,
+    invalidateVisibility,
     attachQuickLinks,
     preserveEditor: () =>
       editing &&
@@ -3112,7 +3260,7 @@ const DashboardHome = (() => {
     storeLinksMarkup: () => Object.keys(storeWebsites).map(websiteLink).join(''),
     title: (key) =>
       key === 'cancelled-month'
-        ? "This Month's OW Cancelled Orders"
+        ? "This Month's OW Cancelled Van Orders"
         : selectedDefinition(key)?.title || '',
   };
 })();

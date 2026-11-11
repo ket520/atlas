@@ -16,7 +16,19 @@ const placement = source.slice(
   source.indexOf('  function emptySlotsMarkup'),
 );
 vm.runInNewContext(
-  `let sizes = {}, order = [], editing = true; const widgetType = key => key.replace(/--(?:1x[123]|2x2)$/, ''); let saves = 0; const save = () => saves++; const refreshPicker = () => {}; ${helpers} ${placement} ${swap} ${occupiedCells}
+  `let sizes = {}, order = [], editing = true; const widgetType = key => key.replace(/--[123]x[123]$/, ''); let saves = 0; const save = () => saves++; const refreshPicker = () => {}; ${helpers} ${placement} ${swap} ${occupiedCells}
+for (const type of ['collection-generator', 'order-identifier', 'order-flow-tracker']) {
+ const key = type + '--3x3';
+ order = [key]; sizes = {[key]: '2x2'};
+ assert.equal(widgetSize(key), '1x1');
+ assert.equal(resizeControls(key), '');
+ assert.equal(growthTarget(key, 'right'), null);
+ const before = JSON.stringify(sizes), saveCount = saves;
+ applyWidgetSize(key, {row: 1, column: 1, width: 3, height: 3});
+ assert.equal(JSON.stringify(sizes), before);
+ assert.equal(saves, saveCount);
+}
+sizes = {};
 order = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
 const checkLayout = () => {
  const positions = widgetPositions(), occupied = new Set();

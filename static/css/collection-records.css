@@ -1,4 +1,6 @@
 /* Collection Notes records and navigation, available before SPA navigation. */
+body[data-page="Collective Note"] .ic2.ai-icon.ai-icon-check { display: none !important; }
+.collection-status-switch-icon:empty, .collection-status-marker:empty { display: none; }
 .collection-delete-confirm { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 26px; border: 1px solid #e2e4ef; border-radius: 18px; background: #fff; color: var(--atlas-slate); box-shadow: 0 24px 80px #171c3540; }
 .collection-delete-confirm::backdrop { background: #171c3566; backdrop-filter: blur(3px); }
 .collection-delete-warning { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 14px; border-radius: 14px; background: #fff0ed; color: #ba3c36; }
@@ -29,9 +31,6 @@ body[data-page="Collective Note"] .collection-record-actions {
   display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 6px;
   width: 100%; min-width: 0;
 }
-body[data-page="Collective Note"] .collection-record-actions .collection-open-note {
-  margin-left: 0; max-width: 100%; height: auto; white-space: nowrap; flex: none;
-}
 body[data-page="Collective Note"] .collection-record-actions .collection-delete-note {
   display: inline-flex; align-items: center; justify-content: center;
   flex: 0 0 30px; width: 30px; height: 30px; margin-left: auto; padding: 0;
@@ -40,36 +39,43 @@ body[data-page="Collective Note"] .collection-record-actions .collection-delete-
 }
 body[data-page="Collective Note"] .collection-record-actions .collection-delete-note:hover { background: #ffe0e4; }
 body[data-page="Collective Note"] .collection-record-actions .collection-delete-note:disabled { opacity: .6; cursor: wait; }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(1) { width: calc((100% - 310px) * .09); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(2) { width: calc((100% - 310px) * .17); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(3) { width: calc((100% - 310px) * .14); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(4) { width: calc((100% - 310px) * .28); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(5) { width: calc((100% - 310px) * .10); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(6) { width: calc((100% - 310px) * .11); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(7) { width: calc((100% - 310px) * .11); }
-body[data-page="Collective Note"] .collection-records-table th:nth-child(8) { width: 310px; }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(1 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.09); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(2 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.14); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(3 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.1); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(4 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.16); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(5 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.08); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(6 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.1); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(7 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.11); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(8 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.1); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(9 of :not(.collection-selection-cell)) { width: calc((100% - 512px) * 0.12); }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(10 of :not(.collection-selection-cell)) { width: 270px; }
+body[data-page="Collective Note"] .collection-records-table th:nth-child(11 of :not(.collection-selection-cell)) { width: 242px; }
 body[data-page="Collective Note"] .collection-record-actions .collection-record-download { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: none; padding: 8px; border: 1px solid var(--atlas-indigo); border-radius: 8px; background: #eef0ff; color: var(--atlas-indigo); font: inherit; font-size: 11px; font-weight: 700; line-height: 1.35; white-space: nowrap; cursor: pointer; }
 .collection-record-download:disabled { opacity: .6; cursor: wait; }
 body[data-page="Collective Note"] .collection-record-actions .collection-record-download:hover { background: var(--atlas-slate); border-color: var(--atlas-slate); color: var(--atlas-cyan); }
 .collection-record-download:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 2px; }
 @container (max-width: 400px) {
   body[data-page="Collective Note"] .collection-record-actions { gap: 4px; }
-  body[data-page="Collective Note"] .collection-record-actions :is(.collection-open-note, .collection-record-download) { gap: 3px; padding: 6px 4px; font-size: 10px; }
-  body[data-page="Collective Note"] .collection-record-actions :is(.collection-open-note, .collection-record-download) svg { width: 12px; height: 12px; }
+  body[data-page="Collective Note"] .collection-record-actions .collection-record-download { gap: 3px; padding: 6px 4px; font-size: 10px; }
+  body[data-page="Collective Note"] .collection-record-actions .collection-record-download svg { width: 12px; height: 12px; }
   body[data-page="Collective Note"] .collection-record-actions .collection-delete-note { flex-basis: 24px; width: 24px; height: 26px; }
 }
 .collection-records-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.collection-records-toolbar .delivery-search { width: min(100%, 460px); min-width: 0; }
+.collection-records-toolbar .delivery-search { width: min(100%, 290px); min-width: 0; }
 .collection-records-toolbar input { min-width: 0; width: 100%; }
 #collection-records-count { color: var(--mut); font-size: 12px; white-space: nowrap; }
-.collection-records-toolbar .delivery-search { flex: 1 1 300px; }
+.collection-records-toolbar .delivery-search { flex: 1 1 180px; }
+.collection-record-filter { flex: 0 1 165px; min-width: 125px; }
+.collection-record-filter .ui-select-trigger { width: 100%; height: 36px; }
+.collection-record-filter .ui-select-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .collection-records-toolbar .collection-date-select { flex: 0 0 145px; width: 145px; min-width: 0; margin-left: auto; }
 .collection-records-toolbar > .collection-note-link { flex: none; margin-left: 0; white-space: nowrap; }
 .collection-date-select .ui-select-trigger { width: 100%; min-width: 0; height: 36px; }
 .collection-date-select .ui-select-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .collection-date-menu[popover] { position: fixed; right: auto; bottom: auto; margin: 0; min-width: 0; max-width: calc(100vw - 24px); box-sizing: border-box; }
 .collection-date-menu:not(:popover-open) { display: none; }
-@media (max-width: 560px) { .collection-records-toolbar { flex-wrap: wrap; gap: 8px; } }
+@media (max-width: 1050px) { .collection-records-toolbar { flex-wrap: wrap; gap: 12px; } }
+@media (max-width: 560px) { .collection-records-toolbar .delivery-search { flex-basis: 100%; width: 100%; } .collection-record-filter { flex: 1 1 130px; } }
 @media screen {
   body[data-page="Collective Note"] .collection-records-table thead th {
     background: var(--atlas-slate); color: #fff; border-color: var(--atlas-space);
@@ -79,19 +85,240 @@ body[data-page="Collective Note"] .collection-record-actions .collection-record-
 }
 
 @container (max-width: 960px) {
-.collection-records-table td:nth-child(1)::before { content: "Order No";}
+.collection-records-table td:nth-child(1 of :not(.collection-selection-cell))::before { content: "Order No";}
 
-.collection-records-table td:nth-child(2)::before { content: "Order Reference No";}
+.collection-records-table td:nth-child(2 of :not(.collection-selection-cell))::before { content: "Order Reference No";}
 
-.collection-records-table td:nth-child(3)::before { content: "Date Created";}
+.collection-records-table td:nth-child(3 of :not(.collection-selection-cell))::before { content: "Date Created";}
 
-.collection-records-table td:nth-child(4)::before { content: "Customer";}
+.collection-records-table td:nth-child(4 of :not(.collection-selection-cell))::before { content: "Customer";}
 
-.collection-records-table td:nth-child(5)::before { content: "Postcode";}
+.collection-records-table td:nth-child(5 of :not(.collection-selection-cell))::before { content: "Postcode";}
 
-.collection-records-table td:nth-child(6)::before { content: "Collection Date";}
+.collection-records-table td:nth-child(6 of :not(.collection-selection-cell))::before { content: "Channel";}
 
-.collection-records-table td:nth-child(7)::before { content: "Items";}
-.collection-records-table td:nth-child(8)::before { content: "Actions";}
+.collection-records-table td:nth-child(7 of :not(.collection-selection-cell))::before { content: "Tel";}
+.collection-records-table td:nth-child(8 of :not(.collection-selection-cell))::before { content: "Collection Date";}
+.collection-records-table td:nth-child(9 of :not(.collection-selection-cell))::before { content: "Collection Method";}
+.collection-records-table td:nth-child(10 of :not(.collection-selection-cell))::before { content: "Status";}
+.collection-records-table td:nth-child(11 of :not(.collection-selection-cell))::before { content: "Actions";}
 
 }
+
+.collection-records-table [data-open-collection-record] { cursor: pointer; }
+.collection-records-table [data-open-collection-record]:hover td,
+.collection-records-table [data-open-collection-record]:focus-visible td { background: #eef0ff; }
+.collection-records-table [data-open-collection-record]:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: -2px; }
+
+.collection-status { display: inline-block; border-radius: 12px; padding: 4px 9px; background: #fff3d6; color: #805b0b; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.collection-status.is-approved { background: #e2f5e8; color: #22643a; }
+.collection-approve-note:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 2px; }
+
+.collection-approval-action { display: inline-flex; flex: none; padding-left: 12px; margin-left: 6px; border-left: 1px solid var(--ln); gap: 6px; }
+
+.collection-status.is-rejected { background: #fde8eb; color: #a42e3c; }
+.collection-approval-action :is(.collection-approve-note, .collection-reject-note, .collection-hold-note) {
+  flex: none; padding: 8px; border: 1px solid; border-radius: 8px;
+  font: inherit; font-size: 11px; font-weight: 750; line-height: 1.35; cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.collection-approval-action .collection-approve-note { background: #e2f5e8; color: #22643a; border-color: #a6d9b6; }
+.collection-approval-action .collection-approve-note:hover:not(:disabled) { background: #c6eacf; border-color: #63ad7a; }
+.collection-approval-action .collection-reject-note { background: #fde8eb; color: #a42e3c; border-color: #efb0ba; }
+.collection-approval-action .collection-reject-note:hover:not(:disabled) { background: #fad0d7; border-color: #d36c7c; }
+.collection-approval-action button:disabled { opacity: .55; cursor: default; }
+.collection-reject-note:focus-visible { outline: 2px solid #a42e3c; outline-offset: 2px; }
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download {
+  position: relative; isolation: isolate; overflow: hidden;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: var(--atlas-slate); pointer-events: none;
+  clip-path: circle(0% at var(--download-x, 50%) var(--download-y, 50%));
+  transition: clip-path 450ms cubic-bezier(.2,.75,.25,1);
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download:is(:hover, :focus-visible) {
+  background: #eef0ff; color: var(--atlas-cyan); border-color: var(--atlas-slate);
+}
+body[data-page="Collective Note"] .collection-record-actions .collection-record-download:is(:hover, :focus-visible)::before {
+  clip-path: circle(150% at var(--download-x, 50%) var(--download-y, 50%));
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="Collective Note"] .collection-record-actions .collection-record-download::before { transition: none; }
+}
+
+.collection-approval-action .collection-hold-note { background: #fff3cc; color: #71520b; border-color: #dfc16e; }
+.collection-approval-action .collection-hold-note:hover:not(:disabled) { background: #ffe59c; border-color: #b38a21; }
+.collection-hold-note:focus-visible { outline: 2px solid #b38a21; outline-offset: 2px; }
+
+/* Three-position collection status switch. */
+.collection-approval-action {
+  --status-position: 1; --status-fill: #fff0bb; --status-ink: #79570c;
+  position: relative; isolation: isolate; display: inline-grid;
+  grid-template-columns: repeat(3, 78px); gap: 0; padding: 3px; margin-left: 4px;
+  border: 1px solid #d7dcea; border-radius: 13px; background: linear-gradient(180deg, #e9edf5, #f6f8fc);
+  box-shadow: inset 0 1px 4px #171c3512, 0 1px 0 #ffffff;
+}
+.collection-approval-action[data-active-status="Approved"] { --status-position: 0; --status-fill: #d8f3e2; --status-ink: #21633e; }
+.collection-approval-action[data-active-status="Rejected"] { --status-position: 2; --status-fill: #fce0e5; --status-ink: #9e3045; }
+.collection-approval-action > .collection-status-slider {
+  content: ''; position: absolute; z-index: -1; left: 3px; top: 3px; bottom: 3px; width: 78px;
+  border-radius: 10px; background: linear-gradient(165deg, #ffffffa6, transparent 70%), var(--status-fill); box-shadow: 0 3px 8px #171c3520, 0 1px 2px #171c3510, inset 0 0 0 1px #ffffffd9;
+  transform: translateX(calc(var(--status-position) * 78px));
+  transition: transform 420ms cubic-bezier(.22,1,.36,1), background 300ms ease;
+}
+.collection-approval-action :is(.collection-approve-note, .collection-reject-note, .collection-hold-note),
+.collection-approval-action :is(.collection-approve-note, .collection-reject-note, .collection-hold-note):hover:not(:disabled) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  min-width: 0; padding: 8px 4px; border: 0; border-radius: 8px;
+  background: transparent; color: #747d94; font-size: 10px; line-height: 1.4; white-space: nowrap;
+}
+.collection-approval-action button:disabled { opacity: 1; }
+.collection-approval-action button[aria-pressed="true"] { color: var(--status-ink); }
+.collection-approval-action button:hover:not(:disabled) { color: #252c4a; }
+.collection-status-switch-icon { display: inline-flex; opacity: .6; transform: scale(.92); transition: transform 320ms cubic-bezier(.22,1,.36,1), opacity 250ms ease; }
+.collection-approval-action button { transition: color 250ms ease; }
+.collection-approval-action button[aria-pressed="true"] .collection-status-switch-icon { opacity: 1; transform: scale(1.12); }
+.collection-approval-action[aria-busy="true"] { cursor: progress; }
+.collection-approval-action[aria-busy="true"] button { cursor: progress; }
+.collection-approval-action button:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) {
+  .collection-approval-action > .collection-status-slider, .collection-approval-action button, .collection-status-switch-icon { transition: none; }
+}
+
+.collection-status-cell .collection-approval-action { margin-left: 0; }
+.collection-actions-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.collection-bulk-edit-trigger { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--atlas-cyan); border-radius: 8px; background: var(--atlas-cyan); color: var(--atlas-space); cursor: pointer; transition: background 180ms ease, transform 180ms ease; }
+.collection-bulk-edit-trigger:hover { background: color-mix(in srgb, var(--atlas-cyan) 85%, white); transform: translateY(-1px); }
+.collection-bulk-edit-trigger:focus-visible { outline: 2px solid var(--atlas-cyan); outline-offset: 2px; }
+.collection-bulk-edit-trigger[aria-expanded="true"] { background: var(--atlas-space); color: var(--atlas-cyan); }
+.collection-bulk-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 12px 16px; margin-top: 12px; border: 1px solid var(--atlas-slate); border-radius: 12px; background: var(--atlas-space); font-size: 12px; }
+.collection-bulk-toolbar[hidden] { display: none; }
+.collection-bulk-toolbar label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.collection-bulk-toolbar button { margin-left: auto; padding: 7px 12px; border: 1px solid #ffffff26; border-radius: 8px; background: var(--atlas-slate); color: #f2f4ff; cursor: pointer; transition: background 180ms ease, border-color 180ms ease; }
+.collection-bulk-checkbox { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; margin: 0; accent-color: var(--atlas-indigo); }
+.collection-bulk-status-actions { display: flex; gap: 6px; }
+.collection-bulk-status-actions button { margin-left: 0; }
+.collection-bulk-status-actions [data-collection-bulk-status="Approved"] { color: #fff; background: #237a49; border-color: #369b62; }
+.collection-bulk-status-actions [data-collection-bulk-status="Rejected"] { color: #fff; background: #b8324a; border-color: #d94b64; }
+.collection-bulk-status-actions [data-collection-bulk-status="Pending"] { color: #fff; background: var(--atlas-indigo); border-color: var(--atlas-indigo); }
+.collection-bulk-toolbar button:disabled { opacity: 1; filter: saturate(.55) brightness(.8); cursor: default; }
+.collection-bulk-file-actions { display: flex; align-items: center; gap: 6px; padding-left: 16px; border-left: 1px solid #ffffff26; }
+.collection-bulk-file-actions button { display: inline-flex; align-items: center; gap: 6px; margin-left: 0; }
+.collection-bulk-file-actions .collection-bulk-delete { color: #ffb3c0; border-color: #ffb3c055; background: var(--atlas-slate); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:last-child { width: 78px; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit tr[data-open-collection-record] > td:last-child { padding: 0; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit .collection-record-actions .collection-record-download { display: none; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit .collection-record-actions { justify-content: flex-end; padding: 0 16px; border-left: 0; }
+.is-bulk-edit .collection-actions-heading { justify-content: flex-end; gap: 0; }
+.is-bulk-edit .collection-actions-heading > span { display: none; }
+.is-bulk-edit .collection-bulk-edit-trigger { display: flex; align-items: center; justify-content: center; gap: 3px; width: 54px; font-size: 10px; font-weight: 750; }
+.collection-record-actions { transition: opacity 240ms ease, transform 300ms ease; }
+.collection-bulk-toolbar { overflow: hidden; box-sizing: border-box; }
+@media (prefers-reduced-motion: reduce) {
+  .collection-record-actions, .collection-bulk-edit-trigger { transition: none; }
+}
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit tbody td.collection-order-cell { padding-left: 54px; }
+.is-bulk-edit .collection-bulk-checkbox { left: 16px; width: 23px; height: 23px; cursor: pointer; }
+.is-bulk-edit .collection-order-cell::after { display: none; }
+.is-bulk-edit tr:has(.collection-bulk-checkbox:checked) { outline: 1px solid #6267e950; outline-offset: -1px; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(1 of :not(.collection-selection-cell)) { width: 170px; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(2 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .14); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(3 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .10); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(4 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .14); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(5 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .08); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(6 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .10); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(7 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .10); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(8 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .10); }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit th:nth-child(9 of :not(.collection-selection-cell)) { width: calc((100% - 270px) * .11); }
+.collection-records-table [data-open-collection-record] > .collection-status-cell,
+.collection-records-table [data-open-collection-record] > td:last-child { cursor: default; }
+
+body[data-page="Collective Note"] .collection-records-table td.collection-status-cell { padding-right: 24px; }
+body[data-page="Collective Note"] .collection-records-table td:last-child { padding-left: 20px; }
+.collection-records-table td:last-child .collection-record-actions { padding-left: 4px; border-left: 1px solid #dce0ed; }
+
+/* Status rail and seal keep the record surface clean. */
+body[data-page="Collective Note"] .collection-records-table tbody tr[data-note-status] {
+  --note-accent: #98a1b4; --note-seal: #edf0f5; --note-ink: #68738a;
+  background: #fff;
+}
+body[data-page="Collective Note"] .collection-records-table tbody tr[data-note-status="Approved"] {
+  --note-accent: #2a9a69; --note-seal: #e0f4e9; --note-ink: #20774f;
+}
+body[data-page="Collective Note"] .collection-records-table tbody tr[data-note-status="Rejected"] {
+  --note-accent: #df6a78; --note-seal: #fce8ec; --note-ink: #b44256;
+}
+body[data-page="Collective Note"] .collection-records-table tbody tr[data-note-status]:is(:nth-child(n), :hover, :focus-visible) > td {
+  background: transparent;
+}
+body[data-page="Collective Note"] .collection-records-table tbody td.collection-order-cell {
+  position: relative; padding-left: 16px;
+}
+.collection-order-cell::after {
+  content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px;
+  border-radius: 0 4px 4px 0; background: var(--note-accent);
+  transition: background 300ms ease, top 240ms ease, bottom 240ms ease;
+}
+.collection-status-marker {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
+  background: var(--note-seal); color: var(--note-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--note-accent) 25%, transparent);
+}
+.collection-records-table tr[data-note-status]:hover .collection-order-cell::after { top: 5px; bottom: 5px; }
+@media (prefers-reduced-motion: reduce) {
+  .collection-order-cell::after { transition: none; }
+}
+
+/* A real selection column remains visible after the slide completes. */
+body[data-page="Collective Note"] .collection-records-table .collection-selection-cell {
+  width: 48px; padding: 0 12px; vertical-align: middle;
+}
+.collection-selection-cell input { width: 23px; height: 23px; margin: 0; accent-color: var(--atlas-indigo); cursor: pointer; }
+.collection-selection-cell .collection-bulk-checkbox { position: static; transform: none; }
+body[data-page="Collective Note"] .collection-records-table.is-bulk-edit tbody td.collection-order-cell { padding-left: 16px; }
+.collection-selection-cell::before { content: none !important; }
+
+/* Keep the pencil and Done faces mounted throughout the swap. */
+.collection-bulk-edit-trigger { position: relative; overflow: hidden; transition: width 360ms cubic-bezier(.22,1,.36,1), background 240ms ease, color 240ms ease; }
+.collection-bulk-edit-trigger > .collection-edit-icon,
+.collection-bulk-edit-trigger > .collection-edit-done { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity 280ms ease, transform 360ms cubic-bezier(.22,1,.36,1); }
+.collection-bulk-edit-trigger .collection-edit-done { opacity: 0; transform: translateY(18px); }
+.collection-bulk-edit-trigger[aria-expanded="true"] .collection-edit-icon { opacity: 0; transform: translateY(-18px); }
+.collection-bulk-edit-trigger[aria-expanded="true"] .collection-edit-done { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .collection-bulk-edit-trigger, .collection-bulk-edit-trigger > span { transition: none; }
+}
+
+/* The top layer keeps bulk actions pinned to the viewport while scrolling. */
+.collection-bulk-toolbar {
+  position: fixed; inset: auto 16px 16px; width: fit-content;
+  max-width: calc(100% - 32px); max-height: calc(100dvh - 32px);
+  margin: 0 auto; overflow: auto; z-index: 100;
+  color: #f2f4ff; box-shadow: 0 8px 32px #171c354d;
+}
+.collection-bulk-toolbar::backdrop { display: none; }
+body[data-page="Collective Note"] main:has(.collection-records-table.is-bulk-edit) { padding-bottom: 160px; }
+
+.collection-bulk-delete-actions { display: flex; padding-left: 16px; border-left: 1px solid #ffffff26; }
+.collection-bulk-delete-actions .collection-bulk-delete { display: inline-flex; align-items: center; gap: 6px; margin-left: 0; color: #ffb3c0; border-color: #ffb3c055; background: var(--atlas-slate); }
+.collection-bulk-file-actions { flex-wrap: wrap; }
+
+.collection-bulk-toolbar [data-collection-bulk-count] { font-weight: 650; color: var(--atlas-cyan); }
+.collection-bulk-toolbar button:hover:not(:disabled) { border-color: var(--atlas-cyan); background: var(--atlas-indigo); color: #fff; }
+.collection-bulk-toolbar [data-collection-bulk-status="Approved"]:hover:not(:disabled) { background: #1b623a; border-color: #65c48b; }
+.collection-bulk-toolbar [data-collection-bulk-status="Rejected"]:hover:not(:disabled) { background: #98283d; border-color: #f17b91; }
+.collection-bulk-toolbar > .collection-bulk-edit-trigger {
+  flex: 0 0 64px; width: 64px; height: 34px; margin-left: auto;
+  background: var(--atlas-cyan); color: var(--atlas-space); border-color: var(--atlas-cyan);
+  font-size: 12px; font-weight: 700;
+}
+.collection-bulk-toolbar button:focus-visible { outline: 2px solid var(--atlas-cyan); outline-offset: 3px; }
+.collection-bulk-delete-actions .collection-bulk-delete:hover:not(:disabled) { background: #7d314b; border-color: #ffb3c0; }
+
+body[data-page="Collective Note"] .collection-records-table thead th:nth-child(1 of :not(.collection-selection-cell)) { padding-left: 16px; }
+
+body[data-page="Collective Note"] .collection-record-actions .collection-record-print { flex: 0 0 30px; width: 30px; height: 30px; padding: 0; }
+@container (max-width: 400px) { body[data-page="Collective Note"] .collection-record-actions .collection-record-print { flex-basis: 26px; width: 26px; height: 26px; padding: 0; } }

@@ -23,6 +23,7 @@
 }
 
 .dash-searchbar {
+  position: relative;
   padding: 12px 16px;
   background: #6b9b5f;
   border-radius: 15px;
@@ -30,7 +31,7 @@
 }
 
 .dash-search-wrap {
-  position: relative;
+  position: static;
   min-width: 0;
 }
 
@@ -90,16 +91,7 @@ body[data-page='Dashboard'] .dashboard-home .db-search-button {
   background: #37b569;
 }
 
-.dashboard-home #dres {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-height: min(calc(var(--atlas-viewport-height, 100dvh) * 0.45), 420px);
-  overflow: auto;
-  z-index: 20;
-}
+
 
 .dash-utilities {
   display: grid;
@@ -1801,7 +1793,7 @@ body.is-dashboard-dragging * {
   position: absolute;
   top: -6px;
   right: -5px;
-  z-index: 3;
+  z-index: 12;
   display: grid;
   place-items: center;
   width: 21px;
@@ -1949,7 +1941,7 @@ body.is-dashboard-dragging * {
 }
 
 .dash-picker-slots {
-  z-index: 0;
+  z-index: 2;
 }
 
 .dash-editor.is-closing {
@@ -2726,22 +2718,79 @@ body[data-page='Dashboard'] #v {
   animation-name: dash-tour-reorder-pointer;
 }
 
-.dash-widget-tour[data-step='2'] .dash-tour-gallery,
-.dash-widget-tour[data-step='2'] .dash-tour-pointer {
+.dash-widget-tour[data-step='3'] .dash-tour-gallery,
+.dash-widget-tour[data-step='3'] .dash-tour-pointer {
   display: none;
 }
 
-.dash-widget-tour[data-step='2'] .dash-tour-saved {
+.dash-widget-tour[data-step='3'] .dash-tour-saved {
   display: flex;
   animation: dash-tour-save 600ms ease-out both;
 }
 
-.dash-widget-tour[data-step='2'] .dash-tour-demo-card {
+.dash-widget-tour[data-step='3'] .dash-tour-demo-card {
   top: 120px;
   left: 64%;
   width: calc(25.33% - 7px);
   height: 64px;
   animation: none;
+}
+
+
+.dash-widget-tour[data-step='2'] .dash-tour-gallery {
+  display: none;
+}
+
+.dash-widget-tour[data-step='2'] .dash-tour-demo-card {
+  top: 120px;
+  left: 12%;
+  width: calc(25.33% - 7px);
+  height: 64px;
+  box-sizing: border-box;
+  border: 2px dashed var(--atlas-indigo);
+  animation: dash-tour-resize 5s ease-in-out infinite;
+}
+
+.dash-widget-tour[data-step='2'] .dash-tour-demo-card::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: calc(50% - 11px);
+  width: 8px;
+  height: 22px;
+  border: 2px solid var(--atlas-indigo);
+  border-radius: 5px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.dash-widget-tour[data-step='2'] .dash-tour-pointer {
+  display: block;
+  top: 164px;
+  left: calc(37.33% - 7px);
+  z-index: 2;
+  transform: translateX(-50%);
+  animation: dash-tour-resize-pointer 5s ease-in-out infinite;
+}
+
+@keyframes dash-tour-resize {
+  0%, 20%, 100% { width: calc(25.33% - 7px); height: 64px; }
+  55%, 80% { width: calc(50.6667% - 3.3333px); height: 64px; }
+}
+
+@keyframes dash-tour-resize-pointer {
+  0%, 20%, 100% { left: calc(37.33% - 7px); opacity: 1; }
+  55%, 80% { left: calc(62.6667% - 3.3333px); opacity: 1; }
+  85%, 95% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-widget-tour[data-step='2'] .dash-tour-demo-card {
+    width: calc(50.6667% - 3.3333px);
+  }
+  .dash-widget-tour[data-step='2'] .dash-tour-pointer {
+    left: calc(62.6667% - 3.3333px);
+  }
 }
 
 .dash-tour-copy {
@@ -4398,3 +4447,189 @@ body.is-dashboard-resizing * {
     animation: none;
   }
 }
+
+/* Clear, consistent typography for dashboard widget data. */
+:is(.dashboard-home, .dash-widget-drag-preview) :is(.dash-widget-total strong, .dash-preview-row, .dash-preview-row b, .dash-table-scroll tbody td, .dash-table-record-total, .dash-identifier-ids dd) {
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: 'lnum' 1, 'tnum' 1;
+}
+:is(.dashboard-home, .dash-widget-drag-preview) .dash-widget-total strong {
+  font-weight: 650;
+  letter-spacing: -.035em;
+  line-height: 1.05;
+}
+:is(.dashboard-home, .dash-widget-drag-preview) :is(.dash-preview-row, .dash-table-scroll tbody td) {
+  font-weight: 450;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+:is(.dashboard-home, .dash-widget-drag-preview) :is(.dash-preview-row b, .dash-table-scroll tbody td strong, .dash-identifier-ids dd) {
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+.dash-identifier-value .dash-identifier-order {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 0; border: 0; background: transparent; color: inherit;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.dash-identifier-value .dash-identifier-order:hover { text-decoration: underline; }
+.dash-identifier-value .dash-identifier-order:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 3px; }
+
+.dash-order-flow [data-dash-order] { cursor: pointer; }
+
+/* Search cards use the Atlas palette with full-colour courier artwork. */
+.dashboard-home #dres {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: min(calc(var(--atlas-viewport-height, 100dvh) * .38), 350px);
+  overflow: auto;
+  z-index: 20;
+  padding: 6px;
+  border: 1px solid var(--atlas-indigo);
+  border-radius: 0 0 16px 16px;
+  background: var(--atlas-space);
+  box-shadow: 0 16px 44px #171c3540;
+}
+.dashboard-home #dres:empty,
+.dashboard-home #dres[hidden] { display: none; }
+.dashboard-home #dres .rc {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) minmax(160px, .55fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 5px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--atlas-indigo) 45%, var(--atlas-slate));
+  border-radius: 11px;
+  background: var(--atlas-slate);
+  color: #f5f6ff;
+  cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.dashboard-home #dres .rc:last-child { margin-bottom: 0; }
+.dashboard-home #dres .rc:is(:hover, :focus-visible) {
+  border-color: var(--atlas-cyan);
+  outline: 2px solid color-mix(in srgb, var(--atlas-cyan) 30%, transparent);
+  outline-offset: -2px;
+  background: var(--atlas-slate);
+}
+.search-result-store {
+  display: flex; align-items: center; justify-content: center;
+  width: 112px; height: 50px; padding: 6px 10px;
+  border: 1px solid #c9ccf5; border-radius: 10px; background: #fff;
+  color: var(--atlas-slate);
+}
+.search-result-store .search-result-store-logo { width: 100%; height: 34px; object-fit: contain; }
+.search-result-customer { min-width: 0; overflow-wrap: anywhere; }
+.dashboard-home #dres .rc .mut { color: #c5cae2; }
+.dashboard-home #dres .rc .search-result-order {
+  display: block; margin-bottom: 4px;
+  color: var(--atlas-cyan); font-size: 11px; font-weight: 750; letter-spacing: .04em;
+}
+.dashboard-home #dres .rcm { text-align: left; color: #f5f6ff; }
+.dashboard-home #dres .rc .search-result-backdrop {
+  position: absolute; inset: 0; z-index: -1; overflow: hidden;
+  pointer-events: none; border-radius: inherit;
+  background: linear-gradient(110deg, var(--atlas-space), var(--atlas-slate));
+}
+.dashboard-home #dres .rc .search-result-backdrop::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, #171c35fa 0%, #171c35ed 30%, #252c4ab5 62%, #252c4a66);
+}
+.dashboard-home #dres .search-result-backdrop .search-result-background-logo {
+  position: absolute; right: -5%; top: 50%;
+  transform: translateY(-50%) rotate(-5deg);
+  width: 78%; max-width: none; height: 260%; object-fit: contain;
+  opacity: .8; mix-blend-mode: normal;
+}
+.dashboard-home #dres .rc:is(:hover, :focus-visible) .search-result-backdrop::after {
+  background: linear-gradient(90deg, #171c35f5, #171c35e8 30%, #252c4a99 62%, #252c4a44);
+}
+.search-result-background-name {
+  position: absolute; right: 2%; top: 50%; transform: translateY(-50%);
+  font-size: clamp(48px, 7vw, 110px); font-weight: 800; line-height: 1;
+  color: var(--search-brand); opacity: .65;
+}
+@media (max-width: 760px) {
+  .dashboard-home #dres .rc { grid-template-columns: 76px minmax(0, 1fr); gap: 8px; padding: 8px 10px; }
+  .search-result-store { width: 76px; }
+  .dashboard-home #dres .rcm { grid-column: 2; }
+  .dashboard-home #dres .rc > div:last-child { grid-column: 2; }
+}
+
+/* Keep search-result details readable over bright courier artwork. */
+.dashboard-home #dres .rc .rcm .mut { color: #e0e4f5; }
+.dashboard-home #dres .rc .stx { color: #f0f2ff; font-weight: 650; }
+.dashboard-home #dres .rc .stx.ok { color: #8be1b0; }
+.dashboard-home #dres .rc .stx.bad { color: #ffabae; }
+.dashboard-home #dres .rc .stx.sc { color: var(--atlas-cyan); }
+.dashboard-home #dres .rc .stx.am { color: #ffda80; }
+.dashboard-home #dres .rc .stx:is(.cn, .nw) { color: #d6daf4; }
+.dashboard-home #dres .rc .stx.uns { color: #ffda80; }
+.dashboard-home #dres .rc .search-result-customer > b { color: #f5f6ff; }
+
+.dashboard-home .dash-searchbar:has(#dres:not(:empty):not([hidden])) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.search-result-type {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 7px 11px; border: 1px solid #6ee3ee80; border-radius: 8px;
+  background: var(--atlas-cyan); color: var(--atlas-space);
+  font-size: 11px; font-weight: 750; white-space: nowrap;
+}
+.search-result-type.is-replacement { background: #e0c5ff; color: #4d2268; border-color: #b794df; }
+.search-result-type.is-refund { background: #ffda80; color: var(--atlas-space); border-color: #d3af58; }
+
+.dashboard-home #dres .rc.is-credit-refund {
+  background: #fff0b8;
+  border-color: #d6ad46;
+  color: #49350d;
+}
+.dashboard-home #dres .rc.is-credit-refund .search-result-backdrop {
+  background: linear-gradient(110deg, #fff7d6, #ffda80);
+}
+.dashboard-home #dres .rc.is-credit-refund .search-result-backdrop::after {
+  background: linear-gradient(90deg, #fff3c9fa, #ffe9a8ed 45%, #ffda8099);
+}
+.dashboard-home #dres .rc.is-credit-refund .search-result-background-logo { opacity: .22; }
+.dashboard-home #dres .rc.is-credit-refund:is(:hover, :focus-visible) {
+  border-color: #976909;
+  outline-color: #97690980;
+}
+.dashboard-home #dres .rc.is-credit-refund .search-result-customer > b,
+.dashboard-home #dres .rc.is-credit-refund .rcm,
+.dashboard-home #dres .rc.is-credit-refund .stx { color: #49350d; }
+.dashboard-home #dres .rc.is-credit-refund .mut,
+.dashboard-home #dres .rc.is-credit-refund .search-result-order { color: #654b18; }
+.is-credit-refund .search-result-type-slot { display: flex; align-items: center; gap: 12px; }
+.search-result-refund-amount { display: grid; gap: 3px; }
+.search-result-refund-amount small { color: #654b18; font-size: 11px; }
+.search-result-refund-amount strong { color: #49350d; font-size: 22px; font-weight: 800; white-space: nowrap; }
+@media (max-width: 760px) {
+  .search-result-refund-amount { gap: 0; line-height: 1.15; }
+  .search-result-refund-amount small { font-size: 10px; }
+  .search-result-refund-amount strong { font-size: 16px; }
+}
+
+/* Palletways column F status labels, shared by all three shipment widgets. */
+.dash-palletways-status { font-weight: 600; color: #62697a; }
+.dash-palletways-status.is-unscheduled { color: #8655c8; }
+.dash-palletways-status.is-created { color: #5961ba; }
+.dash-palletways-status.is-scheduled { color: #147d79; }
+.dash-palletways-status.is-transit { color: #176aab; }
+.dash-palletways-status.is-out { color: #ad6200; }
+.dash-palletways-status.is-delivered { color: #237c45; }
+.dash-palletways-status.is-return { color: #98572c; }
+.dash-palletways-status.is-cancelled { color: #62697a; }
+.dash-palletways-status.is-exception { color: #bd3347; }
+.dash-palletways-status.is-credit { color: #a33b85; }

@@ -572,6 +572,10 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   background: var(--hv);
   color: var(--sdbg);}
 
+.tracking-method-filter[data-booking-field="booked_in"].on {
+  background: var(--atlas-cyan);
+  color: var(--atlas-space);}
+
 .tracking-classification-menu {
   display: none;
   position: fixed;
@@ -848,21 +852,8 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   color: var(--mut);
   font-size: 13px;}
 
-.failed-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 0 0 16px;}
 
-.failed-toolbar .delivery-date-select {
-  flex: 0 0 210px;}
 
-.failed-toolbar .ui-select-trigger {
-  height: 40px;
-  border-radius: 20px;
-  font-size: 15px;
-  font-weight: 500;}
 
 .failed-page-note {
   max-width: 850px;
@@ -871,13 +862,7 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   font-size: 13px;
   line-height: 1.5;}
 
-.failed-toolbar .delivery-search {
-  flex: 1;
-  max-width: 860px;}
 
-.failed-toolbar .delivery-search input {
-  flex: 1;
-  min-width: 0;}
 
 .tracking-table.failed-table {
   min-width: 0;}
@@ -894,10 +879,7 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   line-height: 1.35;
   white-space: normal;}
 
-@media (max-width: 760px) {
-.failed-toolbar .delivery-search {
-    max-width: none;}
-}
+
 
 @container (max-width:960px) {
 .tracking-table,
@@ -1028,7 +1010,7 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   width: 100%;
   border-radius: 0;
   /* Readable minimums depend on the workspace, not the laptop resolution. */
-  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(200px, 23fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(110px, 10fr) minmax(130px, 10fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr);}
+  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(160px, 19fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(150px, 14fr) minmax(130px, 10fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr);}
 
 .tracking-records-scroll .current-table thead {
   display: block;
@@ -1173,28 +1155,28 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   gap: 14px;
   margin-bottom: 18px;}
 
-body[data-page="Deliveries"] .tracking-scope-section {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-scope-section {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   column-gap: 8px;
 }
-body[data-page="Deliveries"] .tracking-scope-heading { grid-column: 1 / -1; }
-body[data-page="Deliveries"] .tracking-scope-section > .fx-tabs {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-scope-heading { grid-column: 1 / -1; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-scope-section > .fx-tabs {
   flex-wrap: nowrap;
   margin: 0;
 }
-body[data-page="Deliveries"] .tracking-scope-section > .tracking-courier-grid {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-scope-section > .tracking-courier-grid {
   flex-wrap: nowrap;
   align-items: center;
   min-width: 0;
   overflow-x: auto;
 }
-body[data-page="Deliveries"] .tracking-courier-grid > .tracking-courier-card {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-grid > .tracking-courier-card {
   flex: 0 1 132px;
   min-width: 90px;
 }
-body[data-page="Deliveries"] .tracking-courier-grid > .tracking-courier-self {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-grid > .tracking-courier-self {
   flex: 0 0 auto;
 }
 
@@ -1596,9 +1578,9 @@ body[data-page="Deliveries"] .tracking-courier-grid > .tracking-courier-self {
 .delivery-store-select .ui-select-menu { min-width: min(310px, calc(var(--atlas-viewport-width, 100vw) - 32px)); }
 
 .delivery-store-select .ui-select-option { white-space: normal; }
-body[data-page="Deliveries"] .bar.delivery-filters > .delivery-search { flex: 1 2 180px; }
-body[data-page="Deliveries"] .bar.delivery-filters > .delivery-store-select { flex-basis: 180px; }
-body[data-page="Deliveries"] .bar.delivery-filters > .delivery-scope-select { flex: 0 1 210px; width: 210px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .bar.delivery-filters > .delivery-search { flex: 1 2 180px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .bar.delivery-filters > .delivery-store-select { flex-basis: 180px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .bar.delivery-filters > .delivery-scope-select { flex: 0 1 210px; width: 210px; }
 .delivery-scope-select .ui-select-menu { min-width: min(320px, calc(var(--atlas-viewport-width, 100vw) - 32px)); }
 .delivery-scope-select .ui-select-option { white-space: normal; }
 
@@ -1915,7 +1897,7 @@ h2.st {
     gap: 10px;}
 }
 
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger {
   border-width: 2px;
   border-color: color-mix(in srgb, #9e8770 55%, var(--ln));}
 
@@ -1950,8 +1932,8 @@ body[data-page="Deliveries"] .delivery-filters .ui-select-trigger {
   z-index: 3;}
 
 /* Date and status read as input fields, with a green active inset border. */
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger,
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger:hover {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger:hover {
   border: 0;
   border-radius: 12px;
   background: var(--hv);
@@ -1962,8 +1944,8 @@ body[data-page="Deliveries"] .delivery-filters .ui-select-trigger:hover {
   transform: none;
   transition: box-shadow 150ms ease;}
 
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger:focus-visible,
-body[data-page="Deliveries"]
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger:focus-visible,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"])
   .delivery-filters
   .ui-select-trigger[aria-expanded="true"] {
   box-shadow: inset 0 0 0 2px var(--gr);}
@@ -1981,15 +1963,15 @@ body[data-page="Deliveries"]
 /* Palletways has ten real cells; header and body share exactly the same grid. */
 .tracking-records-scroll .current-table[data-tracking-carrier="AMZ"],
 .tracking-records-scroll .current-table[data-tracking-carrier="XDP"] {
-  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(200px, 23fr) minmax(160px, 11fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(110px, 10fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr);
+  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(160px, 19fr) minmax(160px, 11fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(150px, 14fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr);
   min-width: 1250px;}
 
 .tracking-records-scroll .current-table[data-tracking-carrier="Palletways"] {
-  --tracking-columns: minmax(80px, 7fr) minmax(120px, 12fr) minmax(220px, 25fr) minmax(160px, 15fr) minmax(140px, 10fr) minmax(90px, 8fr) minmax(120px, 11fr) minmax(120px, 10fr) minmax(120px, 11fr) minmax(120px, 7fr) minmax(130px, 9fr);
+  --tracking-columns: minmax(80px, 7fr) minmax(120px, 12fr) minmax(180px, 21fr) minmax(160px, 15fr) minmax(140px, 10fr) minmax(90px, 8fr) minmax(160px, 15fr) minmax(120px, 10fr) minmax(120px, 11fr) minmax(120px, 7fr) minmax(130px, 9fr);
   min-width: 1280px;}
 
 .tracking-records-scroll .current-table[data-tracking-carrier="Stopstart"] {
-  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(200px, 23fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(110px, 10fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr) minmax(145px, 10fr);
+  --tracking-columns: minmax(80px, 6fr) minmax(120px, 8fr) minmax(160px, 19fr) minmax(140px, 7fr) minmax(90px, 7fr) minmax(150px, 14fr) minmax(120px, 10fr) minmax(120px, 10fr) minmax(110px, 9fr) minmax(145px, 10fr);
   min-width: 1235px;}
 
 .stopstart-tracking-link {
@@ -2042,8 +2024,8 @@ body[data-page="Deliveries"]
 
 .delivery-search input[type="search"] { height: 34px; font-size: 13px;}
 
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger,
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger:hover { font-size: 13px;}
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger:hover { font-size: 13px;}
 
 .delivery-filters .delivery-select .ui-select-trigger { height: 36px; min-height: 36px; padding-top: 7px; padding-bottom: 7px;}
 
@@ -2054,39 +2036,10 @@ body[data-page="Deliveries"] .delivery-filters .ui-select-trigger:hover { font-s
 .tracking-records-scroll .current-table thead th:nth-child(n) { padding: 10px 8px; font-size: 12px;}
 }
 
-/* Failed Deliveries shares Tracking's stable third-level filter controls. */
-body[data-page="Failed Deliveries"] .delivery-filters .ui-select-trigger,
-body[data-page="Failed Deliveries"] .delivery-filters .ui-select-trigger:hover {
-  border: 0;
-  border-radius: 12px;
-  background: var(--hv);
-  box-shadow: inset 0 0 0 1px var(--ln);
-  font-size: 13px;
-  font-weight: 400;
-  outline: none;
-  transform: none;
-}
-
 /* Keep failed filters and records inside the workspace on smaller laptops. */
-body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters { width: 100%; min-width: 0; box-sizing: border-box; }
-body[data-page="Failed Deliveries"] .failed-toolbar .delivery-search { max-width: none; }
-body[data-page="Failed Deliveries"] .failed-toolbar .ui-select-trigger { width: 100%; min-width: 0; }
-body[data-page="Failed Deliveries"] .failed-toolbar .ui-select-menu { max-height: min(420px, calc(var(--atlas-viewport-height, 100dvh) * 0.55)); overflow-y: auto; max-width: calc(var(--atlas-viewport-width, 100vw) - 32px); }
-body[data-page="Failed Deliveries"] .failed-toolbar [data-failed-date-filter] .ui-select-menu { left: auto; right: 0; }
-body[data-page="Failed Deliveries"] .failed-toolbar .delivery-clear { flex-shrink: 0; }
-@media (max-width: 600px) {
-  body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters > .delivery-search { grid-column: 1 / -1; }
-  body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters > .ui-select { width: 100%; max-width: none; min-width: 0; }
-  body[data-page="Failed Deliveries"] .failed-toolbar .ui-select-menu { min-width: 0; width: max-content; max-width: min(310px, calc(var(--atlas-viewport-width, 100vw) - 40px)); }
-  body[data-page="Failed Deliveries"] .failed-toolbar > .ui-select:nth-child(2n+1) .ui-select-menu { left: auto; right: 0; }
-  body[data-page="Failed Deliveries"] .failed-toolbar .delivery-clear { justify-self: start; }
-}
 
-@media (max-width: 600px) {
-  body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters > * { grid-column: auto; grid-row: auto; }
-  body[data-page="Failed Deliveries"] .failed-toolbar.delivery-filters > .delivery-search { grid-column: 1 / -1; width: 100%; box-sizing: border-box; }
-}
+
+
 
 body[data-page="Deliveries"] .tracking-number-heading { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
 body[data-page="Deliveries"] .current-table thead .tracking-number-switch {
@@ -2119,37 +2072,37 @@ body[data-page="Deliveries"] .tracking-records-scroll .current-table tbody tr.is
 body[data-page="Deliveries"] .tracking-records-scroll .current-table tbody tr.is-selected:hover td { background: #e6e7fc; }
 body[data-page="Deliveries"] .tracking-records-scroll .current-table tbody tr.is-selected td:first-child { box-shadow: inset 4px 0 0 var(--atlas-indigo); }
 body[data-page="Deliveries"] .tracking-row:focus-visible { outline-color: var(--atlas-indigo); }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-courier-card { --courier-color: var(--atlas-indigo); }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab,
-body[data-page="Deliveries"] .delivery-scope-row .tracking-courier-card { min-height: 52px; padding: 8px 12px; }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab { font-size: 14px; }
-body[data-page="Deliveries"] .tracking-courier-grid > .tracking-courier-card { flex-basis: 156px; min-width: 116px; }
-body[data-page="Deliveries"] .tracking-courier-grid > .tracking-courier-self { flex: 0 0 auto; }
-body[data-page="Deliveries"] .tracking-courier-card .tracking-courier-logo { height: 34px; }
-body[data-page="Deliveries"] .tracking-courier-self-label { font-size: 13px; }
-body[data-page="Deliveries"] .tracking-courier-count { font-size: 13px; }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab,
-body[data-page="Deliveries"] .delivery-scope-row .tracking-courier-card,
-body[data-page="Deliveries"] .delivery-filters .ui-select-trigger {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-courier-card { --courier-color: var(--atlas-indigo); }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-courier-card { min-height: 52px; padding: 8px 12px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab { font-size: 14px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-grid > .tracking-courier-card { flex-basis: 156px; min-width: 116px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-grid > .tracking-courier-self { flex: 0 0 auto; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-card .tracking-courier-logo { height: 34px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-self-label { font-size: 13px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-courier-count { font-size: 13px; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-courier-card,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-filters .ui-select-trigger {
   border-color: #6267e947;
   background: #fafaff;
 }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab:hover { border-color: var(--atlas-indigo); background: #f0f1fd; }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on,
-body[data-page="Deliveries"] .delivery-scope-row .tracking-courier-card.on,
-body[data-page="Deliveries"] .scope-liquid {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab:hover { border-color: var(--atlas-indigo); background: #f0f1fd; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-courier-card.on,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .scope-liquid {
   border-color: var(--atlas-indigo);
   background: linear-gradient(135deg, #6267e926, #6ee3ee33);
   color: var(--atlas-slate);
   box-shadow: inset 0 1px 0 #ffffff66, 0 3px 12px #6267e924;
 }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab:focus-visible { outline-color: var(--atlas-indigo); }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on span { background-color: #6267e91f; }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on .scope-option-label { background: transparent; }
-body[data-page="Deliveries"] .scope-liquid::before,
-body[data-page="Deliveries"] .scope-liquid::after { background: #6ee3ee88; }
-body[data-page="Deliveries"] .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.liquid-arriving,
-body[data-page="Deliveries"] .delivery-scope-row .tracking-courier-card.liquid-arriving {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab:focus-visible { outline-color: var(--atlas-indigo); }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on span { background-color: #6267e91f; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.on .scope-option-label { background: transparent; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .scope-liquid::before,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .scope-liquid::after { background: #6ee3ee88; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-scope-section > .fx-tabs .fx-tab.liquid-arriving,
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .delivery-scope-row .tracking-courier-card.liquid-arriving {
   border-color: transparent; background: transparent; box-shadow: none;
 }
 body[data-page="Deliveries"] .delivery-clear { border-color: #6267e980; background: #6267e914; color: var(--atlas-slate); }
@@ -2205,16 +2158,16 @@ body:is([data-page="Dashboard"], [data-page="Deliveries"]) .dr.qd.qd-tracking-vi
 body:is([data-page="Dashboard"], [data-page="Deliveries"]) .dr.qd.qd-tracking-view :is(.qd-customer-copy, .qd-document-open, .qd-amazon-doc-download):focus-visible { outline-color: var(--atlas-indigo); }
 
 /* Multi-value Tracking filters retain visible checkbox outlines. */
-body[data-page="Deliveries"] [data-ui-select-multiple] .ui-select-checkbox {
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) [data-ui-select-multiple] .ui-select-checkbox {
   display: inline-flex; align-items: center; justify-content: center; flex: 0 0 17px;
   width: 17px; height: 17px; border: 1px solid var(--atlas-indigo); border-radius: 4px;
   color: var(--atlas-space); background: #fff;
 }
-body[data-page="Deliveries"] [data-ui-select-multiple] [aria-checked="true"] .ui-select-checkbox { background: var(--atlas-space); }
-body[data-page="Deliveries"] [data-ui-select-multiple] .ui-select-checkbox svg { color: var(--atlas-cyan); stroke: var(--atlas-cyan); }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) [data-ui-select-multiple] [aria-checked="true"] .ui-select-checkbox { background: var(--atlas-space); }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) [data-ui-select-multiple] .ui-select-checkbox svg { color: var(--atlas-cyan); stroke: var(--atlas-cyan); }
 @media (max-width: 760px) {
-  body[data-page="Deliveries"] [data-ui-select-multiple] .ui-select-menu { min-width: 0; width: 100%; }
-  body[data-page="Deliveries"] [data-ui-select-multiple] .ui-select-option > span:first-child { overflow-wrap: anywhere; white-space: normal; }
+  body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) [data-ui-select-multiple] .ui-select-menu { min-width: 0; width: 100%; }
+  body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) [data-ui-select-multiple] .ui-select-option > span:first-child { overflow-wrap: anywhere; white-space: normal; }
 }
 
 .tracking-widget-conditions { margin: -4px 0 14px; padding: 10px 12px; border: 1px solid #6267e940; border-radius: 8px; background: #f0f1fd; color: var(--atlas-slate); font-size: 12px; line-height: 1.5; }
@@ -2293,3 +2246,297 @@ body[data-page="Deliveries"] .current-table tbody tr.tracking-searched-row > td:
 .order-flow-node[data-flow-open]:focus-visible rect { stroke: #8794bd; stroke-width: 2; }
 
 .tracking-order-type { display: block; margin-top: 5px; color: #65708a; font-size: 11px; font-weight: 600; line-height: 1.35; }
+
+/* Keep date words intact beside the sort and display controls. */
+body[data-page="Deliveries"] .table-date-sort[data-table-date-sort="tracking"] > span:first-child {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  flex-shrink: 0;
+}
+
+/* Replacement and refund tables share compact identifiers and wider instructions. */
+body:is([data-order-kind="replacement"], [data-order-kind="refund"]) .tracking-records-scroll .current-table {
+  min-width: 1495px;
+  --tracking-columns: 140px 145px minmax(170px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.1fr) minmax(260px, 2.5fr) minmax(130px, .8fr) minmax(140px, 1fr) 110px;
+}
+body:is([data-order-kind="replacement"], [data-order-kind="refund"]) .tracking-records-scroll .current-table[data-tracking-carrier="AMZ"] {
+  min-width: 1395px;
+  --tracking-columns: 140px 145px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr) 110px;
+}
+body:is([data-order-kind="replacement"], [data-order-kind="refund"]) .tracking-records-scroll .current-table[data-tracking-carrier="XDP"] {
+  min-width: 1395px;
+  --tracking-columns: 140px 145px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr) 110px;
+}
+body:is([data-order-kind="replacement"], [data-order-kind="refund"]) .tracking-records-scroll .current-table[data-tracking-carrier="Palletways"] {
+  min-width: 1535px;
+  --tracking-columns: 140px 145px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr) 120px 130px;
+}
+body:is([data-order-kind="replacement"], [data-order-kind="refund"]) .tracking-records-scroll .current-table[data-tracking-carrier="Stopstart"] {
+  min-width: 1530px;
+  --tracking-columns: 140px 145px minmax(170px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.1fr) minmax(130px, .8fr) minmax(140px, 1fr) minmax(260px, 2.5fr) 145px;
+}
+.replacement-order-reference { margin-top: 6px; }
+
+/* Warm yellow palette for the Credit/Refund table. */
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr > td {
+  background: #fffdf4;
+  border-top-color: #eee2b7;
+}
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr:nth-child(even) > td { background: #fff8dc; }
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr:hover > td { background: #fff0b8; }
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr:is(.is-selected, .is-selected:hover) > td { background: #fbe39a; }
+body[data-order-kind="refund"] .current-table .qd-customer-copy {
+  background: #f9e7a0;
+  color: #725010;
+  border-color: #ddc26a;
+}
+body[data-order-kind="refund"] .current-table .qd-customer-copy:hover { background: #f2d26a; color: #51390b; }
+body[data-order-kind="refund"] .current-table .credit-refund-badge {
+  background: linear-gradient(120deg, #fff3be, #f5d778, #fff0ac);
+  border-color: #c49b32;
+  color: #6a4810;
+}
+body[data-order-kind="refund"] .current-table .credit-refund-badge > span { border-left-color: #c49b32; }
+body[data-order-kind="refund"] .tracking-records-scroll .tracking-scroll-thumb { background: #b78c24; }
+
+/* Credit/refund discovery card. */
+.tracking-records-scroll .current-table td.tracking-refund-notice { padding: 24px !important; }
+.refund-discovery {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; align-items: center; gap: 26px;
+  width: min(1120px, 100%); min-height: 174px; margin: 0 auto;
+  padding: 32px; text-align: left; border: 1px solid #6267e966;
+  border-radius: 18px; color: #f4f5ff;
+  background: linear-gradient(115deg, var(--atlas-space), var(--atlas-slate));
+  box-shadow: 0 12px 32px #171c3518, inset 0 1px 0 #ffffff0d;
+  animation: refund-discovery-enter 420ms cubic-bezier(.2,.75,.25,1) both;
+  cursor: pointer; transition: border-color 180ms ease, background 180ms ease;
+}
+.refund-discovery-glow {
+  position: absolute; z-index: -1; right: -70px; top: -160px;
+  width: 460px; height: 460px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #6267e929, transparent 68%);
+}
+.refund-discovery-symbol {
+  display: grid; place-items: center; flex: 0 0 82px; width: 82px; height: 82px;
+  border: 1px solid #f5d77840; border-radius: 24px;
+  color: #ffda80; background: linear-gradient(145deg, #ffda8015, #ffda8005);
+  box-shadow: inset 0 1px 0 #ffda801a;
+}
+.refund-discovery-symbol svg { width: 60px; height: 60px; }
+.refund-discovery-orbit { opacity: .4; }
+.refund-discovery-copy { flex: 1; min-width: 0; }
+.refund-discovery-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #ffda80; font-size: 10px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.refund-discovery-dot { width: 5px; height: 5px; border-radius: 50%; background: #ffda80; box-shadow: 0 0 10px #ffda8060; }
+.refund-discovery-order { margin-left: 4px; padding: 3px 7px; border: 1px solid #6267e966; border-radius: 5px; color: #d9dcff; background: #6267e91a; font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.refund-discovery .refund-discovery-copy h3 { margin: 10px 0 7px; color: #f4f5ff; font-size: clamp(18px, 1.35vw, 22px); line-height: 1.2; font-weight: 650; letter-spacing: -.015em; }
+.refund-discovery .refund-discovery-copy p { margin: 0; max-width: 470px; color: #bfc6df; font-size: 13px; line-height: 1.65; }
+@keyframes refund-discovery-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 760px) {
+  .refund-discovery { flex-wrap: wrap; padding: 24px; gap: 18px; }
+  .refund-discovery-symbol { flex-basis: 64px; width: 64px; height: 64px; border-radius: 18px; }
+  .refund-discovery-symbol svg { width: 48px; height: 48px; }
+  }
+@media (prefers-reduced-motion: reduce) {
+  .refund-discovery { animation: none; }
+}
+
+/* A quiet, friendly invitation; the entire card opens the record. */
+.refund-discovery:is(:hover, :focus-visible) { border-color: var(--atlas-cyan); background: linear-gradient(115deg, var(--atlas-space), #2c3558); }
+.refund-discovery:focus-visible { outline: 2px solid var(--atlas-cyan); outline-offset: 4px; }
+.refund-discovery-link-arrow { flex: none; color: var(--atlas-cyan); transition: transform 180ms ease; }
+.refund-discovery-link-arrow svg { display: block; width: 24px; height: 24px; }
+.refund-discovery:hover .refund-discovery-link-arrow { transform: translateX(4px); }
+@media (prefers-reduced-motion: reduce) { .refund-discovery, .refund-discovery-link-arrow { transition: none; } }
+
+/* The searched order keeps its green highlight in Credit/Refund. */
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr.tracking-searched-row > td,
+body[data-order-kind="refund"] .tracking-records-scroll .current-table tbody tr.tracking-searched-row:is(:hover, .is-selected, .is-selected:hover) > td {
+  background: #c9f2d8;
+}
+body[data-order-kind="refund"] .current-table tbody tr.tracking-searched-row > td:first-child {
+  box-shadow: inset 3px 0 #25824e;
+}
+
+.refund-original-order { display: block; margin-top: 7px; color: #725010; font-size: 11px; line-height: 1.5; }
+.refund-original-order strong { display: block; color: var(--atlas-space); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* Shared Details presentation: one layout for every courier. */
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px; margin: 14px 0 0; padding: 16px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  border: 1px solid #e1e5f2; border-radius: 16px;
+  background: linear-gradient(150deg, #f7f8fd, #f0f3fa);
+}
+.qd-detail-heading {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+  padding: 0 0 6px; min-width: 0;
+}
+.qd-detail-heading-icon {
+  display: grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px;
+  border: 1px solid #d8ddf6; border-radius: 10px; color: var(--atlas-indigo); background: #e9ecfc;
+}
+.qd-detail-heading h3 { margin: 0; color: var(--atlas-space); font-size: 17px; font-weight: 750; letter-spacing: -.02em; }
+.qd-detail-heading p { margin: 3px 0 0; color: #8088a2; font-size: 12px; line-height: 1.5; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item {
+  min-width: 0; margin: 0; padding: 12px; border: 1px solid #e5e8f2;
+  border-radius: 11px; background: #fff; box-shadow: 0 2px 5px #171c3503;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item > div {
+  display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 7px; min-width: 0;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item > div > span {
+  display: flex; align-items: center; gap: 6px; color: #7d859e;
+  font-size: 12px; font-weight: 600; line-height: 1.4;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item > div > span > svg {
+  flex: none; width: 13px; height: 13px; color: #8a91bc;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item b {
+  display: block; max-width: none; width: 100%; color: var(--atlas-space);
+  font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; font-weight: 600;
+  line-height: 1.6; text-align: left; overflow-wrap: anywhere; font-variant-numeric: tabular-nums;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="scheduled"] {
+  border-color: var(--atlas-slate); background: linear-gradient(135deg, var(--atlas-space), var(--atlas-slate));
+  box-shadow: inset 0 1px 0 #ffffff10;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="scheduled"] > div > span,
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="scheduled"] > div > span > svg { color: var(--atlas-cyan); }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="scheduled"] b { color: #f4f6ff; font-size: 16px; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="completed"] { background: #eef1fb; border-color: #dce2f6; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="completed"] b { font-size: 15px; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="completed"].is-complete { background: #edf7f1; border-color: #d1e9dc; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="completed"].is-complete b { color: #276347; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary :is([data-summary-field="special-instructions"], [data-summary-field="delivery-issue"]) { grid-column: 1 / -1; order: 1; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="special-instructions"] { border-left: 3px solid #9ba3e8; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="special-instructions"] .special-instructions-copy { text-align: left; width: 100%; line-height: 1.7; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-summary-field="delivery-issue"] { background: #fff7ed; border-color: #eddbbd; border-left: 3px solid #c89e55; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] :is(.qd-provider, .qd-stopstart-details) {
+  margin: 12px 0 0; padding: 16px; border: 1px solid #e1e5f2 !important;
+  border-radius: 16px; background: #fff; font-family: 'Segoe UI', system-ui, sans-serif; box-shadow: 0 3px 12px #171c3504;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] :is(.qd-provider, .qd-stopstart-details) .qd-title h3 {
+  color: var(--atlas-space); font-size: 15px; font-weight: 750; letter-spacing: -.01em;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; margin-top: 8px;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts > div {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+  min-width: 0; padding: 12px 0; border-bottom: 1px solid #edf0f7;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dt { color: #838ba1; font-size: 12px; font-weight: 500; line-height: 1.5; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dd { width: 100%; color: var(--atlas-space); font-size: 14px; font-weight: 600; line-height: 1.6; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dd .qd-customer-copy { margin-left: 5px; }
+.dr.qd.qd-tracking-view.qd-details-enter[data-qd-tab="details"] :is(.qd-summary, .qd-provider, .qd-stopstart-details) { animation: qd-details-reveal 240ms ease-out both; }
+@keyframes qd-details-reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 420px) {
+  .dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary { gap: 8px; padding: 12px; }
+  .dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dr.qd.qd-tracking-view.qd-details-enter[data-qd-tab="details"] :is(.qd-summary, .qd-provider, .qd-stopstart-details) { animation: none; }
+}
+
+/* Failed Deliveries uses the shared courier-only filter section. */
+body[data-page="Failed Deliveries"] .failed-scope-sections { grid-template-columns: minmax(0, 1fr); }
+body[data-page="Failed Deliveries"] .failed-scope-sections .tracking-courier-logo > span { font-size: 12px; font-weight: 700; }
+
+.failed-date-heading { display: block; padding: 7px 0 5px; color: var(--atlas-slate); font-size: 12px; font-weight: 700; }
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table {
+  --tracking-columns: 140px 145px 130px minmax(170px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.1fr) minmax(260px, 2.5fr) minmax(130px, .8fr) minmax(140px, 1fr);
+}
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table[data-tracking-carrier="AMZ"] {
+  --tracking-columns: 140px 145px 130px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr);
+}
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table[data-tracking-carrier="XDP"] {
+  --tracking-columns: 140px 145px 130px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr);
+}
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table[data-tracking-carrier="Palletways"] {
+  --tracking-columns: 140px 145px 130px minmax(170px, 1.1fr) minmax(160px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.2fr) minmax(130px, .8fr) minmax(140px, 1fr);
+}
+
+body[data-order-kind="refund"] .tracking-records-scroll .current-table[data-tracking-carrier="Stopstart"] {
+  --tracking-columns: 140px 145px 130px minmax(170px, 1.1fr) minmax(120px, .8fr) 100px minmax(180px, 1.1fr) minmax(130px, .8fr) minmax(140px, 1fr) minmax(260px, 2.5fr) 145px;
+}
+
+.tracking-refund-amount { font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+body[data-order-kind="refund"] .current-table thead th:nth-child(3),
+body[data-order-kind="refund"] .current-table td.tracking-refund-amount { text-align: center; }
+
+/* Keep Amazon shipment stages visually distinct without regrouping statuses. */
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-amazon-status="IN_TRANSIT"] .stx {
+  color: #176aab;
+}
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-amazon-status="READY_FOR_RECEIVE"] .stx {
+  color: #8655c8;
+}
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-amazon-status="OUT_FOR_DELIVERY"] .stx {
+  color: #ad6200;
+}
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-amazon-status="DELIVERED"] .stx {
+  color: #237c45;
+}
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell:is([data-amazon-status="LOST"], [data-amazon-status="UNDELIVERABLE"]) .stx {
+  color: #bd3347;
+}
+
+/* XDP column I status colours; source labels and filtering stay unchanged. */
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="DELIVERED"] .stx { color: #237c45; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="DELIVERY"] .stx { color: #176aab; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="NEXT STOP"] .stx { color: #ad6200; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="SMS"] .stx { color: #8655c8; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="EMAIL"] .stx { color: #147d79; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="NOT RECEIVED"] .stx { color: #bd3347; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="DELETE"] .stx { color: #bd3347; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="DAMAGE"] .stx { color: #bd3347; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="CANCELLED"] .stx { color: #62697a; }
+body:is([data-page="Deliveries"], [data-page="Failed Deliveries"]) .tracking-records-scroll .current-table td.tracking-status-cell[data-xdp-status="CREDIT/REFUND"] .stx { color: #a33b85; }
+
+.tracking-method-totals { margin: 0 0 10px; color: var(--mut); font-size: 13px; }
+.bar.delivery-filters > .delivery-other-method-select { flex: 0 1 245px; min-width: 190px; }
+
+.guidance-method-guide { margin: 24px 0; padding: 18px; border: 1px solid #dfe2f1; border-radius: 14px; background: #f7f8ff; }
+.guidance-method-guide-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.guidance-method-guide-head h3 { margin: 0 0 5px; color: var(--atlas-space); }
+.guidance-method-guide-head p { margin: 0; }
+.guidance-method-navigation { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.guidance-method-navigation > span { display: flex; gap: 10px; align-items: center; font-weight: 800; color: var(--atlas-indigo); }
+.guidance-method-navigation small { font-weight: 600; color: var(--mut); }
+.guidance-method-navigation button { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #dfe2f1; border-radius: 8px; background: #fff; color: var(--atlas-indigo); }
+.guidance-method-navigation button:disabled { opacity: .4; cursor: default; }
+.guidance-method-slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+.guidance-method-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
+.guidance-van-methods td:last-child, .guidance-van-methods tfoot td { font-variant-numeric: tabular-nums; font-weight: 800; }
+.guidance-van-methods tfoot { background: #eef0fc; color: var(--atlas-space); }
+@media (max-width: 640px) {
+  .guidance-method-guide { padding: 10px; }
+  .guidance-method-guide-head { align-items: flex-start; flex-direction: column; }
+}
+
+.guidance-method-navigation { flex-wrap: wrap; }
+.guidance-method-navigation [data-guidance-method-index] { width: auto; padding: 0 12px; font: inherit; font-weight: 700; cursor: pointer; }
+.guidance-method-navigation [aria-pressed="true"] { background: var(--atlas-indigo); border-color: var(--atlas-indigo); color: #fff; }
+.guidance-method-navigation [data-guidance-method-current] { font-size: 12px; color: var(--mut); }
+.guidance-method-navigation button:not(:disabled):focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: 2px; }
+.guidance-self-defined th[scope="row"] { color: #8655c8; }
+.guidance-palletways-methods td:last-child { font-variant-numeric: tabular-nums; font-weight: 800; }
+.guidance-palletways-methods tfoot { background: #eef0fc; color: var(--atlas-space); }
+
+.guidance-method-navigation { max-width: 100%; }
+.guidance-method-guide-head { flex-wrap: wrap; }
+:is(.guidance-amz-methods, .guidance-xdp-methods) td:last-child { font-variant-numeric: tabular-nums; font-weight: 800; }
+:is(.guidance-amz-methods, .guidance-xdp-methods) tfoot { background: #eef0fc; color: var(--atlas-space); }
+
+/* Navigate method slides with tabs, arrows or swipe without a scrollbar. */
+.guidance-method-slides { scrollbar-width: none; }
+.guidance-method-slides::-webkit-scrollbar { display: none; }
+.guidance-stopstart-methods td:last-child { font-variant-numeric: tabular-nums; font-weight: 800; }
+.guidance-stopstart-methods tfoot { background: #eef0fc; color: var(--atlas-space); }

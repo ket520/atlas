@@ -19,6 +19,11 @@ with sync_playwright() as pw:
     expect(page.locator('.collection-records-table th').nth(2)).to_have_text('Date Created')
     expect(rows.first.locator('td').nth(1)).to_contain_text('REFERENCE-ABC')
     expect(rows.first.locator('td').nth(2)).to_have_text('02/10/2026')
+    page.locator('[data-collection-sort-created]').click()
+    expect(rows.first.locator('td').first).to_contain_text('654171')
+    page.locator('[data-collection-sort-created]').click()
+    expect(rows.first.locator('td').first).to_contain_text('663132')
+    expect(page.locator('[data-collection-created-header]')).to_have_attribute('aria-sort', 'ascending')
     search = page.locator('[data-collection-records-search]')
     for value, order in [('663132', '663132'), ('reference-xyz', '654171'), ('  ABC  ', '663132')]:
         search.fill(value)

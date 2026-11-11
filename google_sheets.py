@@ -262,13 +262,15 @@ def read_xdp_activity():
 
 
 def read_palletways_tracking():
-    """Read order A, tracking ID B, consignment C, status F and booking Z/AA."""
+    """Read order A, tracking B, consignment C, status F, booking Z/AA and BT/BU."""
     values = get_spreadsheet().worksheet("Palletways").get_all_values()
     return [{"order": row[0].strip(), "trackingId": row[1].strip() if len(row) > 1 else "",
              "consignmentNumber": row[2].strip() if len(row) > 2 else "",
              "status": row[5] if len(row) > 5 else "",
              "bookedIn": row[25] if len(row) > 25 else "",
-             "bookInRequest": row[26] if len(row) > 26 else ""}
+             "bookInRequest": row[26] if len(row) > 26 else "",
+             "bookInDate": row[71].strip() if len(row) > 71 else "",
+             "bookInTime": row[72].strip() if len(row) > 72 else ""}
             for row in values[1:] if row and row[0].strip()]
 
 

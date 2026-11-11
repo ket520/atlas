@@ -12008,18 +12008,18 @@ body[data-page="Manufacture Claims"] .mc-page { min-width: 0; }
 .mc-table { width: 100%; min-width: 1040px; border-collapse: collapse; color: var(--atlas-slate); }
 .mc-table thead th { padding: 14px 12px; border: 0; background: var(--atlas-slate); color: #fff; text-align: left; font-size: 12px; font-weight: 700; white-space: normal; }
 .mc-table th small { color: #c4c9e2; font-size: 10px; font-weight: 500; }
-.mc-table th:nth-child(2), .mc-table td:nth-child(2) { width: 110px; padding-inline: 6px; }
-.mc-table th:nth-child(3), .mc-table td:nth-child(3) { width: 120px; padding-inline: 6px; }
-.mc-table th:nth-child(4), .mc-table td:nth-child(4) { width: 140px; padding-left: 6px; }
+.mc-table th:nth-child(2 of :not(.mc-selection-cell)), .mc-table td:nth-child(2 of :not(.mc-selection-cell)) { width: 110px; padding-inline: 6px; }
+.mc-table th:nth-child(3 of :not(.mc-selection-cell)), .mc-table td:nth-child(3 of :not(.mc-selection-cell)) { width: 120px; padding-inline: 6px; }
+.mc-table th:nth-child(4 of :not(.mc-selection-cell)), .mc-table td:nth-child(4 of :not(.mc-selection-cell)) { width: 140px; padding-left: 6px; }
 .mc-table tbody tr { height: auto; }
 .mc-table tbody td { height: auto; max-height: none; padding: 13px 12px; border-bottom: 1px solid #e6e8f3; font-size: 14px; white-space: normal; overflow-wrap: anywhere; max-width: 260px; }
 .mc-table tbody tr:nth-child(even) td { background: #f3f4fd; }
 .mc-table tbody tr:hover td { background: #eaf9fb; }
 .mc-table .mc-empty { padding: 44px 20px; text-align: center; color: #727995; }
 .mc-solution { display: inline-block; padding: 5px 8px; border-radius: 7px; background: #e6e7fc; color: #4b50c5; }
-.mc-table th:nth-child(6), .mc-table td:nth-child(6) { width: 100px; padding-inline: 6px; }
-.mc-table th:nth-child(7), .mc-table td:nth-child(7) { width: 115px; padding-inline: 6px; }
-.mc-table th:nth-child(8), .mc-table td:nth-child(8) { width: 300px; }
+.mc-table th:nth-child(6 of :not(.mc-selection-cell)), .mc-table td:nth-child(6 of :not(.mc-selection-cell)) { width: 100px; padding-inline: 6px; }
+.mc-table th:nth-child(7 of :not(.mc-selection-cell)), .mc-table td:nth-child(7 of :not(.mc-selection-cell)) { width: 115px; padding-inline: 6px; }
+.mc-table th:nth-child(8 of :not(.mc-selection-cell)), .mc-table td:nth-child(8 of :not(.mc-selection-cell)) { width: 300px; }
 .mc-picture-cell { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; }
 .mc-add-image { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; flex: 0 0 64px; width: 64px; height: 64px; padding: 4px; border: 1px dashed var(--atlas-indigo); border-radius: 7px; background: #f0f1fd; color: var(--atlas-indigo); font: inherit; font-size: 10px; font-weight: 700; white-space: nowrap; cursor: pointer; }
 .mc-add-image:hover { background: #e6e7fc; }
@@ -12031,15 +12031,15 @@ body[data-page="Manufacture Claims"] .mc-page { min-width: 0; }
 .mc-row-photos button:hover img { filter: brightness(.9); }
 /* Distribute the table's spare width across data columns instead of date/reason. */
 .mc-table { table-layout: fixed; min-width: 1250px; }
-.mc-table :is(th, td):nth-child(1) { width: calc((100% - 344px) * .12); }
-.mc-table :is(th, td):nth-child(2) { width: calc((100% - 344px) * .13); }
-.mc-table :is(th, td):nth-child(3) { width: calc((100% - 344px) * .15); }
-.mc-table :is(th, td):nth-child(4) { width: calc((100% - 344px) * .17); }
-.mc-table :is(th, td):nth-child(5) { width: calc((100% - 344px) * .17); }
-.mc-table :is(th, td):nth-child(6) { width: calc((100% - 344px) * .14); }
-.mc-table :is(th, td):nth-child(7) { width: calc((100% - 344px) * .12); }
-.mc-table :is(th, td):nth-child(8) { width: 300px; }
-.mc-table :is(th, td):nth-child(9) { width: 44px; }
+.mc-table :is(th, td):nth-child(1 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .12); }
+.mc-table :is(th, td):nth-child(2 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .13); }
+.mc-table :is(th, td):nth-child(3 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .15); }
+.mc-table :is(th, td):nth-child(4 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .17); }
+.mc-table :is(th, td):nth-child(5 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .17); }
+.mc-table :is(th, td):nth-child(6 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .14); }
+.mc-table :is(th, td):nth-child(7 of :not(.mc-selection-cell)) { width: calc((100% - 344px) * .12); }
+.mc-table :is(th, td):nth-child(8 of :not(.mc-selection-cell)) { width: 300px; }
+.mc-table :is(th, td):nth-child(9 of :not(.mc-selection-cell)) { width: 44px; }
 .mc-table .mc-solution { overflow-wrap: break-word; word-break: normal; max-width: 100%; }
 .mc-count { margin: 10px 0 0; color: #727995; font-size: 12px; }
 .mc-list-status { padding: 10px 12px; border: 1px solid #f0b6bd; border-radius: 8px; background: #fff2f3; color: #a42534; font-size: 12px; }
@@ -12104,3 +12104,182 @@ html.atlas-scaled body { min-height: var(--atlas-viewport-height); }
 
 .mc-table tr[data-mc-edit] { cursor: pointer; }
 .mc-table tr[data-mc-edit]:focus-visible { outline: 2px solid var(--atlas-indigo); outline-offset: -2px; }
+/* Shared replacement marker beneath order references. */
+.replacement-badge {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 6px;
+  border: 1px solid #8c65ad;
+  border-radius: 7px;
+  background: linear-gradient(120deg, #eadcf9, #d8c0ef, #eedffb);
+  color: #4d2268;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 #ffffff80;
+}
+.replacement-badge > svg {
+  flex: 0 0 13px;
+  width: 13px;
+  height: 13px;
+  color: inherit;
+  animation: replacement-turn 4s ease-in-out infinite;
+}
+.replacement-badge > span {
+  padding-left: 5px;
+  border-left: 1px solid #9b79b5;
+}
+@keyframes replacement-turn {
+  0%, 65% { transform: rotate(0deg); }
+  90%, 100% { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .replacement-badge > svg { animation: none; }
+}
+.special-instructions-copy {
+  display: inline;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.special-instructions-copy:hover,
+.special-instructions-copy:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.special-instructions-copy:focus-visible {
+  outline: 2px solid var(--atlas-indigo, #6267e9);
+  outline-offset: 3px;
+}
+
+/* Refund coin with a gentle pulse and a stationary return arrow. */
+.credit-refund-badge > svg { animation: none; flex-basis: 18px; width: 18px; height: 18px; }
+.credit-refund-badge .refund-coin {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  animation: refund-coin-pulse 3s ease-in-out infinite;
+}
+@keyframes refund-coin-pulse {
+  0%, 60%, 100% { transform: scale(1); }
+  30% { transform: scale(.88); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .credit-refund-badge .refund-coin { animation: none; }
+}
+
+/* Manufacturing claims selection uses the shared bulk action theme. */
+.mc-table .mc-selection-cell { width: 48px; padding: 0 12px; vertical-align: middle; }
+.mc-selection-cell input { width: 23px; height: 23px; margin: 0; accent-color: var(--atlas-indigo); cursor: pointer; }
+.mc-table.is-bulk-select { min-width: 1298px; }
+.mc-bulk-select-trigger[hidden] { display: none; }
+.mc-table tr[aria-selected="true"] { outline: 1px solid var(--atlas-indigo); outline-offset: -1px; }
+.mc-page:has(.is-bulk-select) { padding-bottom: 110px; }
+.mc-page:has(.is-bulk-select) .mc-records-toolbar [data-mc-download] { display: none; }
+.collection-bulk-toolbar .mc-bulk-done { margin-left: auto; background: var(--atlas-cyan); color: var(--atlas-space); border-color: var(--atlas-cyan); font-weight: 700; }
+.mc-bulk-toolbar [data-mc-selected-count] { color: var(--atlas-cyan); font-weight: 650; }
+
+.mc-page:has(.is-bulk-select) .mc-records-toolbar [data-mc-print] { display: none; }
+
+.mc-solution-select { width: 145px; flex: 0 0 145px; }
+.mc-solution-select .ui-select-trigger { width: 100%; height: 38px; min-width: 0; }
+.mc-solution-select .ui-select-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.qd-tracking-view .qd-summary-item[data-summary-field="booked-in"] b { white-space: pre-line; }
+
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="not-yet"],
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="booked"] {
+  padding: 10px 12px; border-radius: 8px; margin-block: 4px;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="not-yet"] { background: #b8324a; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="booked"] { background: #237a49; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="not-yet"] > div > span,
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="not-yet"] b,
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="booked"] > div > span,
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-summary .qd-summary-item[data-booking-state="booked"] b { color: #fff; }
+
+/* Credit/refund sidebar: one theme, scoped away from ordinary deliveries. */
+#dr .qd-refund-view {
+  --pn: #252c4a;
+  --ink: #f2f4ff;
+  --mut: #b9bed9;
+  --ln: #434a70;
+  --hv: #343b62;
+  --gr: #a7aaff;
+  --sdbg: #171c35;
+}
+#dr .qd-refund-view .db {
+  background: #171c35;
+  color: var(--ink);
+  border-color: var(--ln);
+  scrollbar-color: #6267e9 #171c35;
+}
+#dr .qd-refund-view :is(.qd-customer-block, .qd-tracking) {
+  background: transparent;
+  border-color: var(--ln);
+  color: var(--ink);
+}
+#dr .qd-refund-view .qd-badge {
+  background: #343b62;
+  border-color: #535a85;
+  color: var(--ink);
+}
+#dr .qd-refund-view .qd-progress {
+  background: linear-gradient(125deg, #343061, #252c4a);
+  border-color: #6267e966;
+}
+/* Shared workspace headings and courier icons use !important light-theme colours. */
+#dr .qd-refund-view :is(h2, h3, .qd-customer-inline) { color: var(--ink) !important; }
+#dr .qd-refund-view :is(.qd-head-meta, .qd-progress-bottom, .qd-progress-top > span) { color: #c6c9e2 !important; }
+#dr .qd-refund-view :is(.mut, .qd-customer > span, .qd-customer-block small, .qd-refund-caption) { color: var(--mut); }
+#dr .qd-refund-view :is(.qd-title, .qd-customer) svg { color: #a7aaff !important; }
+#dr .qd-refund-view .qd-head .x { color: #6ee3ee; background: #343b62; border-color: var(--ln); }
+#dr .qd-refund-view .qd-progress-steps span { background: #4a4c74; }
+#dr .qd-refund-view .qd-progress-steps span.is-active { background: #a7aaff; }
+#dr .qd-refund-view .qd-refund-amount-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+#dr .qd-refund-view .qd-refund-amount {
+  display: block;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  color: #a7aaff;
+}
+#dr .qd-refund-view .qd-refund-caption { font-size: 12px; }
+#dr .qd-refund-view .qd-refund-complete {
+  display: grid; place-items: center; flex: 0 0 56px; width: 56px; height: 56px;
+  border-radius: 50%; background: #237a49; color: #fff; box-shadow: 0 0 0 5px #369b6226;
+}
+#dr .qd-refund-view .qd-refund-pending {
+  flex: none; padding: 7px 12px; border: 1px solid #9b697f; border-radius: 999px;
+  background: #64334a; color: #fff; font-size: 12px; font-weight: 700;
+}
+#dr .qd-refund-view .db > .qd-action-section { display: block; order: 6; }
+#dr .qd-refund-view .qd-action-button {
+  --action-accent: #c4c6ff;
+  --action-tint: #343b62;
+  background: #2d3158; border-color: #6267e980; color: var(--ink); filter: none;
+}
+#dr .qd-refund-view .qd-action-button:disabled {
+  background: #252c4a; border-color: var(--ln); color: #c6c9e2; opacity: 1;
+}
+#dr .qd-refund-view .qd-action-card-icon {
+  background: var(--action-tint); color: var(--action-accent); border: 1px solid #6267e966;
+}
+#dr .qd-refund-view .qd-action-card-icon svg { color: var(--action-accent) !important; opacity: 1; }
+#dr .qd-refund-view .qd-action-button > strong { color: var(--ink); }
+#dr .qd-refund-view .qd-action-card-description { color: var(--mut); }
+#dr .qd-refund-view .qd-action-card-label { color: var(--action-accent); }
+#dr .qd-refund-view .qd-action-button:not(:disabled):hover { background: #373765; border-color: #a7aaff; }

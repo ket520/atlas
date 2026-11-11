@@ -1,6 +1,8 @@
 const pageRenderers = () => ({
   Dashboard: vDash,
   Deliveries: vDel,
+  Replacement: vDel,
+  Refund: vDel,
   'Failed Deliveries': vFail,
   'Collective Note': vCollectiveNote,
   'Manufacture Claims': vManufactureClaims,
@@ -138,7 +140,8 @@ function R() {
   const switchingPage = renderedPage !== null && renderedPage !== page;
   renderedPage = page;
   document.title = `${PAGE_LABELS[page] || page} · Atlas`;
-  document.body.dataset.page = page;
+  document.body.dataset.page = isTrackingPage() ? 'Deliveries' : page;
+  document.body.dataset.orderKind = trackingOrderKind();
   renderSidebar();
   renderHeaderStores();
 
@@ -175,7 +178,7 @@ function R() {
   DashboardFailedCarousel.attach();
   DashboardHome.attachQuickLinks();
 
-  if (page === 'Deliveries') {
+  if (isTrackingPage()) {
     animateHygienicFilter();
     if (document.body.dataset.live === 'true') loadTrackingPage(true);
     else rows();
@@ -185,7 +188,7 @@ function R() {
     else failedRows();
   }
   if (page === 'Dashboard') {
-    dres();
+    if (dashboardSearchVisible) dres();
     DashboardHome.load();
   }
 
@@ -223,13 +226,23 @@ function toggleSidebar() {
 document.addEventListener('click', event => {
   const app = $('.app');
   if (!app.classList.contains('detail-open')
-    || event.target.closest('#dr, [data-app-action="toggle-sidebar"], [data-copy-order-number], [data-copy-order-reference], [data-copy-consignment-number], [data-copy-amazon-tracking], [data-copy-palletways-tracking]')) return;
+    || event.target.closest('#dr, [data-app-action="toggle-sidebar"], [data-copy-special-instructions], [data-copy-order-number], [data-copy-order-reference], [data-copy-consignment-number], [data-copy-amazon-tracking], [data-copy-palletways-tracking]')) return;
   setSidebarCollapsed(true);
   app.classList.remove('mobile-open');
   $('.mn')?.setAttribute('aria-expanded', 'false');
 }, true);
 
 document.addEventListener('click', event => {
+  const refundLink = event.target.closest('[data-view-credit-refund]');
+  if (refundLink) {
+    const id = refundLink.dataset.viewCreditRefund;
+    const record = trackingCreditRefundMatch;
+    if (record && String(record.id || record.order) === id && !get(id)) DeliveryStore.add({ ...record, id });
+    go('Refund', '', '', { search: String(record?.order || id) });
+    op(id);
+    rows();
+    return;
+  }
   if (event.target.closest('[data-dashboard-search]')) {
     const input = $('#dq');
     if (input) { dq = input.value; input.focus(); dres(); }
@@ -280,6 +293,12 @@ document.addEventListener('click', event => {
   if (copyConsignment) {
     event.preventDefault();
     copyText(copyConsignment.dataset.copyConsignmentNumber, 'Consignment number copied');
+    return;
+  }
+  const copyInstructions = event.target.closest('[data-copy-special-instructions]');
+  if (copyInstructions) {
+    event.preventDefault();
+    copyText(copyInstructions.dataset.copySpecialInstructions, 'Special instructions copied');
     return;
   }
   const copyOrder = event.target.closest('[data-copy-order-number], [data-copy-order-reference]');
@@ -340,9 +359,11 @@ document.addEventListener('click', event => {
       failedDateTo = '';
     }
     const menu = clearFailedDates.closest('[data-failed-date-filter]');
-    menu.querySelectorAll('input[type="date"]').forEach(input => { input.value = ''; });
+    menu.querySelectorAll('input[type="date"]').forEach(input => {
+      if (input.id.startsWith(scheduled ? 'failed-scheduled-' : 'failed-date-')) input.value = '';
+    });
     const label = menu.querySelector('.ui-select-label');
-    if (label) label.textContent = scheduled ? failedScheduledLabel() : failedDateLabel();
+    if (label) label.textContent = failedCombinedDateLabel();
     closeFailedDateFilter();
     syncFailedClearButton();
     if (document.body.dataset.live === 'true') loadFailedPage(true);
@@ -360,14 +381,10 @@ document.addEventListener('click', event => {
     failedDateTrigger.setAttribute('aria-expanded', String(opening));
     return;
   }
-  const failedScopeTab = event.target.closest('[data-failed-scope]');
   const failedTab = event.target.closest('[data-failed-method]');
-  if (failedScopeTab || failedTab) {
+  if (failedTab) {
     const from = ScopeLiquid.capture();
-    if (failedScopeTab) {
-      failedScope = failedScopeTab.dataset.failedScope;
-      failedCarrier = '';
-    } else failedCarrier = failedTab.dataset.failedMethod;
+    failedCarrier = failedTab.dataset.failedMethod;
     failedStore = '';
     failedStatus = '';
     dashboardSelectedId = null;
@@ -394,7 +411,7 @@ document.addEventListener('click', event => {
   }
   const trackingRow = event.target.closest('.tracking-row[data-delivery-id]');
   if (trackingRow && !event.target.closest('button, a, input, select, textarea')) {
-    op(trackingRow.dataset.deliveryId);
+    openLinkedOrderRow(trackingRow.dataset.deliveryId);
   }
 });
 
@@ -413,7 +430,7 @@ document.addEventListener('input', event => {
 document.addEventListener('change', event => {
   if (event.target.closest('[data-failed-date-filter] input[type="date"]')) {
     const menu = event.target.closest('[data-failed-date-filter]');
-    const scheduled = menu.querySelector('#fsbtn') !== null;
+    const scheduled = event.target.id.startsWith('failed-scheduled-');
     if (scheduled) {
       failedScheduledFrom = document.querySelector('#failed-scheduled-from')?.value || '';
       failedScheduledTo = document.querySelector('#failed-scheduled-to')?.value || '';
@@ -422,7 +439,7 @@ document.addEventListener('change', event => {
       failedDateTo = document.querySelector('#failed-date-to')?.value || '';
     }
     const label = menu.querySelector('.ui-select-label');
-    if (label) label.textContent = scheduled ? failedScheduledLabel() : failedDateLabel();
+    if (label) label.textContent = failedCombinedDateLabel();
     syncFailedClearButton();
     if (document.body.dataset.live === 'true') loadFailedPage(true);
     else failedRows();
@@ -431,12 +448,40 @@ document.addEventListener('change', event => {
   DeliveryFilters.handleChange(event);
 });
 
+window.addEventListener('tracking-visibility-change', () => {
+  DashboardHome.invalidateVisibility();
+  hygienicFilterAnimated = false;
+  if (TrackingVisibility.enabled()) {
+    trackingScope = compactFilter(filterValues(trackingScope).filter(value => value !== 'hygienic'));
+    failedScope = compactFilter(filterValues(failedScope).filter(value => value !== 'hygienic'));
+  }
+  if (TrackingVisibility.wayfairEnabled() && fsrc === 'Wayfair') {
+    fsrc = ''; fclassification = []; fs = '';
+  }
+  fstore = compactFilter(filterValues(fstore).filter(value => TrackingVisibility.includesStore(value)));
+  failedStore = compactFilter(filterValues(failedStore).filter(value => TrackingVisibility.includesStore(value)));
+  trackingRequest++;
+  trackingLoaded = [];
+  trackingOffset = 0;
+  trackingTotal = 0;
+  trackingHasMore = false;
+  trackingLoadedQuery = '';
+  trackingWidgetFacets = null;
+  failedRequest++;
+  failedLoaded = [];
+  failedOffset = 0;
+  failedTotal = 0;
+  failedHasMore = false;
+  dashboardSelectedId = null;
+  if (page === 'Dashboard' || isTrackingPage() || page === 'Failed Deliveries' || page === 'Guidance') R();
+});
+
 window.addEventListener('popstate', event => {
   page = PAGE_URL[event.state?.page] ? event.state.page : Object.entries(PAGE_URL)
     .find(([, url]) => location.pathname.endsWith(url))?.[0] || 'Dashboard';
-  trackingScope = page === 'Deliveries' && new URLSearchParams(location.search).get('view') === 'today'
+  trackingScope = isTrackingPage() && new URLSearchParams(location.search).get('view') === 'today'
     ? 'today' : '';
-  dashboardWidgetFilter = page === 'Deliveries' ? new URLSearchParams(location.search).get('dashboard_widget') || '' : '';
+  dashboardWidgetFilter = isTrackingPage() ? new URLSearchParams(location.search).get('dashboard_widget') || '' : '';
   trackingWidgetFacets = null;
   fsrc = dashboardWidgetFilter ? new URLSearchParams(location.search).get('carrier') || '' : '';
   fstore = dashboardWidgetFilter ? compactFilter(new URLSearchParams(location.search).getAll('store')) : '';
@@ -451,7 +496,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Enter') {
     const trackingRow = event.target.closest('.tracking-row[data-delivery-id]');
     if (trackingRow && event.target === trackingRow) {
-      op(trackingRow.dataset.deliveryId);
+      openLinkedOrderRow(trackingRow.dataset.deliveryId);
       return;
     }
     const deliveryRow = event.target.closest('.delivery-list-row[data-delivery-id]');
@@ -518,6 +563,18 @@ if (document.body.dataset.live === 'true') {
   const showSourceInfo = entries => {
     const heading = document.createElement('h2');
     heading.textContent = 'Last sync';
+    const header = document.createElement('header');
+    header.className = 'source-info-heading';
+    const range = document.createElement('div');
+    range.className = 'source-info-range';
+    range.setAttribute('role', 'status');
+    range.setAttribute('aria-label', 'Order date range');
+    const rangeLabel = document.createElement('span');
+    rangeLabel.textContent = 'Order date range';
+    const rangeValue = document.createElement('strong');
+    rangeValue.textContent = integrationOrderRangeLabel(liveSummary);
+    range.append(rangeLabel, rangeValue);
+    header.append(heading, range);
     const sections = entries.map(([label, description]) => {
       const section = document.createElement('section');
       section.className = 'source-info-entry';
@@ -528,7 +585,7 @@ if (document.body.dataset.live === 'true') {
       section.append(title, detail);
       return section;
     });
-    sourcePanel.replaceChildren(heading, ...sections);
+    sourcePanel.replaceChildren(header, ...sections);
   };
   const renderSourceInfo = () => {
     sourceButton.textContent = 'Data sources';
@@ -550,6 +607,7 @@ if (document.body.dataset.live === 'true') {
     showSourceInfo(entries);
   };
   document.addEventListener('deliverydesk:sync-run-log', renderSourceInfo);
+  document.addEventListener('deliverydesk:ready', renderSourceInfo);
   renderSourceInfo();
   loadSyncRunLog();
   setInterval(loadSyncRunLog, 5 * 60 * 1000);
@@ -566,7 +624,7 @@ if (document.body.dataset.live === 'true') {
         try {
           const failedPage = await DeliveryApi.list({ issues: 1, dashboard_scope: 'failed', limit: DELIVERY_PAGE_SIZE });
           result.failedPreview = (failedPage.deliveries || []).filter(delivery =>
-            ['Failed', 'Rejected'].includes(trackingStatus(delivery.st)));
+            isGlobalException(delivery) && !isCreditRefundRecord(delivery));
           if (!result.failedPreview.length) result.failedPreviewError = 'The failed-delivery request returned no failed records.';
         } catch (previewError) {
           result.failedPreviewError = previewError.message;
@@ -577,7 +635,7 @@ if (document.body.dataset.live === 'true') {
         ? new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
         : result.syncing ? 'Refreshing…' : 'Not recorded';
       const selectedDelivery = sel ? get(sel) : null;
-      const visiblePageRecords = page === 'Deliveries' ? trackingLoaded
+      const visiblePageRecords = isTrackingPage() ? trackingLoaded
         : page === 'Failed Deliveries' ? failedLoaded : [];
       DeliveryStore.hydrate({ deliveries: [...(result.today || []), ...(result.failedPreview || []), ...visiblePageRecords], activity: [], integrations: [
         ['OptimoRoute', formatTime(sourceTimes.optimoroute), result.stale ? 'wn' : result.optimorouteUnavailable ? 'er' : 'ok', 'Tracking unavailable'],
@@ -640,3 +698,11 @@ setInterval(() => {
   if (clock) clock.textContent = localClockLabel();
 }, 30000);
 
+
+document.addEventListener('keydown', event => {
+  if (!['Enter', ' '].includes(event.key)) return;
+  const card = event.target.closest('.refund-discovery[data-view-credit-refund]');
+  if (!card) return;
+  event.preventDefault();
+  card.click();
+});

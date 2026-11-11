@@ -25,6 +25,37 @@ class CollectionRecordsTests(unittest.TestCase):
                                 collectionDate='2026-10-15', items='SKU1'),
                 'paper': '<table><tbody><tr><td><input name="order" value="123"></td></tr></tbody></table>'}
 
+    def test_approval_toggle_survives_note_edits_and_defaults_for_legacy(self):
+        note = self.note()
+        saved = collection_records.save_note(note)
+        note_id = saved['id']
+        self.assertEqual(collection_records.get_note(note_id)['status'], 'Pending')
+        collection_records.set_status(note_id, 'Approved')
+        note['id'] = note_id
+        note['summary']['customer'] = 'Edited'
+        collection_records.save_note(note)
+        self.assertEqual(collection_records.get_note(note_id)['status'], 'Approved')
+        self.assertEqual(collection_records.list_notes()['records'][0]['status'], 'Approved')
+        collection_records.set_status(note_id, 'Pending')
+        self.assertEqual(collection_records.get_note(note_id)['status'], 'Pending')
+        with self.assertRaises(ValueError):
+            collection_records.set_status(note_id, 'Other')
+        with self.assertRaises(FileNotFoundError):
+            collection_records.set_status('missing', 'Approved')
+        self.assertEqual(collection_records.record_summary(json.dumps(self.note()))['status'], 'Pending')
+
+    def test_channel_and_phone_are_saved_and_recovered_from_older_notes(self):
+        note = self.note()
+        note['paper'] = '<input name="company" value="Shopify"><input name="phone" value="0123456789">'
+        saved = collection_records.save_note(note)
+        record = collection_records.list_notes()['records'][0]
+        self.assertEqual((record['channel'], record['phone']), ('Shopify', '0123456789'))
+        note['id'] = saved['id']
+        note['summary'].update(channel='Amazon', phone='0987654321')
+        collection_records.save_note(note)
+        record = collection_records.list_notes()['records'][0]
+        self.assertEqual((record['channel'], record['phone']), ('Amazon', '0987654321'))
+
     def test_save_reopen_and_update_without_duplicate_records(self):
         self.assertEqual(collection_records.list_notes(), {'records': []})
         note = self.note()
@@ -110,6 +141,14 @@ class CollectionRecordsTests(unittest.TestCase):
                 self.assertEqual(json.load(response)['records'][0]['id'], saved['id'])
             with urlopen(base + '/' + saved['id'], timeout=5) as response:
                 self.assertEqual(json.load(response)['paper'], self.note()['paper'])
+            for status in ('Approved', 'Pending'):
+                request = Request(base + '/' + saved['id'] + '/status',
+                                  data=json.dumps({'status': status}).encode(),
+                                  headers={'Content-Type': 'application/json'}, method='POST')
+                with urlopen(request, timeout=5) as response:
+                    self.assertEqual(json.load(response)['status'], status)
+                with urlopen(base + '/' + saved['id'], timeout=5) as response:
+                    self.assertEqual(json.load(response)['status'], status)
             other = collection_records.save_note(self.note())
             with urlopen(Request(base + '/' + saved['id'], method='DELETE'), timeout=5) as response:
                 self.assertTrue(json.load(response)['deleted'])
@@ -119,3 +158,31 @@ class CollectionRecordsTests(unittest.TestCase):
             http.shutdown()
             http.server_close()
             thread.join()
+
+    def test_channel_uses_tracking_store_classification_for_saved_notes(self):
+        note = self.note()
+        note['summary']['channel'] = 'Website'
+        saved = collection_records.save_note(note)
+        mappings = [('SHOPIFY', 'Shopify - Neshome'), ('BATHPROF', 'Bathroom Republic - Website'),
+                    ('BATHROOM', 'Bathroom Republic - Website'), ('AMAZON', 'Amazon'), ('', '')]
+        for code, expected in mappings:
+            with self.subTest(code=code):
+                payload = {'storeCode': code, 'salesActivityDetails': {'Order Type': 'Shopify', 'Order Analysis': 'Website'}}
+                with delivery_data.connect() as db:
+                    db.execute('INSERT OR REPLACE INTO deliveries VALUES (?,?,?,?)',
+                               ('123', json.dumps(payload), '2026-01-01', '2026-01-01'))
+                    db.commit()
+                record = next(row for row in collection_records.list_notes()['records'] if row['id'] == saved['id'])
+                self.assertEqual(record['channel'], expected)
+                self.assertEqual(collection_records.get_note(saved['id'])['summary']['channel'], 'Website')
+
+    def test_rejection_persists_and_can_be_changed_to_approval(self):
+        note = self.note()
+        note_id = collection_records.save_note(note)['id']
+        collection_records.set_status(note_id, 'Rejected')
+        note['id'] = note_id
+        collection_records.save_note(note)
+        self.assertEqual(collection_records.get_note(note_id)['status'], 'Rejected')
+        self.assertEqual(collection_records.list_notes()['records'][0]['status'], 'Rejected')
+        collection_records.set_status(note_id, 'Approved')
+        self.assertEqual(collection_records.get_note(note_id)['status'], 'Approved')

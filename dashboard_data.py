@@ -36,11 +36,11 @@ def widget_condition(key):
             [],
         ),
         "cancelled": (
-            f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,10)=?",
+            "ow_cancelled_van(payload)=1 AND substr(json_extract(payload, '$.orderDate'),1,10)=?",
             [uk_day.isoformat()],
         ),
         "cancelled-month": (
-            f"({carrier}='Cancelled' OR {status}='Cancelled') AND substr(json_extract(payload, '$.orderDate'),1,7)=?",
+            "ow_cancelled_van(payload)=1 AND substr(json_extract(payload, '$.orderDate'),1,7)=?",
             [uk_day.strftime("%Y-%m")],
         ),
         "hold": (f"({carrier}='On Hold' OR {status}='Unassigned')", []),
@@ -55,7 +55,7 @@ def widget_condition(key):
             [],
         ),
         "palletways-unbooked": (
-            f"{carrier}='Palletways' AND lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))='no' AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'), '')))!='delivered' AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id=deliveries.order_id)",
+            f"{carrier}='Palletways' AND lower(coalesce(json_extract(payload, '$.deliveryMethodRaw'), '')) NOT LIKE '%next day%' AND lower(trim(coalesce(json_extract(payload, '$.palletwaysSheetBookedIn'), '')))='no' AND lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'), '')))!='delivered' AND EXISTS (SELECT 1 FROM sales_activity_orders AS ow WHERE ow.order_id=deliveries.order_id)",
             [],
         ),
         "van-unscheduled": (
@@ -100,6 +100,8 @@ def snapshot(store='', carrier='', **visibility):
                     "orderDateTime",
                     "cust",
                     "orderRef",
+                    "orderRelationKind",
+                    "originalOrder",
                     "deliveryMethodRaw",
                     "carrier",
                     "postcode",
@@ -140,8 +142,9 @@ def snapshot(store='', carrier='', **visibility):
 
 def widget_facets(key):
     """Tracking's counts follow the same cohort as a widget's View all action."""
-    from delivery_data import connect
+    from delivery_data import connect, CREDIT_REFUND_SQL
     clause, values = widget_condition(key)
+    depot_clause, _ = widget_condition('palletways-depot-3days')
     with connect() as db:
         return [dict(row) for row in db.execute(
             "SELECT json_extract(payload, '$.carrier') AS carrier, "
@@ -153,6 +156,11 @@ def widget_facets(key):
             "json_extract(payload, '$.palletwaysSheetStatus') AS palletwaysSheetStatus, "
             "tracking_today(payload, ?) AS today, "
             "json_extract(payload, '$.salesActivityDetails.\"Order Type\"') AS orderType, "
-            "purchase_store(payload) AS purchaseStore, palletways_classification(payload) AS palletwaysClassification, COUNT(*) AS count "
-            "FROM deliveries WHERE " + clause + " GROUP BY 1,2,3,4,5,6,7,8,9,10,11",
+            "purchase_store(payload) AS purchaseStore, palletways_classification(payload) AS palletwaysClassification, "
+            f"{CREDIT_REFUND_SQL} AS creditRefund, "
+            "global_tracking_status(payload) AS overallStatus, "
+            "json_extract(payload, '$.rawStatus') AS rawStatus, "
+            "json_extract(payload, '$.palletwaysSheetMatched') AS palletwaysSheetMatched, "
+            f"SUM(CASE WHEN {depot_clause} THEN 1 ELSE 0 END) AS palletwaysDepotCount, COUNT(*) AS count "
+            "FROM deliveries WHERE " + clause + " GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15",
             [datetime.now(ZoneInfo('Europe/London')).date().isoformat(), *values])]

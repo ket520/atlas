@@ -86,6 +86,41 @@ class CollectionNoteTests(unittest.TestCase):
         self.assertEqual([item["sku"] for item in note["items"]], ["SKU-1", "SKU-2", "SKU-3"])
         self.assertEqual(note["items"][0]["description"], "First item")
 
+    def test_collection_fields_follow_tracking_sheet_links(self):
+        original = {"Order no": "123", "Delivery method": "Next Day (Pallet)"}
+        replacement = {"Order no": "456", "Original order Number": "123.0", "Order Category": "Order"}
+        credit = {"Order no": "789", "Original order Number": "123", "Order Category": "Credit/Refund"}
+        for linked, kind, expected in ((replacement, "Replacement", "456"), (credit, "Refund", "")):
+            fields = collection_note.order_note("123", [original, linked])["fields"]
+            self.assertEqual(fields["deliveryMethod"], "Next Day (Pallet)")
+            self.assertEqual(fields["collectionType"], kind)
+            self.assertEqual(fields["replacementOrder"], expected)
+        fields = collection_note.order_note("456", [original, replacement])["fields"]
+        self.assertEqual((fields["collectionType"], fields["replacementOrder"]), ("Replacement", "123"))
+        fields = collection_note.order_note("123", [original])["fields"]
+        self.assertEqual((fields["collectionType"], fields["replacementOrder"]), ("", ""))
+        fields = collection_note.order_note("123", [original, replacement, credit])["fields"]
+        self.assertEqual(fields["collectionType"], "")
+
+    def test_collection_links_do_not_guess_conflicting_or_multiple_replacements(self):
+        original = {"Order no": "123"}
+        child = {"Order no": "456", "Original order Number": "123", "Order Category": "Order"}
+        conflicting = {**child, "Original order Number": "999"}
+        fields = collection_note.order_note("123", [original, child, conflicting])["fields"]
+        self.assertEqual((fields["collectionType"], fields["replacementOrder"]), ("", ""))
+        fields = collection_note.order_note("123", [original, child, {**child, "Order no": "789"}])["fields"]
+        self.assertEqual((fields["collectionType"], fields["replacementOrder"]), ("Replacement", ""))
+
+    def test_replacement_order_reads_original_order_number_from_selected_row(self):
+        row = {"Order no": "456", "Original order Number": "123.0"}
+        fields = collection_note.order_note("456", [row])["fields"]
+        self.assertEqual(fields["replacementOrder"], "123")
+        self.assertEqual(fields["collectionType"], "")
+        row = {"Order no": "456", **{f"Column_{i}": "" for i in range(2, 14)}, "Column_14": "123"}
+        self.assertEqual(collection_note.order_note("456", [row])["fields"]["replacementOrder"], "123")
+        conflict = {**row, "Column_14": "999"}
+        self.assertEqual(collection_note.order_note("456", [row, conflict])["fields"]["replacementOrder"], "")
+
     def test_missing_and_invalid_orders(self):
         self.assertEqual(collection_note.order_note("123", []), {"found": False, "order": "123"})
         for order in ("", "abc", "123/456"):

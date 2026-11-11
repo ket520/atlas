@@ -13,6 +13,32 @@ const esc = (value) =>
       })[char],
   );
 
+function specialInstructionsMarkup(value) {
+  const text = String(value || '');
+  if (!text.trim()) return '\u2014';
+  return `<button type="button" class="special-instructions-copy" data-copy-special-instructions="${esc(text)}" title="Copy special instructions" aria-label="Copy special instructions">${esc(text)}</button>`;
+}
+
+function canCopyOrderReference(value) {
+  const reference = String(value || '').trim();
+  return Boolean(reference) && !/^(?:replacements?|replacementorders?)$/.test(
+    reference.toLowerCase().replace(/[^a-z0-9]/g, ''),
+  );
+}
+
+function replacementBadge(delivery) {
+  const kind = delivery.orderRelationKind || delivery.relatedKind;
+  const reference = delivery.orderRef || delivery.orderReference;
+  const replacementReference = Boolean(String(reference || '').trim()) && !canCopyOrderReference(reference);
+  if (!replacementReference && !['Replacement', 'Later Replacement'].includes(kind)) return '';
+  return `<span class="replacement-badge" aria-label="Replacement order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9a8 8 0 0 1 13-3l3 3M20 4v5h-5M20 15a8 8 0 0 1-13 3l-3-3M4 20v-5h5"/></svg><span>Replacement</span></span>`;
+}
+
+function creditRefundBadge(delivery) {
+  if (!isCreditRefundRecord(delivery)) return '';
+  return '<span class="replacement-badge credit-refund-badge" aria-label="Credit/Refund order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="refund-coin"><circle cx="12" cy="12" r="7"/><path d="M14 9h-3a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3h-3M12 7.5v9"/></g><path class="refund-return-arrow" d="M20.5 8A9.5 9.5 0 0 0 5 4.5L2.5 7m0-4v4h4"/></svg><span>Credit/Refund</span></span>';
+}
+
 function toast(message, duration = 2200) {
   const element = document.createElement('div');
   element.className = 'toast';
@@ -70,10 +96,6 @@ function copyText(text, message = 'Copied') {
     .catch(() => toast('Could not copy. Please copy it manually.'));
 }
 
-function actionError(error, fallback = 'Something went wrong') {
-  toast(error?.message || fallback);
-}
-
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const hd = (value) =>
@@ -84,15 +106,6 @@ const hd = (value) =>
         year: 'numeric',
       })
     : '';
-
-const fmtD = hd;
-
-const fmtLongD = (value) =>
-  new Date(`${value}T12:00:00`).toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
 
 const fmtMD = (value) => {
   const [monthDay, time] = value.split(' ');
@@ -257,10 +270,6 @@ function palletwaysDetails(delivery, copyButton = () => '') {
     fact('Booked in', details.bookedIn),
 
     fact('Book-in request', details.bookInRequest),
-
-    fact('Tail lift requested', details.tailLift),
-
-    fact('Hand-ball requested', details.handBall),
 
     fact('Insurance', details.insurance),
 
@@ -568,6 +577,9 @@ const matchesDeliveryCarrier = (carrier, filter) =>
   !filter ||
   (filter === SELF_DELIVERY_GROUP ? SELF_DELIVERY_CARRIERS.includes(carrier) : carrier === filter);
 
+const isTrackingPage = () => ['Deliveries', 'Replacement', 'Refund'].includes(page);
+const trackingOrderKind = () => page === 'Replacement' ? 'replacement' : page === 'Refund' ? 'refund' : '';
+
 const PAGE_LABELS = {
   Deliveries: 'Tracking',
   'Collective Note': 'Collection Notes',
@@ -576,7 +588,7 @@ const PAGE_LABELS = {
 const PAGE_URL = APP_CONFIG.routes;
 let page = PAGE_URL[document.body.dataset.page] ? document.body.dataset.page : 'Deliveries';
 let trackingScope =
-  page === 'Deliveries' && new URLSearchParams(location.search).get('view') === 'today'
+  isTrackingPage() && new URLSearchParams(location.search).get('view') === 'today'
     ? 'today'
     : '';
 // Give the initial page (including / and index.html) an explicit history identity.
@@ -670,6 +682,8 @@ const ICON = {
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   download:
     '<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+  print:
+    '<path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/><path d="M18 12h.01"/>',
   pencil:
     '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
   image:
@@ -727,6 +741,8 @@ const ico = (name, size = 20, strokeWidth = 1.75) => {
 };
 
 const STATUS_STYLE = {
+  'Other Status': ['cn', 'circ'],
+  'Next Stop': ['am', 'truck'],
   Awaiting: ['uns', 'circ'],
   'Status unverified': ['cn', 'circ'],
   Unscheduled: ['uns', 'circ'],
@@ -793,20 +809,117 @@ const depotDelayLabel = (delivery) => {
     : '';
 };
 
+const palletwaysDeliveryConflict = (delivery) =>
+  delivery?.carrier === 'Palletways' &&
+  String(delivery.palletwaysSheetStatus || '').trim().toLowerCase() === 'delivered' &&
+  ['Failed', 'Rejected', 'Lost'].includes(trackingStatus(delivery.st));
+
+const palletwaysSpecificStatus = (value) => {
+  const status = String(value || '').trim();
+  return status.toLowerCase() === 'palletways not assigned' ? 'Unscheduled' : status;
+};
+
+const usesGlobalTrackingStatus = () => page === 'Deliveries' && !fsrc;
+const isOwCancelledVan = delivery => {
+  const category = String(delivery.salesActivityDetails?.['Order Category'] || '').trim().toLowerCase();
+  if (category === 'credit/refund' || String(delivery.orderRelationKind || delivery.relatedKind || '').trim().toLowerCase() === 'credit/refund') return false;
+  const method = String(delivery.deliveryMethodRaw || '').trim().toLowerCase();
+  if (method !== 'to be cancelled' && category !== 'cancelled') return false;
+  const methods = ['own van', 'own delivery', 'standard van delivery', 'next day van delivery'];
+  return methods.includes(method) || (!method && delivery.carrier === 'Own van') ||
+    (method === 'to be cancelled' && methods.includes(String(delivery.cancelledFromDeliveryMethod || '').trim().toLowerCase()));
+};
+const GLOBAL_TRACKING_STATUSES = new Set(['Other Status', 'Unscheduled', 'Scheduled', 'Out for Delivery',
+  'Next Stop', 'Delivered', 'Failed', 'Rejected', 'Lost', 'Cancelled', 'Return', 'Unassigned']);
+const globalStatusCategory = value => {
+  const normalized = trackingStatus(String(value || '').trim());
+  return GLOBAL_TRACKING_STATUSES.has(normalized) ? normalized : 'Other Status';
+};
+const globalOwStatus = value => ({P:'Scheduled', S:'Scheduled', C:'Delivered', X:'Cancelled',
+  SCHEDULED:'Scheduled', DELIVERED:'Delivered', COMPLETE:'Delivered', COMPLETED:'Delivered',
+  FAILED:'Failed', 'FAILED DELIVERY':'Failed', 'OUT FOR DELIVERY':'Out for Delivery',
+  REJECTED:'Rejected', RETURN:'Return'})[String(value || '').trim().toUpperCase()] || 'Unscheduled';
+const overallTrackingStatus = delivery => {
+  if (delivery.overallStatus) return globalStatusCategory(delivery.overallStatus);
+  const stored = delivery.st || delivery.status;
+  const category = String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderCategory ||
+    delivery.orderRelationKind || delivery.relatedKind || '').trim().toLowerCase();
+  if (['Palletways', 'XDP'].includes(delivery.carrier) && category === 'cancelled') return 'Cancelled';
+  const method = String(delivery.deliveryMethodRaw || delivery.classification || '').trim().toLowerCase();
+  if (delivery.carrier === 'AMZ') {
+    const raw = String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase();
+    return raw ? ({READY_FOR_RECEIVE:'Scheduled', IN_TRANSIT:'Scheduled', OUT_FOR_DELIVERY:'Out for Delivery',
+      DELIVERED:'Delivered', DELIVERY_ATTEMPTED:'Failed', UNDELIVERABLE:'Failed', REJECTED:'Rejected',
+      LOST:'Lost', RETURNED_TO_SELLER:'Cancelled', RETURNED:'Return', AWAITING_CUSTOMER_PICKUP:'Other Status',
+      PICKUP_CANCELLED:'Other Status', CARRIER_CANCELLED_PICKUP:'Other Status'})[raw] || 'Other Status'
+      : globalStatusCategory(stored);
+  }
+  if (delivery.carrier === 'Palletways') {
+    const raw = String(delivery.palletwaysSheetStatus || '').trim().toUpperCase();
+    const mapped = ({'PALLETWAYS NOT ASSIGNED':'Unscheduled', UNSCHEDULED:'Unscheduled',
+      'CONSIGNMENT CREATED':'Unscheduled', SCHEDULED:'Scheduled', 'IN TRANSIT':'Scheduled',
+      'OUT FOR DELIVERY':'Out for Delivery', DELIVERED:'Delivered', RETURN:'Return',
+      'PALLETWAYS LOOK UP FAILED':'Unassigned'})[raw];
+    if (mapped) return mapped;
+    if (method === 'on hold - tbc') return 'Unassigned';
+    if (['Failed', 'Rejected', 'Lost'].includes(stored)) return stored;
+    if (raw || delivery.palletwaysSheetMatched) return 'Other Status';
+    return globalOwStatus(delivery.rawStatus);
+  }
+  if (delivery.carrier === 'XDP') {
+    const raw = String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' ');
+    const mapped = ({BOOKING:'Unscheduled', UNSCHEDULED:'Unscheduled', SCHEDULED:'Scheduled', DELIVERY:'Scheduled',
+      'OUT FOR DELIVERY':'Out for Delivery', 'NEXT STOP':'Next Stop', DELIVERED:'Delivered', DAMAGE:'Failed',
+      DELETE:'Failed', 'NOT RECEIVED':'Failed', FAILED:'Failed', REJECTED:'Rejected', LOST:'Lost',
+      SMS:'Other Status', EMAIL:'Other Status', CREATE:'Other Status', AWAITING:'Other Status'})[raw];
+    if (mapped) return mapped;
+    if (method === 'on hold - tbc') return 'Unassigned';
+    if (String(delivery.rawStatus || '').trim().toUpperCase() === 'RETURN') return 'Return';
+    return raw ? 'Other Status' : globalStatusCategory(stored);
+  }
+  return globalStatusCategory(stored);
+};
+const isGlobalException = delivery => Boolean(delivery) &&
+  ['Failed', 'Rejected', 'Lost'].includes(overallTrackingStatus(delivery));
+
+const palletwaysOwFallback = (delivery) => {
+  if (delivery.palletwaysSheetMatched || palletwaysSpecificStatus(delivery.palletwaysSheetStatus)) return '';
+  return String(delivery.rawStatus || '').trim();
+};
+
+const carrierBadgeStatus = (delivery) => {
+  if (isCreditRefundRecord(delivery)) return {'refund:complete': 'Delivered', 'refund:cancelled': 'Cancelled', 'refund:not-yet': 'Scheduled'}[refundStatusValue(delivery)];
+  if (page === 'Failed Deliveries') return overallTrackingStatus(delivery);
+  if (usesGlobalTrackingStatus()) return overallTrackingStatus(delivery);
+  if (isTrackingPage() && fsrc === 'Palletways' && delivery?.carrier === 'Palletways') {
+    const sheetStatus = palletwaysSpecificStatus(delivery.palletwaysSheetStatus);
+    return trackingStatus(sheetStatus) || palletwaysOwFallback(delivery);
+  }
+  return delivery.st;
+};
+
 const carrierStatusLabel = (delivery) => {
+  if (isCreditRefundRecord(delivery)) return refundStatusLabel(refundStatusValue(delivery));
+  if (usesGlobalTrackingStatus() && ['Palletways', 'XDP'].includes(delivery.carrier) &&
+      String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderRelationKind || '').trim().toLowerCase() === 'cancelled') return 'Cancelled';
+  if (usesGlobalTrackingStatus() && delivery.carrier === 'Palletways')
+    return palletwaysSpecificStatus(delivery.palletwaysSheetStatus) || palletwaysOwFallback(delivery) || overallTrackingStatus(delivery);
+  if (isTrackingPage() && fsrc === 'Palletways' && delivery?.carrier === 'Palletways')
+    return palletwaysSpecificStatus(delivery.palletwaysSheetStatus) || palletwaysOwFallback(delivery);
+  if (palletwaysDeliveryConflict(delivery)) return delivery.palletwaysStatusLabel || delivery.palletwaysDetails?.statusLabel || trackingStatus(delivery.st);
   if (
-    page === 'Deliveries' &&
+    isTrackingPage() &&
     fsrc === 'Palletways' &&
     delivery?.carrier === 'Palletways' &&
-    delivery.palletwaysSheetStatus
+    delivery.palletwaysSheetStatus && !palletwaysDeliveryConflict(delivery)
   ) {
-    return delivery.palletwaysSheetStatus;
+    return palletwaysSpecificStatus(delivery.palletwaysSheetStatus);
   }
   if (delivery?.carrier === 'XDP' && delivery.xdpStatus) {
     return amazonStatusLabel(delivery.xdpStatus);
   }
   if (
-    page === 'Deliveries' &&
+    isTrackingPage() &&
     fsrc === 'Stopstart' &&
     delivery?.carrier === 'Stopstart' &&
     delivery.stopstartStatus
@@ -820,22 +933,31 @@ const carrierStatusLabel = (delivery) => {
     return delivery.palletwaysStatusLabel;
   }
 
-  return trackingStatus(delivery?.st) || delivery?.st || 'Unscheduled';
+  return usesGlobalTrackingStatus() ? overallTrackingStatus(delivery)
+    : trackingStatus(delivery?.st) || delivery?.st || 'Unscheduled';
 };
 
 const statusSourceLabel = (delivery) => {
+  if (isCreditRefundRecord(delivery)) return 'OW';
+  if (usesGlobalTrackingStatus() && ['Palletways', 'XDP'].includes(delivery.carrier) &&
+      String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderRelationKind || '').trim().toLowerCase() === 'cancelled') return 'OW Order Category';
+  if (usesGlobalTrackingStatus() && delivery.carrier === 'Palletways')
+    return delivery.palletwaysSheetStatus || delivery.palletwaysSheetMatched ? 'Palletways sheet' :
+      ['Failed', 'Rejected', 'Lost'].includes(delivery.st) ? delivery.statusSource || 'OW' : 'OW';
+  if (isTrackingPage() && fsrc === 'Palletways' && delivery?.carrier === 'Palletways')
+    return palletwaysOwFallback(delivery) ? 'OW' : 'Palletways sheet';
   if (delivery?.carrier === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus))
     return 'Amazon Shipping';
   if (
-    page === 'Deliveries' &&
+    isTrackingPage() &&
     fsrc === 'Palletways' &&
     delivery?.carrier === 'Palletways' &&
-    delivery.palletwaysSheetStatus
+    delivery.palletwaysSheetStatus && !palletwaysDeliveryConflict(delivery)
   )
     return 'Palletways sheet';
   if (delivery?.carrier === 'XDP' && delivery.xdpStatus) return 'XDP sheet';
   if (
-    page === 'Deliveries' &&
+    isTrackingPage() &&
     fsrc === 'Stopstart' &&
     delivery?.carrier === 'Stopstart' &&
     delivery.stopstartStatus
@@ -857,7 +979,7 @@ const statusSourceDisplay = (delivery) => {
 };
 
 function courierIssueFollowUpNotice(delivery) {
-  if (!['Failed', 'Rejected'].includes(trackingStatus(delivery?.st))) return null;
+  if (!(page === 'Failed Deliveries' ? isGlobalException(delivery) : ['Failed', 'Rejected'].includes(trackingStatus(delivery?.st)))) return null;
   if (
     document.body.dataset.live === 'true' &&
     (liveSummary?.courierIssuesUnavailable || liveSummary?.stale)
@@ -909,9 +1031,12 @@ function activityMarkerKind(source, title) {
   if (source === 'ow') return 'ow';
   const text = String(title || '')
     .toLowerCase()
-    .replace(/_/g, ' ');
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (/\blost\b/.test(text)) return 'lost';
-  if (/\bfailed\b|\bundeliverable\b|\bnot delivered\b|\bdelivery unsuccessful\b/.test(text))
+  if (/\bfailed\b|\bundeliverable\b|\bnot (?:received|delivered)\b|\bdelivery (?:unsuccessful|attempted)\b|\bunable to deliver\b|\bdamag(?:e|ed)\b|\brefused\b|\brejected\b/.test(text) ||
+      (source === 'xdp' && /^delete\b/.test(text)))
     return 'failed';
   if (/\bdelivered\b/.test(text) && !/\bnot\b|\bunable\b/.test(text)) return 'delivered';
   return 'neutral';
@@ -1149,62 +1274,156 @@ function purchaseStoreLogo(delivery, className = '') {
   else if (channel === 'wayfair') filename = 'wayfair.jpg';
   else if (channel === 'wilko' || channel === 'weiko') filename = 'wilko.png';
   return filename
-    ? `<img class="purchase-store-logo ${esc(className)}" src="/assets/${filename}" alt="${esc(purchaseChannel(delivery))}" title="${esc(purchaseChannel(delivery))}">`
+    ? `<img class="purchase-store-logo ${esc(className)}" src="/assets/${filename}" width="130" height="40" alt="${esc(purchaseChannel(delivery))}" title="${esc(purchaseChannel(delivery))}">`
     : '';
 }
 
-function cp(id, quiet = false) {
-  const delivery = get(id);
-  const trackingLink = delivery ? tlink(delivery) : '';
-  if (!trackingLink) {
-    toast('Tracking link not available yet');
-    return Promise.resolve(false);
-  }
-
-  return writeClipboard(trackingLink)
-    .then(() => {
-      if (!quiet) toast('Tracking link copied');
-      return true;
-    })
-    .catch(() => {
-      toast('Could not copy. Please copy it manually.');
-      return false;
-    });
+function exactOrderMatches(records, query, keys = ['order', 'id']) {
+  const term = String(query || '').trim().toLowerCase();
+  if (!term) return records;
+  const exact = records.filter(record => keys.some(key => String(record[key] || '').trim().toLowerCase() === term));
+  return exact.length ? exact : records;
 }
 
-const trackingButton = (delivery) => {
-  const link = tlink(delivery);
-  return `<button class="cb" ${link ? '' : 'disabled'} onclick="event.stopPropagation();cp('${delivery.id}')">${link ? 'Copy link' : 'No tracking link'}</button>`;
-};
+function orderRecordType(delivery = {}) {
+  const kind = delivery?.orderRelationKind || delivery?.relatedKind;
+  if (kind === 'Credit/Refund' ||
+      String(delivery?.salesActivityDetails?.['Order Category'] || '').toLowerCase() === 'credit/refund') return 'Credit/Refund';
+  return ['Replacement', 'Later Replacement'].includes(kind) ? 'Replacement' : 'Order';
+}
+
+function isCreditRefundRecord(delivery) {
+  return orderRecordType(delivery) === 'Credit/Refund';
+}
+
+function refundStatusValue(delivery) {
+  const raw = String(delivery?.rawStatus || '').trim().toUpperCase();
+  return ['C', 'COMPLETED'].includes(raw) ? 'refund:complete'
+    : ['X', 'CANCELLED'].includes(raw) ? 'refund:cancelled' : 'refund:not-yet';
+}
+
+function refundStatusLabel(value) {
+  return {'refund:complete': 'Refund complete', 'refund:cancelled': 'Cancelled', 'refund:not-yet': 'Not Yet'}[value] || value;
+}
+
+function refundAmountLabel(delivery) {
+  const raw = String(delivery.salesActivityDetails?.['Gross (base)'] ?? '').trim();
+  const normalized = raw.replace(/[£,\s]/g, '').replace(/^\((.*)\)$/, '-$1');
+  const amount = normalized && /^-?\d+(?:\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
+  return Number.isFinite(amount)
+    ? new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Math.abs(amount))
+    : 'Amount unavailable';
+}
+
+function searchRefundAmountMarkup(delivery) {
+  if (!isCreditRefundRecord(delivery)) return '';
+  return `<span class="search-result-refund-amount"><small>Refund amount</small><strong>${esc(refundAmountLabel(delivery))}</strong></span>`;
+}
+
+function searchOrderTypeMarkup(delivery) {
+  const type = orderRecordType(delivery);
+  const tone = type === 'Credit/Refund' ? 'refund' : type === 'Replacement' ? 'replacement' : 'order';
+  return `<span class="search-result-type is-${tone}">${type}</span>`;
+}
+
+function dashboardSearchDestination(delivery = {}) {
+  const type = orderRecordType(delivery);
+  const target = type === 'Credit/Refund' ? 'Refund' : type === 'Replacement' ? 'Replacement' : 'Deliveries';
+  const carrier = SELF_DELIVERY_CARRIERS.includes(delivery.carrier)
+    ? SELF_DELIVERY_GROUP : delivery.carrier || '';
+  const supported = new Set([...APP_CONFIG.carriers.supported, ...Object.keys(courierAssets), SELF_DELIVERY_GROUP]);
+  return { target, carrier: supported.has(carrier) ? carrier : '' };
+}
+
+let dashboardSearchHighlight = null;
+function openDashboardSearchOrder(id) {
+  const delivery = get(id);
+  const order = String(delivery?.order || id);
+  const destination = dashboardSearchDestination(delivery);
+  dashboardSearchHighlight = {
+    id: String(id), order, page: destination.target, carrier: destination.carrier,
+    startedAt: performance.now(), fallbackApplied: false,
+  };
+  go(destination.target, '', '', { carrier: destination.carrier });
+  dashboardSelectedId = id;
+  op(id);
+  rows();
+}
+
+let dashboardSearchRequest = 0;
+let dashboardSearchVisible = false;
+let dashboardSearchCache = null;
+function closeDashboardSearch() {
+  clearTimeout(dashboardSearchTimer);
+  dashboardSearchRequest++;
+  dashboardSearchVisible = false;
+  const dropdown = $('#dres');
+  if (dropdown) dropdown.hidden = true;
+}
+function reopenDashboardSearch(input) {
+  dq = input.value;
+  if (!dq.trim()) return;
+  const dropdown = $('#dres');
+  if (dropdown && (dropdown.hidden || !dropdown.childNodes.length)) dres();
+}
+document.addEventListener('click', event => {
+  const input = event.target.closest('#dq');
+  if (input) { reopenDashboardSearch(input); return; }
+  if (!event.target.closest('#dres, [data-dashboard-search]')) closeDashboardSearch();
+}, true);
+document.addEventListener('focusin', event => {
+  if (event.target.matches('#dq')) reopenDashboardSearch(event.target);
+});
 
 async function dres() {
+  const request = ++dashboardSearchRequest;
   const container = $('#dres');
   if (!container) return;
 
   const term = dq.trim().toLowerCase().replace(/\s+/g, ' ');
   if (!term) {
-    container.innerHTML = '';
+    container.replaceChildren();
+    closeDashboardSearch();
     return;
   }
+  dashboardSearchVisible = true;
+  if (dashboardSearchCache?.term === term && !container.childNodes.length) {
+    container.innerHTML = dashboardSearchCache.markup;
+  }
+  container.hidden = false;
 
   let candidates = D;
+  const linkedOrderIds = new Set();
   if (document.body.dataset.live === 'true') {
     try {
-      const result = await DeliveryApi.list({ q: term, limit: 6 });
-      if (dq.trim().toLowerCase().replace(/\s+/g, ' ') !== term) return;
-      candidates = result.deliveries;
+      const result = await DeliveryApi.list({ q: term, limit: 6, tracking_related: 1 });
+      if (request !== dashboardSearchRequest || !container.isConnected || dq.trim().toLowerCase().replace(/\s+/g, ' ') !== term) return;
+      const relations = result.orderRelations;
+      const related = (relations?.related || []).filter(record =>
+        ['Replacement', 'Later Replacement', 'Credit/Refund'].includes(record.relatedKind),
+      );
+      related.forEach(record => linkedOrderIds.add(String(record.id || record.order)));
+      candidates = [...new Map([
+        ...(relations?.original ? [relations.original] : []), ...result.deliveries, ...related,
+      ].map(record => [String(record.id || record.order), record])).values()];
       for (const delivery of candidates)
         if (!DeliveryStore.find(delivery.id)) DeliveryStore.add(delivery);
     } catch (error) {
+      if (request !== dashboardSearchRequest || !container.isConnected) return;
       container.textContent = error.message;
       return;
     }
   }
   const phoneTerm = term.replace(/\s/g, '');
-  const matches = candidates
+  const preferred = exactOrderMatches(candidates, term);
+  const searchCandidates = preferred !== candidates
+    ? [...preferred, ...candidates.filter(record => linkedOrderIds.has(String(record.id || record.order)) && !preferred.includes(record))]
+    : candidates;
+  const matches = searchCandidates
     .filter((delivery) => {
       const fields = [
         delivery.trk,
+        delivery.palletwaysSheetTrackingNumber,
         delivery.palletwaysSheetConsignmentNumber,
         delivery.order,
         delivery.orderRef,
@@ -1216,7 +1435,7 @@ async function dres() {
         .join(' ')
         .toLowerCase();
       return (
-        fields.includes(term) ||
+        linkedOrderIds.has(String(delivery.id || delivery.order)) || fields.includes(term) ||
         (phoneTerm.length > 3 &&
           String(delivery.phone || '')
             .replace(/\s/g, '')
@@ -1225,44 +1444,33 @@ async function dres() {
     })
     .slice(0, 6);
 
-  container.innerHTML = matches.length
+  const markup = matches.length
     ? matches
         .map(
           (
             delivery,
-          ) => `<div class="rc" tabindex="0" onclick="op('${delivery.id}')" onkeydown="if(event.key==='Enter')op('${delivery.id}')">
-        <div><b>${esc(delivery.cust)}</b><br><span class="mut">${esc(delivery.addr)}</span><br><span class="mut">${esc(delivery.phone)} · ${delivery.trk ? esc(delivery.trk) : 'No tracking no.'}</span></div>
-        <div class="rcm">${stat(delivery.st, carrierStatusLabel(delivery))}<br><span class="mut">${delivery.reason ? esc(deliveryReason(delivery.reason).label) : delivery.date ? `${hd(delivery.date)}${delivery.win ? ` · ${delivery.win.replace('-', '–')}` : ''}` : 'Date unavailable'} · ${esc(delivery.carrier === 'Own van' ? 'Own van' : delivery.carrier)}</span></div>
-        <div>${trackingButton(delivery)}</div>
+          ) => `<div class="rc${isCreditRefundRecord(delivery) ? ' is-credit-refund' : ''}" style="--search-brand:${esc(courierAssets[delivery.carrier]?.[1] || '#6267e9')}" tabindex="0" role="button" onclick="openDashboardSearchOrder('${delivery.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardSearchOrder('${delivery.id}')}">
+        <span class="search-result-backdrop" aria-hidden="true">${courierAssets[delivery.carrier] ? `<img class="search-result-background-logo" src="/assets/${esc(courierAssets[delivery.carrier][0])}" alt="">` : `<span class="search-result-background-name">${esc(delivery.deliveryMethodRaw || delivery.carrier || 'Delivery')}</span>`}</span>
+        <div class="search-result-store" aria-hidden="true">${purchaseStoreLogo(delivery, 'search-result-store-logo') || ico('pkg', 24)}</div><div class="search-result-customer"><span class="search-result-order">Order ${esc(delivery.order || delivery.id)}</span><b>${esc(delivery.cust)}</b><br><span class="mut">${esc(delivery.addr)}</span><br><span class="mut">${esc(delivery.phone)} · ${delivery.trk ? esc(delivery.trk) : 'No tracking no.'}</span></div>
+        <div class="rcm">${stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}<br><span class="mut">${delivery.reason ? esc(deliveryReason(delivery.reason).label) : delivery.date ? `${hd(delivery.date)}${delivery.win ? ` · ${delivery.win.replace('-', '–')}` : ''}` : 'Date unavailable'} · ${esc(delivery.carrier === 'Own van' ? 'Own van' : delivery.carrier)}</span></div>
+        <div class="search-result-type-slot">${searchOrderTypeMarkup(delivery)}${searchRefundAmountMarkup(delivery)}</div>
       </div>`,
         )
         .join('')
     : '<div class="rc0">No match. Check the spelling, or try the order ID.</div>';
+  dashboardSearchCache = { term, markup };
+  if (container.innerHTML !== markup) container.innerHTML = markup;
 }
 
 function scheduleDashboardSearch() {
   clearTimeout(dashboardSearchTimer);
+  dashboardSearchRequest++;
   if (!dq.trim()) {
     dres();
     return;
   }
   dashboardSearchTimer = setTimeout(dres, 200);
 }
-
-const mt = (values) => !q || values.join(' ').toLowerCase().includes(q.toLowerCase());
-
-const sq = (value) => {
-  q = value;
-  R();
-  const input = $('#q');
-  if (input) {
-    input.focus();
-    input.setSelectionRange(1000, 1000);
-  }
-};
-
-const sb = (placeholder = 'Search tracking no., order ID, customer or postcode') =>
-  `<div class="bar"><input type="search" id="q" placeholder="${placeholder}" value="${esc(q)}" oninput="sq(this.value)" aria-label="Search"></div>`;
 
 const stale = (delivery) => {
   const source = S.find(
@@ -1271,14 +1479,6 @@ const stale = (delivery) => {
   );
   if (!source || source[2] === 'ok') return '';
   return `<div class="card" style="box-shadow:none;background:var(--k2);margin:10px 0">Data from ${source[0]} may be out of date: ${esc(source[3])}</div>`;
-};
-
-const deliveryNotifySub = (delivery) => {
-  if (!['Scheduled', 'Rescheduled', 'Out for Delivery'].includes(delivery.st) || !delivery.date)
-    return '';
-  return delivery.nt
-    ? `<small class="vx-sub ok">${ico('ok', 14, 2)}Customer notified</small>`
-    : `<small class="vx-sub">${ico('circ', 14, 2)}Not notified</small>`;
 };
 
 function dashboardWidgetControls(key = dashboardWidgetFilter) {
@@ -1297,8 +1497,7 @@ function dashboardWidgetControls(key = dashboardWidgetFilter) {
   if (key === 'hold') return { scope: 'On Hold', conditions: 'On Hold or Unassigned' };
   if (key === 'cancelled' || key === 'cancelled-month')
     return {
-      scope: 'Cancelled',
-      conditions: `Cancelled ? Order date: ${key === 'cancelled-month' ? 'this month' : 'today'} (UK)`,
+      conditions: `Confirmed Own van only; OW T = TO BE CANCELLED or OW AI Order Category = Cancelled; excludes Credit/Refund; Order date: ${key === 'cancelled-month' ? 'this month' : 'today'} (UK)`,
     };
   if (key === 'palletways-next-day')
     return {
@@ -1309,7 +1508,7 @@ function dashboardWidgetControls(key = dashboardWidgetFilter) {
     return {
       carrier: 'Palletways',
       bookedIn: 'no',
-      conditions: `Palletways${key.endsWith('-b2c') ? ' B2C' : key.endsWith('-b2b') ? ' B2B' : ''} ? Booked in: No ? Excludes Delivered ? Current Sales Activity orders`,
+      conditions: `Palletways${key.endsWith('-b2c') ? ' B2C' : key.endsWith('-b2b') ? ' B2B' : ''} ? Booked in: No ? Excludes Delivered and Next Day ? Current Sales Activity orders`,
     };
   if (key === 'out-of-stock')
     return {
@@ -1335,7 +1534,7 @@ function go(target, statusFilter = '', scope = '', filters = {}) {
   page = target;
   trackingScope = target === 'Deliveries' ? scope : '';
   sel = null;
-  q = '';
+  q = filters.search || '';
   fs = statusFilter;
   fsrc = filters.carrier || '';
   fstore = filters.store || '';
@@ -1368,37 +1567,6 @@ function go(target, statusFilter = '', scope = '', filters = {}) {
   }
 
   R();
-}
-
-const rowAct = (delivery) => {
-  const link = tlink(delivery);
-  return `<span class="ract">
-  <button class="cpi" ${link ? '' : 'disabled'} title="${link ? 'Copy tracking link' : 'No tracking link yet'}" aria-label="Copy tracking link" onclick="event.stopPropagation();cpi(this,'${delivery.id}')">
-    ${ico('copy', 16, 1.9)}
-  </button>
-  <span class="goi" aria-hidden="true">${ico('right', 16, 2)}</span>
-</span>`;
-};
-
-async function cpi(button, id) {
-  const delivery = get(id);
-  if (!tlink(delivery)) {
-    toast('Tracking link not available yet');
-    return;
-  }
-
-  const copied = await cp(id, true);
-  if (!copied) return;
-
-  button.classList.add('done');
-  button.innerHTML = ico('check', 16, 2.2);
-  button.setAttribute('aria-label', 'Copied');
-
-  setTimeout(() => {
-    button.classList.remove('done');
-    button.innerHTML = ico('copy', 16, 1.9);
-    button.setAttribute('aria-label', 'Copy tracking link');
-  }, 1300);
 }
 
 const ScopeLiquid = (() => {
@@ -1576,7 +1744,15 @@ function fadeClearFilter(button) {
 }
 
 const DeliveryFilters = (() => {
+  function widgetDateLabel() {
+    if (dashboardWidgetFilter === 'cancelled-month') return 'This month (order created)';
+    if (dashboardWidgetFilter === 'cancelled') return 'Today (order created)';
+    return '';
+  }
+
   function dateLabel() {
+    const widgetDate = widgetDateLabel();
+    if (widgetDate) return widgetDate + (fd || ft ? ' + delivery dates' : '');
     if (!fd && !ft) return 'Delivery date';
     if (fd && ft) return `${hd(fd)} – ${hd(ft)}`;
     return fd ? `From ${hd(fd)}` : `To ${hd(ft)}`;
@@ -1630,7 +1806,8 @@ const DeliveryFilters = (() => {
       ${[
         ['', 'All'],
         ['yes', 'Yes'],
-        ['no', 'No'],
+        ['no', field === 'booked_in' ? 'N/A' : 'No'],
+        ...(field === 'booked_in' ? [['not-yet', 'Not Yet']] : []),
       ]
         .map(
           ([value, text]) =>
@@ -1788,9 +1965,9 @@ const DeliveryFilters = (() => {
       fs = '';
     fs = compactFilter(filterValues(fs).filter((value) => trackingLevelCounts().statuses[value]));
     history.replaceState(
-      { page: 'Deliveries' },
+      { page },
       '',
-      trackingScope === 'today' ? 'deliveries.html?view=today' : 'deliveries.html',
+      trackingScope === 'today' ? `${PAGE_URL[page]}?view=today` : PAGE_URL[page],
     );
     R();
     ScopeLiquid.move(previousBubble, level);
@@ -1807,15 +1984,33 @@ const DeliveryFilters = (() => {
       fstore = compactFilter(filterValues(fstore).filter((value) => stores.includes(value)));
     const levelCounts = trackingLevelCounts();
     const counts = levelCounts.statuses;
+    const otherMethods = Object.entries(levelCounts.carriers)
+      .filter(([value, count]) => value && count > 0 && !isMainTrackingMethod(value))
+      .sort(([a], [b]) => a.localeCompare(b));
+    const otherMethodTotal = otherMethods.reduce((sum, [, count]) => sum + count, 0);
+    const categoryFacets = levelCounts.facets.filter(item => matchesDeliveryCarrier(item.carrier, fsrc) &&
+      filterIncludes(fstore, item.purchaseStore) &&
+      (!fclassification.length || fclassification.includes(item.classification)));
+    const categoryOptions = TRACKING_SCOPE_OPTIONS
+      .filter(([value]) => ['', 'today', 'hygienic'].includes(value) &&
+        (value !== 'hygienic' || !TrackingVisibility.enabled()))
+      .map(([value, label]) => [value, label, categoryFacets.filter(item => trackingMatchesScope(item, value))
+        .reduce((sum,item) => sum + item.count, 0)])
+      .filter(([value, , count]) => !value || count > 0 || filterValues(trackingScope).includes(value))
+      .map(([value, label, count]) => [value, value ? `${label} (${count})` : 'All categories']);
+    const depotCount = categoryFacets.reduce((sum,item) => sum + Number(item.palletwaysDepotCount || 0), 0);
+    if (fsrc === 'Palletways' && (depotCount > 0 || dashboardWidgetFilter === 'palletways-depot-3days'))
+      categoryOptions.push(['palletways-depot-3days', `At Depot 3> Days (${depotCount})`]);
     const statusOptions = [
       ['', `All statuses (${Object.values(counts).reduce((sum, count) => sum + count, 0)})`],
-      ...(['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc)
+      ...(trackingOrderKind() === 'refund' ? ['refund:complete', 'refund:not-yet', 'refund:cancelled'] : ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc)
         ? Object.keys(counts).sort((a, b) => a.localeCompare(b))
         : [
-            'Awaiting',
+            ...(usesGlobalTrackingStatus() ? ['Other Status'] : ['Awaiting']),
             'Unscheduled',
             'Scheduled',
             'Out for Delivery',
+            'Next Stop',
             'Delivered',
             'Failed',
             'Rejected',
@@ -1828,7 +2023,7 @@ const DeliveryFilters = (() => {
         .filter((status) => counts[status] || filterValues(fs).includes(status))
         .map((status) => [
           status,
-          `${status.startsWith('amazon:') ? amazonStatusLabel(status.slice(7)) : status.startsWith('stopstart:') ? status.slice(10) : status.startsWith('xdp:') ? amazonStatusLabel(status.slice(4)) : status.startsWith('palletways:') ? status.slice(11) : status} (${counts[status] || 0})`,
+          `${status.startsWith('refund:') ? refundStatusLabel(status) : status.startsWith('amazon:') ? amazonStatusLabel(status.slice(7)) : status.startsWith('stopstart:') ? status.slice(10) : status.startsWith('xdp:') ? amazonStatusLabel(status.slice(4)) : status.startsWith('palletways:') ? status.slice(11) : status} (${counts[status] || 0})`,
         ]),
     ];
     const hasFilters = Boolean(
@@ -1849,6 +2044,17 @@ const DeliveryFilters = (() => {
         <input type="search" id="q" data-delivery-search placeholder="Search delivery" value="${esc(q)}" aria-label="Search deliveries">
       </label>
 
+      ${!isMainTrackingMethod(fsrc) ? UiSelect.render(
+        'dotherMethodValue',
+        isMainTrackingMethod(fsrc) ? '' : fsrc,
+        [['', `Other Delivery Method (${otherMethodTotal})`],
+          ...otherMethods.map(([value, count]) => [value, `${value === 'SUPPLIER' ? 'Supplier' : value} (${count})`])],
+        {
+          ariaLabel: 'Filter other delivery methods',
+          className: 'delivery-other-method-select',
+          onChange: (value) => setScope(value, 'method'),
+        },
+      ) : ''}
       ${UiSelect.render(
         'dstoreValue',
         fstore,
@@ -1864,7 +2070,7 @@ const DeliveryFilters = (() => {
           },
         },
       )}
-      ${UiSelect.render(
+      ${categoryOptions.length > 1 ? UiSelect.render(
         'dscopeValue',
         compactFilter([
           ...filterValues(trackingScope),
@@ -1872,17 +2078,7 @@ const DeliveryFilters = (() => {
             ? ['palletways-depot-3days']
             : []),
         ]),
-        [
-          ...TRACKING_SCOPE_OPTIONS.filter(
-            ([value]) => value !== 'hygienic' || !TrackingVisibility.enabled(),
-          ).map(([value, label]) => [
-            value,
-            value
-              ? `${label} (${levelCounts.facets.filter((item) => trackingMatchesScope(item, value)).reduce((sum, item) => sum + item.count, 0)})`
-              : 'All categories',
-          ]),
-          ...(fsrc === 'Palletways' ? [['palletways-depot-3days', 'At Depot 3> Days']] : []),
-        ],
+        categoryOptions,
         {
           ariaLabel: 'Filter categories',
           className: 'delivery-scope-select',
@@ -1903,7 +2099,7 @@ const DeliveryFilters = (() => {
             );
           },
         },
-      )}
+      ) : ''}
       ${UiSelect.render('dstatusValue', fs, statusOptions, {
         ariaLabel: 'Filter by status',
         className: 'delivery-select',
@@ -1916,11 +2112,12 @@ const DeliveryFilters = (() => {
       })}
 
       <div class="ui-select delivery-date-select" data-date-filter>
-        <button class="ui-select-trigger" id="dbtn" type="button" aria-expanded="false" aria-label="Filter by delivery date" data-delivery-filter-action="toggle-date">
+        <button class="ui-select-trigger" id="dbtn" type="button" aria-expanded="false" aria-label="${widgetDateLabel() ? esc(dateLabel()) : 'Filter by delivery date'}" data-delivery-filter-action="toggle-date">
           <span class="ui-select-label">${esc(dateLabel())}</span>
           <span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span>
         </button>
         <div class="ui-select-menu ui-date-menu" id="dpn" hidden>
+          ${widgetDateLabel() ? `<p class="tracking-widget-date-scope" role="status">${esc(widgetDateLabel())} (UK). Applied by the dashboard widget. Use Clear filters to remove it.</p><p>Additional delivery date range:</p>` : ''}
           <div class="delivery-date-fields">
             <label><span>From</span><input type="date" data-delivery-date="from" value="${esc(fd)}"></label>
             <label><span>To</span><input type="date" data-delivery-date="to" value="${esc(ft)}"></label>
@@ -2007,7 +2204,7 @@ const DeliveryFilters = (() => {
       trackingScope = '';
       dashboardWidgetFilter = '';
       trackingWidgetFacets = null;
-      history.replaceState({ page: 'Deliveries' }, '', 'deliveries.html');
+      history.replaceState({ page }, '', PAGE_URL[page]);
       closeAll();
       UiSelect.closeAll();
       R();
@@ -2284,7 +2481,7 @@ function setSidebarCollapsed(collapsed) {
   );
 }
 
-const isOrderDetailPage = () => ['Dashboard', 'Deliveries', 'Failed Deliveries'].includes(page);
+const isOrderDetailPage = () => ['Dashboard', 'Deliveries', 'Replacement', 'Refund', 'Failed Deliveries'].includes(page);
 
 const DeliveryDetail = (() => {
   const container = () => $('#dr');
@@ -2300,6 +2497,7 @@ const DeliveryDetail = (() => {
   let detailCloseTimer = null;
 
   function podItemsFor(delivery) {
+    if (isCreditRefundRecord(delivery)) return [];
     const podUrl = delivery?.podUrl || delivery?.proofUrl || '';
     const podImageUrl =
       delivery?.podImageUrl ||
@@ -3039,7 +3237,58 @@ const DeliveryDetail = (() => {
     `;
   }
 
-  function decorateTrackingPanel(delivery, provider, podItems, url) {
+  function detailActionsMarkup(delivery, showHeading = false) {
+    const actionCard = (icon, title, description, label) =>
+      `<span class="qd-action-card-top"><span class="qd-action-card-icon" aria-hidden="true">${ico(icon, 23)}</span><span class="qd-action-card-label">${label}</span></span><strong>${title}</strong><span class="qd-action-card-description">${description}</span><span class="qd-action-card-arrow" aria-hidden="true">${ico('right', 17)}</span>`;
+    return `
+      <section class="qd-block qd-action-section" aria-label="Order actions">
+        ${showHeading ? `<div class="qd-title-row"><div class="qd-title">${ico('clipboardcheck', 18)}<h3>Actions</h3></div></div>` : ''}
+        <div class="qd-action-buttons">
+          <a class="qd-action-button qd-action-create" href="./collective-note.html?order=${encodeURIComponent(delivery.order || delivery.id)}" aria-label="Generate collection note for order ${esc(delivery.order || delivery.id)}">${actionCard('plus', 'Generate Collection Note', 'Start a note with this order’s details.', 'CREATE')}</a>
+          ${delivery.collectionNoteId ? `<a class="qd-action-button qd-action-view" href="./collective-note.html?view=create&amp;record=${encodeURIComponent(delivery.collectionNoteId)}" aria-label="View collection note for order ${esc(delivery.order || delivery.id)}">${actionCard('note', 'View Collection Note', 'Pick up your latest saved note.', 'SAVED')}</a>` : `<button type="button" class="qd-action-button qd-action-view" disabled aria-label="View Collection Note" title="No saved collection note for this order">${actionCard('note', 'View Collection Note', 'No saved note for this order yet.', 'NO NOTE')}</button>`}
+          <button type="button" class="qd-action-button qd-action-claim" disabled aria-label="File Claim">${actionCard('clipboardcheck', 'File Claim', 'Carrier claim tools are on the way.', 'COMING SOON')}</button>
+          <button type="button" class="qd-action-button qd-action-manufacture" disabled aria-label="Generate Manufacture Claims">${actionCard('pkg', 'Generate Manufacture Claims', 'Manufacturing claim tools are on the way.', 'COMING SOON')}</button>
+        </div>
+      </section>
+    `;
+  }
+
+  function decorateRefundPanel(panel, delivery) {
+    panel.classList.add('qd-tracking-view', 'qd-refund-view');
+    panel.dataset.qdTab = 'refund';
+    panel.setAttribute('aria-label', 'Credit and refund details');
+    const status = String(delivery.rawStatus || '').trim().toUpperCase();
+    const complete = ['C', 'COMPLETED'].includes(status);
+    const cancelled = ['X', 'CANCELLED'].includes(status);
+    const progressLabel = complete ? 'Credit note completed' : cancelled ? 'Cancelled'
+      : ['H', 'ON HOLD'].includes(status) ? 'On hold' : 'Refund in progress';
+    const progressStep = complete ? 4 : ['P', 'PARTIALLY DESPATCHED', 'S', 'SCHEDULED'].includes(status) ? 2 : 1;
+    const created = detailDateTime(delivery.orderDateTime || delivery.orderDate) || 'Date unavailable';
+    const headIcon = panel.querySelector('.qd-head-icon');
+    if (headIcon) headIcon.innerHTML = ico('Refund', 26);
+    const customerTitle = panel.querySelector('.qd-customer-block .qd-title h3');
+    if (customerTitle) customerTitle.textContent = 'Customer information';
+    panel.querySelector('.qd-head').insertAdjacentHTML('afterend', `
+      <div class="qd-badges" aria-label="Refund status and source">
+        <span class="qd-badge qd-badge-status">${stat(complete ? 'Delivered' : cancelled ? 'Cancelled' : 'Scheduled', owStatusDescription(delivery.rawStatus) || 'In progress')}</span>
+        <span class="qd-badge">Credit / Refund</span><span class="qd-badge">OrderWise</span>
+      </div>
+      <section class="qd-progress" aria-label="Refund progress">
+        <div class="qd-progress-top"><h3>Refund progress</h3><span>${esc(progressLabel)}</span></div>
+        <div class="qd-progress-steps" aria-hidden="true">${Array.from({length: 4}, (_, index) => '<span class="' + (index < progressStep ? 'is-active' : '') + '"></span>').join('')}</div>
+        <div class="qd-progress-bottom"><span>Order created &middot; ${esc(created)}</span><span>${complete ? 'Completed' : 'Not completed'}</span></div>
+      </section>
+    `);
+    panel.querySelector('.qd-tracking').innerHTML = `
+      <div class="qd-title-row"><div class="qd-title">${ico('Refund', 18)}<h3>Refund amount</h3></div></div>
+      <div class="qd-refund-amount-row"><strong class="qd-refund-amount">${esc(refundAmountLabel(delivery))}</strong>
+        ${complete ? '<span class="qd-refund-complete" role="status" aria-label="Refund complete" title="Refund complete">' + ico('check', 36, 3) + '</span>' : '<span class="qd-refund-pending" role="status">Not Yet</span>'}
+      </div><span class="qd-refund-caption">Credit / Refund</span>
+    `;
+    panel.querySelector('.qd-pair').insertAdjacentHTML('afterend', detailActionsMarkup(delivery, true));
+  }
+
+  function decorateTrackingPanel(delivery, provider, podItems) {
     if (!isOrderDetailPage()) return;
 
     const panel = container().querySelector('.dr.qd');
@@ -3047,7 +3296,9 @@ const DeliveryDetail = (() => {
     const summary = panel?.querySelector('.qd-summary');
     const customerTracking = panel?.querySelector('.qd-pair');
 
-    if (!head || !summary || !customerTracking) return;
+    if (!head || !customerTracking) return;
+    if (isCreditRefundRecord(delivery)) { decorateRefundPanel(panel, delivery); return; }
+    if (!summary) return;
 
     panel.classList.add('qd-tracking-view');
     panel.dataset.qdTab = trackingTab;
@@ -3096,8 +3347,7 @@ const DeliveryDetail = (() => {
           ? 2
           : 1;
 
-    const progressLabel =
-      {
+    const progressLabel = {
         Awaiting: 'Awaiting XDP status',
         Unscheduled: 'Awaiting despatch',
         Unassigned: 'On hold',
@@ -3120,7 +3370,7 @@ const DeliveryDetail = (() => {
       `
       <div class="qd-badges" aria-label="Order status and source">
         <span class="qd-badge qd-badge-status">
-          ${stat(delivery.st, carrierStatusLabel(delivery))}
+          ${stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}
         </span>
 
         <span class="qd-badge">
@@ -3154,15 +3404,36 @@ const DeliveryDetail = (() => {
     `,
     );
 
-    const factRow = (label, value) =>
+    summary.insertAdjacentHTML('afterbegin', `<header class="qd-detail-heading"><span class="qd-detail-heading-icon" aria-hidden="true">${ico('clipboardcheck', 19)}</span><div><h3>Order details</h3><p>Schedule, references &amp; delivery information</p></div></header>`);
+    const detailIcons = {
+      'Delivery method': 'truck', Source: 'link', 'Original delivery method': 'truck',
+      'Order reference': 'note', 'Booking status': 'clock', 'Special instructions': 'note',
+      'OrderWise status': 'pkg', 'Delivery issue': 'alert',
+      'Booked In': 'clock', 'Book In Request': 'note',
+    };
+    const factRow = (label, value, copyInstructions = false) =>
       value
-        ? `<div class="qd-summary-item">
+        ? `<div class="qd-summary-item" data-summary-field="${esc(label.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}">
           <div>
-            <span>${esc(label)}</span>
-            <b>${esc(value)}</b>
+            <span>${ico(detailIcons[label] || 'pkg', 13)}${esc(label)}</span>
+            <b>${copyInstructions ? specialInstructionsMarkup(value) : esc(value)}</b>
           </div>
         </div>`
         : '';
+
+    const showPalletwaysBooking = isPalletwaysDelivery(delivery) &&
+      String(delivery.deliveryMethodRaw || '').trim().toLowerCase() !== 'palletways next day';
+    const sheetBookedIn = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
+    const bookingDateTime = [delivery.palletwaysSheetBookInDate, delivery.palletwaysSheetBookInTime]
+      .map(value => String(value || '').trim()).filter(Boolean).join('\n');
+    const sheetRequest = String(delivery.palletwaysSheetBookInRequest || '').trim().toLowerCase();
+    const bookingState = sheetBookedIn !== 'yes' ? 'not-yet'
+      : String(delivery.palletwaysSheetBookInDate || '').trim() && String(delivery.palletwaysSheetBookInTime || '').trim() ? 'booked' : 'unknown';
+    const bookedInRow = showPalletwaysBooking
+      ? factRow('Booked In', sheetBookedIn === 'yes' ? bookingDateTime || '\u2014' : 'Not Yet')
+          .replace('data-summary-field="booked-in"', `data-summary-field="booked-in" data-booking-state="${bookingState}"`)
+      : '';
+    const orderWiseRow = delivery.rawStatus ? factRow('OrderWise status', owStatusDescription(delivery.rawStatus)) : '';
 
     summary.insertAdjacentHTML(
       'beforeend',
@@ -3170,19 +3441,19 @@ const DeliveryDetail = (() => {
         factRow('Delivery method', provider),
         factRow('Source', source),
 
-        delivery.deliveryMethodRaw && delivery.deliveryMethodRaw !== provider
+        !isPalletwaysDelivery(delivery) && delivery.carrier !== 'AMZ' && delivery.deliveryMethodRaw && delivery.deliveryMethodRaw !== provider
           ? factRow('Original delivery method', delivery.deliveryMethodRaw)
           : '',
 
-        factRow('Order reference', delivery.orderRef || delivery.orderReference),
+        factRow('Order reference', delivery.orderRef || delivery.orderReference).replace('</b>', `</b>${replacementBadge(delivery)}`),
         factRow('Booking status', delivery.bookingStatus),
+        showPalletwaysBooking ? orderWiseRow : '',
+        showPalletwaysBooking ? factRow('Book In Request', sheetRequest === 'yes' ? 'Yes' : sheetRequest === 'no' ? 'No' : '\u2014') : '',
         ['AMZ', 'XDP', 'Stopstart'].includes(delivery.carrier) || isPalletwaysDelivery(delivery)
-          ? factRow('Special instructions', delivery.specialInstructions || delivery.instructions)
+          ? factRow('Special instructions', delivery.specialInstructions || delivery.instructions, true)
           : '',
 
-        delivery.rawStatus
-          ? factRow('OrderWise status', owStatusDescription(delivery.rawStatus))
-          : '',
+        showPalletwaysBooking ? bookedInRow : orderWiseRow,
 
         factRow('Delivery issue', delivery.reason),
       ].join(''),
@@ -3194,9 +3465,6 @@ const DeliveryDetail = (() => {
       ['documents', 'Documents'],
       ['action', 'Action'],
     ];
-    const actionCard = (icon, title, description, label) =>
-      `<span class="qd-action-card-top"><span class="qd-action-card-icon" aria-hidden="true">${ico(icon, 23)}</span><span class="qd-action-card-label">${label}</span></span><strong>${title}</strong><span class="qd-action-card-description">${description}</span><span class="qd-action-card-arrow" aria-hidden="true">${ico('right', 17)}</span>`;
-
     customerTracking.insertAdjacentHTML(
       'afterend',
       `
@@ -3219,16 +3487,10 @@ const DeliveryDetail = (() => {
           )
           .join('')}
       </div>
-      <section class="qd-block qd-action-section" aria-label="Order actions">
-        <div class="qd-action-buttons">
-          <a class="qd-action-button qd-action-create" href="./collective-note.html?order=${encodeURIComponent(delivery.order || delivery.id)}" aria-label="Generate collection note for order ${esc(delivery.order || delivery.id)}">${actionCard('plus', 'Generate Collection Note', 'Start a note with this order’s details.', 'CREATE')}</a>
-          ${delivery.collectionNoteId ? `<a class="qd-action-button qd-action-view" href="./collective-note.html?view=create&amp;record=${encodeURIComponent(delivery.collectionNoteId)}" aria-label="View collection note for order ${esc(delivery.order || delivery.id)}">${actionCard('note', 'View Collection Note', 'Pick up your latest saved note.', 'SAVED')}</a>` : `<button type="button" class="qd-action-button qd-action-view" disabled aria-label="View Collection Note" title="No saved collection note for this order">${actionCard('note', 'View Collection Note', 'No saved note for this order yet.', 'NO NOTE')}</button>`}
-          <button type="button" class="qd-action-button qd-action-claim" disabled aria-label="File Claim">${actionCard('clipboardcheck', 'File Claim', 'Carrier claim tools are on the way.', 'COMING SOON')}</button>
-          <button type="button" class="qd-action-button qd-action-manufacture" disabled aria-label="Generate Manufacture Claims">${actionCard('pkg', 'Generate Manufacture Claims', 'Manufacturing claim tools are on the way.', 'COMING SOON')}</button>
-        </div>
-      </section>
+      ${detailActionsMarkup(delivery)}
     `,
     );
+
 
     if (
       !isPalletwaysDelivery(delivery) &&
@@ -3453,6 +3715,9 @@ const DeliveryDetail = (() => {
     }
 
     palletwaysLivePending.add(trackingId);
+    delivery.palletwaysLiveLoading = true;
+    delivery.palletwaysLiveError = '';
+    if (String(sel) === String(deliveryId)) render();
 
     try {
       const response = await fetch(`/api/palletways/live/${encodeURIComponent(trackingId)}`, {
@@ -3470,8 +3735,15 @@ const DeliveryDetail = (() => {
       applyPalletwaysLive(delivery, payload);
     } catch (error) {
       console.error('Palletways live lookup failed:', trackingId, error);
+      delivery.palletwaysLiveError = error.message || 'Could not load Palletways activity.';
     } finally {
       palletwaysLivePending.delete(trackingId);
+      delivery.palletwaysLiveLoading = false;
+      const record = get(deliveryId);
+      if (record && record !== delivery) {
+        record.palletwaysLiveLoading = false;
+        record.palletwaysLiveError = delivery.palletwaysLiveError;
+      }
 
       const current = sel ? get(sel) : null;
 
@@ -3651,6 +3923,7 @@ const DeliveryDetail = (() => {
     if (palletwaysPortalPending.has(pendingKey)) return;
     palletwaysPortalPending.add(pendingKey);
     delivery.palletwaysPortalLoading = true;
+    delivery.palletwaysLookupMatched = false;
     delivery.palletwaysPortalError = '';
     if (String(sel) === String(deliveryId)) render();
     let trackingId = '';
@@ -3667,6 +3940,7 @@ const DeliveryDetail = (() => {
       if (!/^\d{11}$/.test(trackingId))
         throw new Error('The matched column B value is not a valid Palletways tracking ID.');
       delivery.trk = trackingId;
+      delivery.palletwaysLookupMatched = true;
       delivery.palletwaysDetails = { ...(delivery.palletwaysDetails || {}), trackingId };
       const current = get(deliveryId);
       if (current && current !== delivery) {
@@ -3707,6 +3981,25 @@ const DeliveryDetail = (() => {
         }
       }
       if (String(sel) === String(deliveryId)) render();
+    }
+  }
+
+  function renderPalletwaysProgress(delivery) {
+    if (!isPalletwaysDelivery(delivery)) return;
+    const live = palletwaysLivePending.has(palletwaysTrackingId(delivery));
+    const portal = delivery.palletwaysPortalLoading;
+    const panel = container().querySelector('.qd-tracking-view');
+    const tabs = panel?.querySelector('.qd-section-tabs');
+    if (!tabs) return;
+    if (live || portal) {
+      const matched = delivery.palletwaysLookupMatched;
+      const completed = !matched ? 0 : 1 + Number(!live) + Number(!portal);
+      const percent = Math.round(completed * 100 / 3);
+      const label = !matched ? 'Matching Palletways tracking number' :
+        live && portal ? 'Loading activity and documents' : live ? 'Loading tracking activity' : 'Loading shipment documents';
+      tabs.insertAdjacentHTML('afterend', `<div class="qd-amazon-fetching qd-amazon-loading qd-palletways-loading" role="status" aria-live="polite"><div class="qd-amazon-progress"><span class="qd-amazon-spinner" role="progressbar" aria-label="Palletways lookup steps completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="${completed} of 3 steps completed" style="--qd-amazon-progress:${percent}%"></span><small>${percent}% · ${completed}/3 steps completed · ${esc(label)}</small></div></div>`);
+    } else if (delivery.palletwaysLiveError) {
+      tabs.insertAdjacentHTML('afterend', `<p class="qd-amazon-empty" role="alert">${esc(delivery.palletwaysLiveError)}</p>`);
     }
   }
 
@@ -4483,7 +4776,7 @@ const DeliveryDetail = (() => {
   }
 
   function renderAmazonShippingContent(delivery) {
-    if (!isOrderDetailPage() || !isAmazonShippingDelivery(delivery)) {
+    if (!isOrderDetailPage() || isCreditRefundRecord(delivery) || !isAmazonShippingDelivery(delivery)) {
       return;
     }
 
@@ -4587,7 +4880,7 @@ const DeliveryDetail = (() => {
     const amazonDelivery = get(id);
     const selectedDelivery = get(id);
 
-    if (isOrderDetailPage() && isAmazonShippingDelivery(amazonDelivery)) {
+    if (isOrderDetailPage() && !isCreditRefundRecord(amazonDelivery) && isAmazonShippingDelivery(amazonDelivery)) {
       const trackingId = amazonShippingId(amazonDelivery);
       const cached = amazonShippingCache.get(trackingId);
 
@@ -4609,7 +4902,7 @@ const DeliveryDetail = (() => {
     focusedSection = section;
 
     if (
-      isOrderDetailPage() &&
+      isOrderDetailPage() && !isCreditRefundRecord(get(id)) &&
       String(get(id)?.carrier || '')
         .trim()
         .toLowerCase() === 'palletways'
@@ -4675,7 +4968,7 @@ const DeliveryDetail = (() => {
       closeGallery();
     }
     const delivery = sel ? get(sel) : null;
-    if (delivery && isPalletwaysDelivery(delivery)) {
+    if (delivery && !isCreditRefundRecord(delivery) && isPalletwaysDelivery(delivery)) {
       const cached = palletwaysLiveCache.get(palletwaysTrackingId(delivery));
       if (cached?.ok) applyPalletwaysLive(delivery, cached);
     }
@@ -4749,7 +5042,7 @@ const DeliveryDetail = (() => {
             <div class="qd-head-details">
             <div class="qd-head-meta">
               <span>Order #${esc(delivery.order)}</span>
-              <span class="qd-head-state">${stat(delivery.st, carrierStatusLabel(delivery))} <span class="mut">· ${esc(provider)}</span></span>
+              <span class="qd-head-state">${stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))} <span class="mut">· ${esc(provider)}</span></span>
               ${delivery.deliveryMethodRaw ? `<small class="mut">Delivery method: ${esc(delivery.deliveryMethodRaw)}</small>` : ''}
               ${statusSourceLabel(delivery) !== provider ? `<small class="mut">${esc(statusSourceDisplay(delivery))}</small>` : ''}
             </div>
@@ -4761,14 +5054,14 @@ const DeliveryDetail = (() => {
         </div>
         ${stale(delivery)}
         ${courierNotice ? `<p class="qd-courier-notice" role="status">${esc(courierNotice.text)}</p>` : ''}
-        <section class="qd-summary" aria-label="Delivery summary">
-          <div class="qd-summary-item">
-            <div><span>Scheduled</span><b>${esc(scheduledValue)}</b></div>
+        ${isCreditRefundRecord(delivery) ? '' : `<section class="qd-summary" aria-label="Delivery summary">
+          <div class="qd-summary-item" data-summary-field="scheduled">
+            <div><span>${ico('clock', 14)}Scheduled</span><b>${esc(scheduledValue)}</b></div>
           </div>
-          <div class="qd-summary-item ${trackingStatus(delivery.st) === 'Delivered' ? 'is-complete' : 'is-incomplete'}">
-            <div><span>Completed</span><b>${esc(completedValue)}</b></div>
+          <div class="qd-summary-item ${trackingStatus(delivery.st) === 'Delivered' ? 'is-complete' : 'is-incomplete'}" data-summary-field="completed">
+            <div><span>${ico('check', 14)}Completed</span><b>${esc(completedValue)}</b></div>
           </div>
-        </section>
+        </section>`}
         <section class="qd-block qd-pair" aria-label="Customer and tracking">
           <div class="qd-customer-block">
             <div class="qd-title-row"><div class="qd-title">${ico('user', 18, 1.9)}<h3>Customer</h3></div></div>
@@ -4817,11 +5110,12 @@ const DeliveryDetail = (() => {
             ${delivery.carrier === 'Palletways' && postcode ? `<span class="qd-tracking-postcode">Customer delivery postcode: <strong>${esc(postcode)}</strong></span>` : ''}
           </div>
         </section>
-        ${palletwaysDetails(delivery, customerCopyButton)}
-        ${stopstartDetailsMarkup(delivery)}
+        ${isCreditRefundRecord(delivery) ? '' : palletwaysDetails(delivery, customerCopyButton)}
+        ${isCreditRefundRecord(delivery) ? '' : stopstartDetailsMarkup(delivery)}
         ${
-          delivery.carrier === 'XDP'
+          !isCreditRefundRecord(delivery) && delivery.carrier === 'XDP'
             ? `<section class="qd-block qd-order-facts qd-provider qd-xdp-details" aria-label="XDP details">
+          <div class="qd-title-row"><div class="qd-title">${ico('truck', 18, 1.9)}<h3>Courier details</h3></div></div>
           <dl class="qd-facts"><div><dt>Latest detail</dt><dd>${
             delivery.xdpLatestDetail ? esc(delivery.xdpLatestDetail).replace(/\r?\n/g, '<br>') : '—'
           }</dd></div>
@@ -4836,7 +5130,7 @@ const DeliveryDetail = (() => {
             : ''
         }
         ${
-          delivery.carrier !== 'XDP' && (podItems.length || delivery.providerPodNote)
+          !isCreditRefundRecord(delivery) && delivery.carrier !== 'XDP' && (podItems.length || delivery.providerPodNote)
             ? `<section class="qd-block qd-pod">
           <div class="qd-title-row"><div class="qd-title">${ico('check', 18, 1.9)}<h3>Proof of delivery</h3></div>${podItems.length > 1 ? `<span class="qd-pod-count">${podItems.length} images</span>` : ''}</div>
           ${delivery.providerPodNote ? `<p class="qd-pod-note"><strong>Delivery note:</strong> ${esc(delivery.providerPodNote)}</p>` : ''}
@@ -4856,14 +5150,19 @@ const DeliveryDetail = (() => {
         </section>`
             : ''
         }
-        ${palletwaysDocuments(delivery)}
-        ${xdpDocuments(delivery)}
-        ${['Stopstart', 'XDP'].includes(delivery.carrier) ? mergedTrackingActivityMarkup(delivery, null) : `<section class="qd-block qd-activity" tabindex="-1">${logMarkup(delivery)}</section>`}
+        ${isCreditRefundRecord(delivery) ? '' : palletwaysDocuments(delivery)}
+        ${isCreditRefundRecord(delivery) ? '' : xdpDocuments(delivery)}
+        ${isCreditRefundRecord(delivery) ? '' : ['Stopstart', 'XDP'].includes(delivery.carrier) ? mergedTrackingActivityMarkup(delivery, null) : `<section class="qd-block qd-activity" tabindex="-1">${logMarkup(delivery)}</section>`}
       </div>
     </aside>`;
 
-    decorateTrackingPanel(delivery, provider, podItems, url);
+    decorateTrackingPanel(delivery, provider, podItems);
+    renderPalletwaysProgress(delivery);
     renderAmazonShippingContent(delivery);
+    const renderedPanel = container().querySelector('.qd-tracking-view');
+    if (renderedPanel && trackingTab === 'details' && (!sameDelivery || previousPanel?.dataset.qdTab !== 'details')) {
+      renderedPanel.classList.add('qd-details-enter');
+    }
 
     syncSelectedTrackingRow();
     if (sameDelivery && focusedSection !== 'activity') {
@@ -5008,21 +5307,28 @@ const DeliveryDetail = (() => {
       if (!panel) return;
 
       panel.dataset.qdTab = nextTab;
+      panel.classList.toggle('qd-details-enter', nextTab === 'details');
 
       panel.querySelectorAll('[data-detail-action="tracking-tab"]').forEach((tab) => {
         tab.setAttribute('aria-pressed', String(tab.dataset.qdTab === nextTab));
       });
 
-      // Smoothly scroll the sidebar to the bottom
-      // whenever Activity, Details, or Documents is selected.
+      // Keep the section tabs and the start of Details in view.
       const scrollContainer = panel.querySelector('.db');
 
       if (scrollContainer) {
         cancelAnimationFrame(scrollContainer._scrollFrame);
 
         const start = scrollContainer.scrollTop;
-        const target = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-        const duration = 650;
+        const tabs = panel.querySelector('.qd-section-tabs');
+        const target = nextTab === 'details' && tabs
+          ? Math.max(0, start + AtlasViewport.rect(tabs).top - AtlasViewport.rect(scrollContainer).top - 12)
+          : scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          scrollContainer.scrollTop = target;
+          return;
+        }
+        const duration = nextTab === 'details' ? 320 : 650;
         const startTime = performance.now();
 
         const animateScroll = (now) => {

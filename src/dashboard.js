@@ -1,39 +1,4 @@
-const vNN = delivery => (
-  ['Scheduled', 'Rescheduled', 'Out for Delivery'].includes(delivery.st)
-  && Boolean(delivery.date)
-  && !delivery.nt
-);
-
 const localClockLabel = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-function dk(key) {
-  if (key === 'fail') {
-    go('Failed Deliveries');
-    return;
-  }
-  const status = {
-    unscheduled: 'Unscheduled',
-    active: 'Scheduled',
-    done: 'Delivered',
-    fail: 'Failed',
-  }[key] || '';
-  go('Deliveries', status);
-}
-
-function todayDeliveries() {
-  const currentDay = localDateKey();
-  const deliveries = document.body.dataset.live === 'true' && liveSummary
-    ? liveSummary.today || []
-    : D;
-
-  return deliveries
-    .filter(delivery => (
-      delivery.date === currentDay
-      && ['Scheduled', 'Out for Delivery'].includes(trackingStatus(delivery.st))
-    ))
-    .sort((a, b) => (a.deliveryWindowStartAt || a.eta || a.win || '99:99')
-      .localeCompare(b.deliveryWindowStartAt || b.eta || b.win || '99:99'));
-}
 
 function failedDeliveriesPreview() {
   if (document.body.dataset.live === 'true' && liveSummary) {
@@ -44,7 +9,6 @@ function failedDeliveriesPreview() {
 }
 
 let dashboardFailedSearch = '';
-let dashboardCollectionOrder = '';
 
 function filterDashboardFailedOrders(value) {
   dashboardFailedSearch = value;
@@ -225,7 +189,7 @@ const DashboardFailedCarousel = (() => {
         result = await DeliveryApi.list({ issues: 1, dashboard_scope: 'failed',
           limit: size, offset: nextOffset, q: nextQuery });
       } else {
-        const matches = failedDeliveriesPreview().filter(delivery =>
+        const matches = exactOrderMatches(failedDeliveriesPreview(), nextQuery).filter(delivery =>
           [delivery.order, delivery.cust, delivery.orderRef, delivery.orderReference]
             .some(value => String(value || '').toLocaleLowerCase().includes(nextQuery.toLocaleLowerCase())));
         result = { deliveries: matches.slice(nextOffset, nextOffset + size), total: matches.length };

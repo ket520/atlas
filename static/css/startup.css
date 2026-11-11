@@ -116,7 +116,6 @@ html.desk-starting { overflow: hidden;}
 
 @keyframes desk-startup-float { 50% { transform: translateY(-4px); } }
 
-@keyframes desk-startup-pulse { to { transform: scale(3); opacity: 0; } }
 
 @keyframes desk-startup-spin { to { transform: rotate(360deg); } }
 

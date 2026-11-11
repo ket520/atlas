@@ -3,6 +3,9 @@ const ManufactureClaims = (() => {
   const solutions = ['Replacement', 'Refund', 'Others'];
   let records = [], loading = false, loadError = '', request = 0, exporting = false;
   let attachments = [], search = '', dateFrom = '', dateTo = '', editingId = null, editingOpener = null;
+  let bulkSelect = false, solutionFilter = '';
+  let orderDateSort = ''; 
+  const selectedClaims = new Set();
   const deleting = new Set();
   const uploading = new Set();
   let lookupTimer = null, lookupController = null, lookupVersion = 0, autoValues = {};
@@ -17,13 +20,29 @@ const ManufactureClaims = (() => {
     ], {duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 250 : 1400, easing: 'ease-out'}));
   }
   function cancelLookup() { clearTimeout(lookupTimer); lookupController?.abort(); lookupVersion++; }
-  const filteredRecords = () => records.filter(item =>
+  const filteredRecords = () => sortDeliveriesByDate(exactOrderMatches(records, search, ['originalOrderNo', 'replacementOrderNo']).filter(item =>
     (!search.trim() || [item.originalOrderNo, item.replacementOrderNo].some(value => String(value || '').toLowerCase().includes(search.trim().toLowerCase())))
-    && (!dateFrom || item.orderDate >= dateFrom) && (!dateTo || item.orderDate <= dateTo));
+    && (!dateFrom || item.orderDate >= dateFrom) && (!dateTo || item.orderDate <= dateTo)
+    && (!solutionFilter || (solutionFilter === 'Others' ? Boolean(item.solution) && !['Replacement', 'Refund'].includes(item.solution) : item.solution === solutionFilter))), orderDateSort, item => item.orderDate);
+  document.addEventListener('click', event => {
+    if (!event.target.closest('[data-mc-sort-order-date]')) return;
+    orderDateSort = orderDateSort === 'desc' ? 'asc' : 'desc';
+    paint();
+    const header = document.querySelector('[data-mc-order-date-header]');
+    header?.setAttribute('aria-sort', orderDateSort === 'asc' ? 'ascending' : 'descending');
+    const indicator = header?.querySelector('.table-date-sort-indicator');
+    if (indicator) indicator.innerHTML = dateSortIcon(orderDateSort);
+  });
   function dateLabel() {
     const display = value => value.split('-').reverse().join('/');
     return dateFrom && dateTo ? `${display(dateFrom)} – ${display(dateTo)}`
       : dateFrom ? `From ${display(dateFrom)}` : dateTo ? `Until ${display(dateTo)}` : 'Order date';
+  }
+  function solutionFilterControl() {
+    return UiSelect.render('mc-solution-filter', solutionFilter, [['', 'All solutions'], ...solutions.map(value => [value, value])], {
+      className: 'mc-solution-select', ariaLabel: 'Filter claims by solution',
+      onChange: value => { solutionFilter = value; paint(); },
+    });
   }
   function dateFilter() {
     return `<div class="ui-select mc-date-select"><button type="button" class="ui-select-trigger" data-mc-toggle-date aria-label="Filter claims by order date" aria-expanded="false" aria-controls="mc-date-menu" aria-haspopup="dialog"><span class="ui-select-label">${esc(dateLabel())}</span><span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span></button><div id="mc-date-menu" class="ui-select-menu ui-date-menu mc-date-menu" popover="auto" role="dialog" aria-label="Claim order date range"><div class="delivery-date-fields"><label><span>From</span><input type="date" aria-label="Claim date from" data-mc-date="from" value="${esc(dateFrom)}" max="${esc(dateTo)}"></label><label><span>To</span><input type="date" aria-label="Claim date to" data-mc-date="to" value="${esc(dateTo)}" min="${esc(dateFrom)}"></label></div><button type="button" class="delivery-date-clear" data-mc-clear-dates>Clear dates</button></div></div>`;
@@ -40,35 +59,40 @@ const ManufactureClaims = (() => {
   }
 
   function rows() {
-    if (loading && !records.length) return '<tr><td colspan="9" class="mc-empty">Loading claims…</td></tr>';
-    if (!filteredRecords().length) return `<tr><td colspan="9" class="mc-empty">${loadError ? 'Claims could not be loaded.' : search || dateFrom || dateTo ? 'No claims match the selected search or dates.' : 'No claims yet. Select New claim to add one.'}</td></tr>`;
-    return filteredRecords().map(item => `<tr data-mc-edit="${esc(item.id)}" tabindex="0" aria-label="Edit claim for order ${esc(item.originalOrderNo)}">
-      <td>${esc(hd(item.orderDate))}</td><td><span class="tracking-order-number"><strong>${esc(item.originalOrderNo)}</strong>${item.originalOrderNo ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(item.originalOrderNo)}" aria-label="Copy original order number ${esc(item.originalOrderNo)}" title="Copy original order number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>
+    if (loading && !records.length) return `<tr><td colspan="${bulkSelect ? 10 : 9}" class="mc-empty">Loading claims…</td></tr>`;
+    if (!filteredRecords().length) return `<tr><td colspan="${bulkSelect ? 10 : 9}" class="mc-empty">${loadError ? 'Claims could not be loaded.' : search || dateFrom || dateTo || solutionFilter ? 'No claims match the selected search or dates.' : 'No claims yet. Select New claim to add one.'}</td></tr>`;
+    return filteredRecords().map(claimRow).join('');
+  }
+
+  function claimRow(item) {
+    return `<tr data-mc-edit="${esc(item.id)}" tabindex="0" aria-label="Edit claim for order ${esc(item.originalOrderNo)}">
+      ${bulkSelect ? `<td class="mc-selection-cell"><input type="checkbox" data-mc-select="${esc(item.id)}" aria-label="Select claim for order ${esc(item.originalOrderNo)}" ${selectedClaims.has(item.id) ? 'checked' : ''}></td>` : ''}<td>${esc(hd(item.orderDate))}</td><td><span class="tracking-order-number"><strong>${esc(item.originalOrderNo)}</strong>${item.originalOrderNo ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(item.originalOrderNo)}" aria-label="Copy original order number ${esc(item.originalOrderNo)}" title="Copy original order number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>
       <td><span class="tracking-order-number">${esc(item.replacementOrderNo || '—')}${item.replacementOrderNo ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(item.replacementOrderNo)}" aria-label="Copy replacement order number ${esc(item.replacementOrderNo)}" title="Copy replacement order number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td><td>${esc(item.variantCode)}</td>
       <td>${esc(item.reason)}</td><td><span class="mc-solution">${esc(item.solution)}</span></td>
       <td>${esc(item.sellingShop)}</td><td><div class="mc-picture-cell"><div class="mc-row-photos">${photoPreviews(item)}</div><button type="button" class="mc-add-image" data-mc-add-image="${esc(item.id)}" aria-label="Add image to claim for order ${esc(item.originalOrderNo)}" title="${(item.photos || []).length >= 5 ? 'Maximum 5 pictures per claim' : 'Add pictures to this claim'}" ${uploading.has(item.id) || deleting.has(item.id) || (item.photos || []).length >= 5 ? 'disabled' : ''}>${ico('plus', 18)}<span>${uploading.has(item.id) ? 'Adding…' : 'Add image'}</span></button></div></td>
       <td class="mc-delete-cell"><button type="button" class="collection-delete-note" data-mc-delete="${esc(item.id)}" aria-label="Delete claim for order ${esc(item.originalOrderNo)}" title="Delete claim" ${deleting.has(item.id) ? 'disabled' : ''}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></td>
-    </tr>`).join('');
+    </tr>`;
   }
 
   function render() {
     return `<section id="manufacture-claims-root" class="mc-page" aria-label="Manufacturing claims">
       <div class="delivery-page-head"><div><h1 class="fx-title">Manufacturing Claims</h1><p class="mc-subtitle">Record product issues, resolutions and supporting pictures.</p></div></div>
-      <div class="mc-records-toolbar"><label class="delivery-search">${ico('search', 18)}<input type="search" data-mc-search placeholder="Search original or replacement order no" aria-label="Search claims by original or replacement order number" value="${esc(search)}"></label><div class="mc-actions">${dateFilter()}<button type="button" class="mc-secondary" data-mc-download="xlsx">${ico('download', 15)}XLSX</button><button type="button" class="mc-secondary" data-mc-download="pdf">${ico('download', 15)}PDF</button><button type="button" class="mc-secondary" data-mc-refresh>Refresh</button><button type="button" class="mc-primary" data-mc-new>${ico('plus', 16)}New claim</button></div></div>
+      <div class="mc-records-toolbar"><label class="delivery-search">${ico('search', 18)}<input type="search" data-mc-search placeholder="Search original or replacement order no" aria-label="Search claims by original or replacement order number" value="${esc(search)}"></label><div class="mc-actions">${dateFilter()}${solutionFilterControl()}<button type="button" class="mc-secondary" data-mc-download="xlsx">${ico('download', 15)}XLSX</button><button type="button" class="mc-secondary" data-mc-download="pdf">${ico('download', 15)}PDF</button><button type="button" class="mc-secondary" data-mc-print>${ico('print', 15)}Print</button><button type="button" class="mc-secondary" data-mc-refresh>Refresh</button><button type="button" class="mc-primary" data-mc-new>${ico('plus', 16)}New claim</button></div></div>
       <p class="mc-list-status" data-mc-error role="alert" ${loadError ? '' : 'hidden'}>${esc(loadError)}</p>
       <input type="file" data-mc-add-files accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
       <div class="mc-table-wrap" role="region" aria-label="Manufacturing claims table" tabindex="0"><table class="mc-table">
-        <thead><tr><th>Order date</th><th>Original Order No</th><th>Replacement Order No</th><th>VariantCode</th><th>Reason</th><th>Solution<br><small>Replacement / Refund</small></th><th>Selling shop</th><th>Pictures</th><th class="mc-delete-cell" aria-label="Actions"></th></tr></thead>
+        <thead><tr><th data-mc-order-date-header aria-sort="${orderDateSort === 'asc' ? 'ascending' : orderDateSort === 'desc' ? 'descending' : 'none'}"><button type="button" class="table-date-sort" data-mc-sort-order-date aria-label="Sort claim order date">Order date <span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(orderDateSort)}</span></button></th><th>Order No</th><th>Replacement Order No</th><th>SKU</th><th>Reason</th><th>Solution<br><small>Replacement / Refund</small></th><th>Channel</th><th>Pictures</th><th class="mc-delete-cell" aria-label="Actions"><button type="button" class="collection-bulk-edit-trigger mc-bulk-select-trigger" data-mc-bulk-select aria-label="Bulk select claims" title="Bulk select claims" aria-expanded="${bulkSelect}">${ico('pencil', 16)}</button></th></tr></thead>
         <tbody data-mc-rows>${rows()}</tbody></table></div>
+      <div class="collection-bulk-toolbar mc-bulk-toolbar" data-mc-bulk-toolbar popover="manual" hidden><span data-mc-selected-count role="status" aria-live="polite">0 selected</span><div class="collection-bulk-file-actions"><button type="button" data-mc-bulk-download="pdf">${ico('download', 14)} PDF</button><button type="button" data-mc-bulk-download="xlsx">${ico('download', 14)} XLSX</button><button type="button" data-mc-bulk-print>${ico('print', 14)} Print</button></div><button type="button" class="mc-bulk-done" data-mc-bulk-done>Done</button></div>
       <p class="mc-count" data-mc-count>${filteredRecords().length} ${filteredRecords().length === 1 ? 'claim' : 'claims'}</p>
       <dialog class="mc-dialog" aria-labelledby="mc-form-title"><form id="mc-form">
         <header><div><p class="mc-eyebrow">MANUFACTURING CLAIMS</p><h2 id="mc-form-title">New claim</h2></div><button type="button" class="mc-close" data-mc-close aria-label="Close claim form">${ico('x', 20)}</button></header>
         <fieldset class="mc-fields">
-          <label>Original Order No<input name="originalOrderNo" required maxlength="200" autocomplete="off"></label>
+          <label>Order No<input name="originalOrderNo" required maxlength="200" autocomplete="off"></label>
           <label>Replacement Order No<input name="replacementOrderNo" required maxlength="200" autocomplete="off" list="mc-replacement-options"><datalist id="mc-replacement-options"></datalist></label>
           <label>Order date<input type="date" name="orderDate" required value="${localDateKey()}"></label>
-          <label>Selling shop<select name="sellingShop" required><option value="">Choose a selling shop</option>${options(PURCHASE_STORES)}</select></label>
-          <label class="mc-full">VariantCode<input name="variantCode" required maxlength="200" autocomplete="off"></label>
+          <label>Channel<select name="sellingShop" required><option value="">Choose a channel</option>${options(PURCHASE_STORES)}</select></label>
+          <label class="mc-full">SKU<input name="variantCode" required maxlength="200" autocomplete="off"></label>
           <p class="mc-full mc-lookup-status" data-mc-lookup-status role="status" aria-live="polite"></p>
           <label>Reason<select name="reason" required><option value="">Choose a reason</option>${options(reasons)}</select></label>
           <label>Solution<select name="solution" required><option value="">Choose a solution</option>${options(solutions)}</select></label>
@@ -93,7 +117,47 @@ const ManufactureClaims = (() => {
     root.querySelector('[data-mc-count]').textContent = `${filteredRecords().length} ${filteredRecords().length === 1 ? 'claim' : 'claims'}`;
     const error = root.querySelector('[data-mc-error]');
     error.hidden = !loadError; error.textContent = loadError;
-    root.querySelectorAll('[data-mc-download]').forEach(button => { button.disabled = loading || Boolean(loadError) || exporting; });
+    syncBulkSelection(root);
+  }
+
+  function syncBulkSelection(root = document.getElementById('manufacture-claims-root')) {
+    if (!root) return;
+    const table = root.querySelector('.mc-table');
+    table.classList.toggle('is-bulk-select', bulkSelect);
+    const headerRow = table.querySelector('thead tr');
+    if (bulkSelect && !headerRow.querySelector('.mc-selection-cell')) {
+      const header = document.createElement('th');
+      header.className = 'mc-selection-cell';
+      header.innerHTML = '<input type="checkbox" data-mc-select-all aria-label="Select all visible claims">';
+      headerRow.prepend(header);
+    }
+    if (!bulkSelect) headerRow.querySelector('.mc-selection-cell')?.remove();
+    const visible = filteredRecords();
+    const checked = visible.filter(item => selectedClaims.has(item.id)).length;
+    const all = root.querySelector('[data-mc-select-all]');
+    if (all) { all.checked = visible.length > 0 && checked === visible.length; all.indeterminate = checked > 0 && checked < visible.length; all.disabled = loading || exporting || !visible.length; }
+    root.querySelectorAll('[data-mc-select]').forEach(input => { input.checked = selectedClaims.has(input.dataset.mcSelect); input.disabled = exporting; });
+    root.querySelectorAll('[data-mc-edit]').forEach(row => {
+      if (bulkSelect) row.setAttribute('aria-selected', String(selectedClaims.has(row.dataset.mcEdit)));
+      else row.removeAttribute('aria-selected');
+    });
+    const trigger = root.querySelector('[data-mc-bulk-select]');
+    trigger.hidden = bulkSelect;
+    trigger.setAttribute('aria-expanded', String(bulkSelect));
+    trigger.disabled = exporting;
+    const toolbar = root.querySelector('[data-mc-bulk-toolbar]');
+    toolbar.hidden = !bulkSelect;
+    if (bulkSelect && !toolbar.matches(':popover-open')) toolbar.showPopover();
+    if (!bulkSelect && toolbar.matches(':popover-open')) toolbar.hidePopover();
+    toolbar.querySelector('[data-mc-selected-count]').textContent = selectedClaims.size + ' selected';
+    toolbar.querySelector('[data-mc-bulk-done]').disabled = exporting;
+    root.querySelectorAll('[data-mc-download], [data-mc-bulk-download], [data-mc-bulk-print], [data-mc-print]').forEach(button => { button.disabled = loading || Boolean(loadError) || exporting || (bulkSelect && !selectedClaims.size) || (button.hasAttribute('data-mc-print') && !visible.length); });
+  }
+  function toggleClaimSelection(row) {
+    const id = row.dataset.mcEdit;
+    if (exporting) return;
+    if (selectedClaims.has(id)) selectedClaims.delete(id); else selectedClaims.add(id);
+    syncBulkSelection();
   }
 
   async function responseJson(response) {
@@ -109,27 +173,80 @@ const ManufactureClaims = (() => {
     loading = true; loadError = ''; paint();
     try {
       const result = await responseJson(await fetch('/api/manufacture-claims'));
-      if (request === id) records = result.records || [];
+      if (request === id) { records = result.records || []; const ids = new Set(records.map(item => item.id)); selectedClaims.forEach(id => { if (!ids.has(id)) selectedClaims.delete(id); }); }
     } catch (error) { if (request === id) loadError = error.message || 'Could not load claims. Please try again.'; }
     finally { loading = false; paint(); }
+  }
+
+  async function printSelectedClaims(selectedOnly = true) {
+    if (loading || loadError || exporting || (selectedOnly && !selectedClaims.size)) return;
+    const root = document.getElementById('manufacture-claims-root');
+    if (!root) return;
+    const selected = selectedOnly ? records.filter(record => selectedClaims.has(record.id)) : filteredRecords();
+    if (!selected.length) return;
+    const dates = selected.map(record => String(record.orderDate || '').slice(0, 10)).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date)).sort();
+    const dateRange = dates.length ? esc(hd(dates[0])) + (dates[0] === dates[dates.length - 1] ? '' : ' &ndash; ' + esc(hd(dates[dates.length - 1]))) : 'Not specified';
+    const table = document.createElement('table');
+    const head = root.querySelector('.mc-table thead').cloneNode(true);
+    head.querySelectorAll('.mc-selection-cell, .mc-delete-cell').forEach(cell => cell.remove());
+    table.append(head);
+    const body = document.createElement('tbody');
+    body.innerHTML = selected.map(claimRow).join('');
+    [...body.children].forEach((row, index) => {
+      row.querySelectorAll('.mc-selection-cell, .mc-delete-cell').forEach(cell => cell.remove());
+      row.lastElementChild.innerHTML = (selected[index].photos || []).map(photo => '<img src="' + esc(photo.url) + '" alt="' + esc(photo.name || 'Claim picture') + '">').join('') || '?';
+      row.querySelectorAll('button').forEach(button => button.remove());
+    });
+    table.append(body);
+    const frame = document.createElement('iframe');
+    frame.title = 'Print selected manufacturing claims';
+    frame.setAttribute('sandbox', 'allow-same-origin allow-modals');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.tabIndex = -1;
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1200px;height:900px;border:0';
+    const loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once: true}));
+    frame.srcdoc = '<!doctype html><html><head><title> </title><style>@page{size:A4 landscape;margin:0}body{margin:0;padding:10mm;font:11px Arial,sans-serif;color:#171c35}header{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin:0 0 6px;break-inside:avoid}h1{font-size:20px;margin:0}.print-date-range{font-size:12px;font-weight:600;margin:0;text-align:right;color:#171c35}p{margin:0 0 16px;color:#525a75}table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}th{background:#252c4a;color:white;text-align:left}th,td{padding:8px;border:1px solid #ccd1de;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}th:last-child{width:24%}img{max-width:84px;max-height:84px;object-fit:contain;margin:2px}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body><header><h1>Manufacturing Claims</h1><p class="print-date-range">Order Date Range: ' + dateRange + '</p></header><p>' + selected.length + (selectedOnly ? ' selected claim' : ' claim') + (selected.length === 1 ? '' : 's') + '</p>' + table.outerHTML + '</body></html>';
+    exporting = true;
+    syncBulkSelection(root);
+    const button = root.querySelector(selectedOnly ? '[data-mc-bulk-print]' : '[data-mc-print]');
+    button.setAttribute('aria-busy', 'true');
+    document.body.append(frame);
+    try {
+      await loaded;
+      await frame.contentDocument.fonts.ready;
+      frame.contentWindow.addEventListener('afterprint', () => frame.remove(), {once: true});
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      setTimeout(() => frame.remove(), 300000);
+    } catch (error) { frame.remove(); toast(error.message || 'Could not print the selected claims.'); }
+    finally {
+      exporting = false;
+      button.removeAttribute('aria-busy');
+      syncBulkSelection(root);
+      if (button.isConnected) button.focus({preventScroll: true});
+    }
   }
 
   async function download(format) {
     if (loading || loadError || exporting) return;
     const root = document.getElementById('manufacture-claims-root');
     if (!root) return;
-    const headings = [...root.querySelectorAll('.mc-table th')].slice(0, 8);
-    const visibleRows = [...root.querySelectorAll('[data-mc-rows] > tr')];
+    const headings = [...root.querySelectorAll('.mc-table th:not(.mc-selection-cell)')].slice(0, 8);
+    const exportRecords = bulkSelect ? records.filter(record => selectedClaims.has(record.id)) : filteredRecords();
+    if (bulkSelect && !exportRecords.length) return;
+    const exportBody = document.createElement('tbody');
+    exportBody.innerHTML = exportRecords.map(claimRow).join('');
+    const visibleRows = [...exportBody.children];
     const payload = {
       format, columns: headings.map(cell => cell.innerText.trim()),
       widths: headings.map(cell => AtlasViewport.rect(cell).width),
-      rows: filteredRecords().map((record, index) => ({id: record.id,
-        cells: [...visibleRows[index].cells].slice(0, 8).map(cell => cell.innerText.trim()),
+      rows: exportRecords.map((record, index) => ({id: record.id,
+        cells: [...visibleRows[index].cells].filter(cell => !cell.classList.contains('mc-selection-cell')).slice(0, 8).map(cell => cell.textContent.trim()),
         photos: (record.photos || []).map(photo => photo.id),
       })),
     };
     exporting = true; paint();
-    root.querySelector(`[data-mc-download="${format}"]`)?.setAttribute('aria-busy', 'true');
+    root.querySelector(bulkSelect ? `[data-mc-bulk-download="${format}"]` : `[data-mc-download="${format}"]`)?.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch('/api/manufacture-claims/export', {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
@@ -145,7 +262,7 @@ const ManufactureClaims = (() => {
     } catch (error) { toast(error.message || 'Could not download the claims table. Please try again.'); }
     finally {
       exporting = false; paint();
-      root.querySelectorAll('[data-mc-download]').forEach(button => button.removeAttribute('aria-busy'));
+      root.querySelectorAll('[data-mc-download], [data-mc-bulk-download], [data-mc-bulk-print], [data-mc-print]').forEach(button => button.removeAttribute('aria-busy'));
     }
   }
 
@@ -202,7 +319,7 @@ const ManufactureClaims = (() => {
     if (editing) { cancelLookup(); form.querySelector('fieldset').disabled = true; form.querySelector('[data-mc-save]').disabled = true; }
     try {
       await responseJson(await fetch(`/api/manufacture-claims/${encodeURIComponent(id)}`, {method:'DELETE'}));
-      request++; records = records.filter(item => item.id !== id); paint();
+      request++; records = records.filter(item => item.id !== id); selectedClaims.delete(id); paint();
       if (editing) form.closest('dialog').close();
       toast('Claim deleted');
     } catch (error) { toast(error.message || 'Could not delete claim.'); }
@@ -216,11 +333,26 @@ const ManufactureClaims = (() => {
   document.addEventListener('keydown', event => {
     const row = event.target.closest('[data-mc-edit]');
     if (row && event.target === row && ['Enter', ' '].includes(event.key)) {
-      event.preventDefault(); open(records.find(item => item.id === row.dataset.mcEdit), row);
+      event.preventDefault();
+      if (bulkSelect) toggleClaimSelection(row); else open(records.find(item => item.id === row.dataset.mcEdit), row);
     }
   });
 
   document.addEventListener('click', event => {
+    const bulkButton = event.target.closest('[data-mc-bulk-select], [data-mc-bulk-done]');
+    if (bulkButton) {
+      if (bulkButton.disabled || exporting) return;
+      bulkSelect = !bulkSelect;
+      selectedClaims.clear();
+      paint();
+      const root = document.getElementById('manufacture-claims-root');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        root.querySelectorAll('.mc-table tbody td').forEach(cell => cell.animate([{transform: 'translateX(-20px)'}, {transform: 'translateX(0)'}], {duration: 300, easing: 'cubic-bezier(.22,1,.36,1)'}));
+        if (bulkSelect) root.querySelector('[data-mc-bulk-toolbar]').animate([{opacity: 0, transform: 'translateY(16px)'}, {opacity: 1, transform: 'translateY(0)'}], {duration: 300, easing: 'ease-out'});
+      }
+      root.querySelector(bulkSelect ? '[data-mc-bulk-done]' : '[data-mc-bulk-select]')?.focus({preventScroll: true});
+      return;
+    }
     const preview = event.target.closest('[data-mc-preview]');
     if (preview) DeliveryDetail.openImages(attachments, Number(preview.dataset.mcPreview),
       `Claim ${document.querySelector('#mc-form [name="originalOrderNo"]').value || 'pictures'}`, preview);
@@ -248,7 +380,7 @@ const ManufactureClaims = (() => {
       paint();
     }
     const row = event.target.closest('[data-mc-edit]');
-    if (row && !uploading.has(row.dataset.mcEdit) && !event.target.closest('button, a, input, select')) open(records.find(item => item.id === row.dataset.mcEdit), row);
+    if (row && !uploading.has(row.dataset.mcEdit) && !event.target.closest('button, a, input, select')) { if (bulkSelect) toggleClaimSelection(row); else open(records.find(item => item.id === row.dataset.mcEdit), row); }
     const deleteButton = event.target.closest('[data-mc-delete]');
     if (deleteButton) deleteClaim(deleteButton);
     const formDelete = event.target.closest('[data-mc-form-delete]');
@@ -258,8 +390,10 @@ const ManufactureClaims = (() => {
       const record = records.find(item => item.id === picture.dataset.mcViewPhotos);
       if (record) DeliveryDetail.openImages(record.photos, Number(picture.dataset.mcPhotoIndex), `Claim ${record.originalOrderNo}`, picture);
     }
-    const exportButton = event.target.closest('[data-mc-download]');
-    if (exportButton) download(exportButton.dataset.mcDownload);
+    const printButton = event.target.closest('[data-mc-bulk-print], [data-mc-print]');
+    if (printButton && !printButton.disabled) void printSelectedClaims(printButton.hasAttribute('data-mc-bulk-print'));
+    const exportButton = event.target.closest('[data-mc-download], [data-mc-bulk-download]');
+    if (exportButton) download(exportButton.dataset.mcDownload || exportButton.dataset.mcBulkDownload);
     if (event.target.closest('[data-mc-new]')) open();
     if (event.target.closest('[data-mc-refresh]')) load();
     if (event.target.closest('[data-mc-close]')) {
@@ -317,8 +451,8 @@ const ManufactureClaims = (() => {
       status.textContent = result.replacementOptions?.length > 1
         ? 'Multiple replacement orders found. Choose a replacement order from the suggestions.'
         : result.originalUnavailable ? 'The linked original is not saved yet. Check the order fields before saving.'
-        : 'Available order links, Product SKU and selling shop filled. Check the details before saving.';
-      if (!result.variantCodes?.length) status.textContent += ' Product SKU is not available; enter VariantCode manually.';
+        : 'Available order links, SKU and channel filled. Check the details before saving.';
+      if (!result.variantCodes?.length) status.textContent += ' SKU is not available; enter it manually.';
     } catch (error) {
       if (version === lookupVersion) status.textContent = error.name === 'AbortError' ? 'Order lookup timed out. Try again or fill the fields manually.' : error.message;
     } finally { clearTimeout(timeout); }
@@ -353,6 +487,13 @@ const ManufactureClaims = (() => {
   });
 
   document.addEventListener('change', event => {
+    if (event.target.matches('[data-mc-select], [data-mc-select-all]')) {
+      if (exporting) return;
+      const ids = event.target.matches('[data-mc-select-all]') ? filteredRecords().map(item => item.id) : [event.target.dataset.mcSelect];
+      ids.forEach(id => { if (event.target.checked) selectedClaims.add(id); else selectedClaims.delete(id); });
+      syncBulkSelection();
+      return;
+    }
     if (event.target.matches('[data-mc-add-files]')) {
       const files = [...event.target.files], id = event.target.dataset.claimId;
       event.target.value = '';

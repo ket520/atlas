@@ -28,12 +28,57 @@ with sync_playwright() as pw:
     table = page.locator('.guidance-status-map')
     failed = table.locator('tbody tr').filter(has=page.locator('th[scope="row"]', has_text='Failed'))
     headings = table.locator('thead tr').nth(1).locator('th').all_text_contents()
+    assert not {'Self Delivery', 'LOCAL MULTIDROP', 'UK Next Day', 'Stopstart', 'Wayfair', 'Yodel'}.intersection(headings), headings
+    def pallet_cell(status):
+        row = table.locator('tbody tr').filter(has=page.get_by_role('rowheader', name=status, exact=True))
+        return row.locator('[data-guidance-carrier="Palletways"]')
+    expect(pallet_cell('Unscheduled')).to_contain_text('Consignment Created')
+    expect(pallet_cell('Unscheduled')).to_contain_text('Palletways Not Assigned')
+    expect(pallet_cell('Scheduled')).to_contain_text('In Transit')
+    expect(pallet_cell('Unassigned')).to_contain_text('Palletways Look Up Failed')
+    expect(pallet_cell('Cancelled')).to_contain_text('Self-defined')
+    expect(pallet_cell('Cancelled')).to_contain_text('OW Order Category')
     amazon = failed.locator('td').nth(headings.index('Amazon Shipping')).inner_text()
     xdp = failed.locator('td').nth(headings.index('XDP')).inner_text()
-    assert 'UNDELIVERABLE' in amazon and 'LOST' in amazon, amazon
+    assert 'UNDELIVERABLE' in amazon and 'DELIVERY_ATTEMPTED' in amazon and 'LOST' not in amazon, amazon
     assert all(status in xdp for status in ['DAMAGE', 'DELETE', 'NOT RECEIVED']), xdp
+    def xdp_cell(status):
+        return table.locator('tbody tr').filter(has=page.get_by_role('rowheader', name=status, exact=True)).locator('[data-guidance-carrier="XDP"]')
+    expect(xdp_cell('Out for Delivery')).to_contain_text('OUT FOR DELIVERY')
+    expect(xdp_cell('Out for Delivery')).not_to_contain_text('NEXT STOP')
+    expect(xdp_cell('Next Stop')).to_contain_text('NEXT STOP')
+    expect(xdp_cell('Next Stop')).to_contain_text('XDP tab column I')
+    expect(xdp_cell('Cancelled')).to_contain_text('Self-defined')
+    expect(xdp_cell('Cancelled')).to_contain_text('OW Order Category')
+    expect(xdp_cell('Return')).to_contain_text('OW Status (J)')
+    expect(xdp_cell('Return')).to_contain_text('RETURN')
+    expect(xdp_cell('Unassigned')).to_contain_text('On hold - TBC')
+    expect(xdp_cell('Unscheduled')).to_contain_text('BOOKING')
+    expect(xdp_cell('Other Status')).not_to_contain_text('BOOKING')
+    for source_status in ['SMS', 'EMAIL', 'CREATE']:
+        expect(xdp_cell('Other Status')).to_contain_text(source_status)
+    for status in ['Other Status', 'Unscheduled', 'Scheduled', 'Out for Delivery', 'Delivered', 'Failed']:
+        expect(xdp_cell(status)).to_contain_text('XDP tab column I')
+    row_labels = table.locator('tbody th[scope="row"]').all_text_contents()
+    assert row_labels.index('Next Stop') == row_labels.index('Out for Delivery') + 1
+    next_stop = table.locator('tbody tr').filter(has=page.get_by_role('rowheader', name='Next Stop', exact=True))
+    for carrier in ['Own van', 'Amazon Shipping', 'Palletways']:
+        expect(next_stop.locator(f'[data-guidance-carrier="{carrier}"]')).to_have_text('\u2014')
     lost = table.locator('tbody tr').filter(has=page.locator('th[scope="row"]', has_text='Lost'))
-    assert 'LOST' not in lost.locator('td').nth(headings.index('Amazon Shipping')).inner_text()
+    assert 'LOST' in lost.locator('td').nth(headings.index('Amazon Shipping')).inner_text()
+    expected_amazon = {
+        'Other Status': ['AWAITING_CUSTOMER_PICKUP', 'PICKUP_CANCELLED', 'CARRIER_CANCELLED_PICKUP'],
+        'Scheduled': ['READY_FOR_RECEIVE', 'IN_TRANSIT'],
+        'Out for Delivery': ['OUT_FOR_DELIVERY'], 'Delivered': ['DELIVERED'],
+        'Failed': ['DELIVERY_ATTEMPTED', 'UNDELIVERABLE'], 'Rejected': ['REJECTED'],
+        'Lost': ['LOST'], 'Cancelled': ['RETURNED_TO_SELLER'], 'Return': ['RETURNED'],
+    }
+    for overall, values in expected_amazon.items():
+        row = table.locator('tbody tr').filter(has=page.get_by_role('rowheader', name=overall, exact=True))
+        cell = row.locator('[data-guidance-carrier="Amazon Shipping"]')
+        expect(cell).to_contain_text('Amazon Shipping tab')
+        for value in values:
+            expect(cell).to_contain_text(value)
     captions = page.locator('.guidance-table caption').all_text_contents()
     assert captions[-2:] == ['Stores', 'Data switches'], captions
     for group in ['Failed Deliveries · Inclusion and display', 'Failed Deliveries · Filter levels',
@@ -48,8 +93,8 @@ with sync_playwright() as pw:
         assert current in quick, current
     text = page.locator('.guidance-reference').inner_text()
     for expected in ['_Sync_Control', '_Sync_Run_Log', 'NOT RECEIVED', 'zero plus blank',
-                     'Current Failed and Rejected', 'current UK year', 'First six digits on each line',
-                     'On means hide', 'Amazon LOST is grouped under Failed']:
+                     'Current global Failed, Rejected and Lost', 'current UK year', 'First six digits on each line',
+                     'On means hide', 'Amazon LOST is grouped under Lost']:
         assert expected in text, expected
     for width in [390, 760, 1024, 1366, 1920]:
         page.set_viewport_size({'width': width, 'height': 768})

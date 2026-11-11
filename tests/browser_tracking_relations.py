@@ -20,12 +20,12 @@ with sync_playwright() as pw:
     page.locator('[data-delivery-search]').fill('663132')
     expect(page.locator('#tb > tr').first).to_have_attribute('data-delivery-id', '663132')
     expect(page.locator('#tb > tr').nth(1)).to_have_class('tracking-related-heading')
-    expect(page.locator('.tracking-related-row')).to_have_count(2)
+    expect(page.locator('.tracking-related-row')).to_have_count(1)
     expect(page.locator('.tracking-related-heading').first).to_contain_text('Replacement Order Found')
-    expect(page.locator('.tracking-related-heading').last).to_contain_text('Credit/Refund Found')
+    expect(page.locator('[data-related-kind="Credit/Refund"]')).to_have_count(0)
     expect(page.locator('.tracking-related-row td:first-child small')).to_have_count(0)
     colors = page.locator('.tracking-related-row').evaluate_all('rows => rows.map(row => getComputedStyle(row.cells[0]).backgroundColor)')
-    assert colors == ['rgb(237, 243, 255)', 'rgb(255, 244, 220)'], colors
+    assert colors == ['rgb(237, 243, 255)'], colors
     for carrier in ['', 'Palletways', 'AMZ', 'XDP', 'Stopstart']:
         page.evaluate('(carrier) => { fsrc=carrier; R(); }', carrier)
         headers = page.locator('.current-table thead th').count()
@@ -35,12 +35,11 @@ with sync_playwright() as pw:
               const headers=[...document.querySelectorAll('.current-table thead th')];
               return [...el.children].every((cell,i)=>Math.abs(cell.getBoundingClientRect().x-headers[i].getBoundingClientRect().x)<1);
             }''')
-    assert page.locator('.tracking-related-row').last.get_attribute('data-delivery-id') is None
     page.evaluate('window.opened=null;op=(id)=>window.opened=id')
     page.locator('.tracking-related-row').first.click()
     assert page.evaluate('window.opened') == '700001'
     page.evaluate('window.forwardRelations=trackingRelations')
-    for order in ['700001', '700002']:
+    for order in ['700001']:
         page.evaluate('''order => {
           const searched=forwardRelations.related.find(item=>item.order===order);
           trackingRelations={order, original:searched,
@@ -50,8 +49,6 @@ with sync_playwright() as pw:
         expect(page.locator('#tb > tr').first.locator('td').first).to_contain_text(order)
         expect(page.locator('.tracking-related-heading')).to_contain_text('Original ID Found')
         expect(page.locator('[data-related-kind="Original"][data-delivery-id="663132"]')).to_have_count(1)
-        if order == '700002':
-            assert page.locator('#tb > tr').first.get_attribute('data-delivery-id') is None
     page.evaluate('trackingRelations=forwardRelations')
     page.locator('[data-delivery-search]').fill('66313')
     expect(page.locator('.tracking-related-heading')).to_have_count(0)
@@ -97,4 +94,4 @@ with sync_playwright() as pw:
     for index, label in enumerate(['Original ID Found','2nd Original ID Found','3rd Original ID Found','4th Original ID Found']):
         expect(page.locator('.tracking-related-heading').nth(index)).to_contain_text(label)
     browser.close()
-    print('PASS: forward/reverse order links, column alignment, type colours/headings, details, credits without courier and exact-search-only display')
+    print('PASS: forward/reverse order links, column alignment, type colours/headings, details, credit exclusion and exact-search-only display')

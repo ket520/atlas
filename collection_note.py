@@ -4,6 +4,7 @@ import re
 import threading
 import time
 from sales_activity import product_items
+from tracking_relations import field, order_number, sheet_order_link
 
 _lock = threading.Lock()
 _rows = None
@@ -15,11 +16,15 @@ def order_note(order, rows, on_progress=None):
     if not re.fullmatch(r"\d{1,20}", order):
         raise ValueError("Enter a numeric order number.")
     matches = []
+    grouped = {}
     total = len(rows)
     if on_progress:
         on_progress({"stage": "matching", "completed": 0, "total": total})
     for index, row in enumerate(rows, 1):
-        if str(row.get("Order no") or "").strip() == order:
+        source_order = order_number(field(row, "Order no"))
+        if source_order:
+            grouped.setdefault(source_order, []).append(row)
+        if source_order == order:
             matches.append(row)
         if on_progress and (index % 250 == 0 or index == total):
             on_progress({"stage": "matching", "completed": index, "total": total})
@@ -52,6 +57,33 @@ def order_note(order, rows, on_progress=None):
         values.discard("")
         return values.pop() if len(values) == 1 else ""
 
+    # Original notes use direct children; linked notes use their own link.
+    incoming = sheet_order_link(order, matches)
+    links = [(child, link[1]) for child, items in grouped.items()
+             if (link := sheet_order_link(child, items)) and link[0] == order]
+    if incoming:
+        links = [(order, incoming[1])]
+    categories = {category for _, category in links}
+    collection_type = ({"order": "Replacement", "credit/refund": "Refund"}
+                       .get(next(iter(categories)), "") if len(categories) == 1 else "")
+    # The note's Replacement Order field is explicitly sourced from Sales Activity N.
+    original_ids = {order_number(field(row, "Original order Number")
+                    if any(re.sub(r"[^a-z0-9]", "", str(name).lower()) == "originalordernumber"
+                           for name in row)
+                    else list(row.values())[13] if len(row) > 13 else "")
+                    for row in matches}
+    replacement_order = next(iter(original_ids)) if len(original_ids) == 1 else ""
+    if not any(original_ids):
+        replacement_ids = {child for child, category in links if category == "order"}
+        replacement_order = next(iter(replacement_ids)) if len(replacement_ids) == 1 else ""
+    refund_rows = matches
+    if not incoming:
+        refund_ids = {child for child, category in links if category == "credit/refund"}
+        refund_rows = grouped[next(iter(refund_ids))] if len(refund_ids) == 1 else []
+    refund_amounts = {field(row, "Gross (base)") for row in refund_rows}
+    refund_amounts.discard("")
+    refund_amount = next(iter(refund_amounts)) if collection_type == "Refund" and len(refund_amounts) == 1 else ""
+
     items = product_items(matches)
     order_type = value("Order Type")
     company = value("Order Analysis") if order_type.casefold() == "shopify" else order_type
@@ -72,6 +104,10 @@ def order_note(order, rows, on_progress=None):
             "postcode": value("Delivery postcode"),
             "phone": value("Delivery telephone"),
             "collectionOrder": order,
+            "deliveryMethod": value("Delivery method"),
+            "collectionType": collection_type,
+            "replacementOrder": replacement_order,
+            "refundAmount": refund_amount,
         },
         "items": items,
     }

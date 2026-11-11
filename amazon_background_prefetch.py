@@ -1,5 +1,5 @@
 
-"""Preload Amazon Shipping data in scheduled-date order."""
+"""Preload Amazon-tab Delivered shipments first, newest dates first in each group."""
 
 import re
 import threading
@@ -37,27 +37,31 @@ def _ordered_ids():
     with connect() as db:
         rows = db.execute("""
             SELECT
-                json_extract(payload, '$.trk') AS tracking,
+                COALESCE(
+                    NULLIF(trim(json_extract(payload, '$.owTrackingNo')), ''),
+                    json_extract(payload, '$.trk')
+                ) AS tracking,
                 COALESCE(
                     NULLIF(json_extract(payload, '$.date'), ''),
                     NULLIF(json_extract(payload, '$.dispatchDate'), ''),
                     NULLIF(json_extract(payload, '$.orderDate'), ''),
-                    '9999-12-31'
-                ) AS scheduled
+                    ''
+                ) AS scheduled,
+                upper(trim(COALESCE(
+                    NULLIF(trim(json_extract(payload, '$.amazonSheetStatus')), ''),
+                    json_extract(payload, '$.amazonStatus'), ''
+                ))) AS amazon_status
             FROM deliveries
             WHERE json_extract(payload, '$.carrier') = 'AMZ'
-            ORDER BY scheduled ASC, order_id ASC
+            ORDER BY CASE WHEN amazon_status='DELIVERED' THEN 0 ELSE 1 END,
+                     CASE WHEN date(substr(scheduled, 1, 10)) IS NULL THEN 1 ELSE 0 END,
+                     scheduled DESC, order_id DESC
         """).fetchall()
 
     seen = set()
 
-    for tracking, scheduled in rows:
+    for tracking, scheduled, amazon_status in rows:
         tracking = str(tracking or "").strip().upper()
-        scheduled = str(scheduled or "")[:10]
-
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", scheduled):
-            continue
-
         if not re.fullmatch(r"[A-Z0-9-]{1,64}", tracking):
             continue
 
@@ -151,7 +155,7 @@ def _loop():
                 flush=True,
             )
 
-        # Scan again for newly scheduled or missing shipments.
+        # Each new pass starts with uncached Amazon-tab Delivered shipments.
         time.sleep(60)
 
 

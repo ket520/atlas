@@ -178,6 +178,7 @@ def archive_courier_issues(tabs, observed_at=None):
                     )
                 elif tab in {"Palletways", "XDP"} and entry.get("dispatchDate"):
                     delivery["carrierIssueDispatchDate"] = entry["dispatchDate"]
+                    delivery["carrierIssueDispatchDateTime"] = clean(row.get("Dispatch Date"))
                 elif tab == "Cancelled Orders":
                     delivery["cancellationRecord"] = entry
                 elif tab == "COMPLETED VAN DELIVERIES":

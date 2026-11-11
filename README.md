@@ -11,6 +11,15 @@ refreshes in the same tab do not replay it. Reduced-motion preferences are respe
 
 ## Main pages
 
+Replacement and Refund are active sidebar pages at `/replacement.html` and
+`/refund.html`. They share Tracking's table, filters, date display toggle,
+sorting and server pagination. Replacement includes verified `Order` records
+linked to a different original order; Refund includes verified `Credit/Refund`
+links, including records without a delivery method. Conflicting links are omitted.
+Filter counts cover the entire selected list. Records without a saved delivery
+remain visible but do not open a delivery-detail drawer. These pages only read
+the saved order links; they do not create replacements or issue refunds.
+
 Desktop screens automatically zoom the interface out to fit a 1920 x 1080
 reference workspace (for example, 1440 x 810 uses 75%). Navigation and controls
 shrink together; mobile layouts and printed documents retain their own sizing.

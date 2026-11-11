@@ -16,7 +16,7 @@ def archive_statuses(rows):
     statuses = {}
     consignments = {}
     tracking_numbers = {}
-    booking_fields = {"bookedIn": {}, "bookInRequest": {}}
+    booking_fields = {"bookedIn": {}, "bookInRequest": {}, "bookInDate": {}, "bookInTime": {}}
     for row in rows:
         order = str(row.get("order") or "").strip()
         if re.fullmatch(r"\d+\.0", order):
@@ -38,6 +38,7 @@ def archive_statuses(rows):
     with connect() as db:
         for row in db.execute("SELECT order_id, payload FROM deliveries WHERE json_extract(payload, '$.carrier')='Palletways'").fetchall():
             delivery = json.loads(row["payload"])
+            delivery["palletwaysSheetMatched"] = row["order_id"] in statuses
             candidates = statuses.get(row["order_id"], set())
             delivery.pop("palletwaysSheetStatus", None)
             delivery.pop("palletwaysSheetConsignmentNumber", None)
@@ -49,7 +50,9 @@ def archive_statuses(rows):
             if len(tracking) == 1 and next(iter(tracking)):
                 delivery["palletwaysSheetTrackingNumber"] = next(iter(tracking))
             for source, target in (("bookedIn", "palletwaysSheetBookedIn"),
-                                   ("bookInRequest", "palletwaysSheetBookInRequest")):
+                                   ("bookInRequest", "palletwaysSheetBookInRequest"),
+                                   ("bookInDate", "palletwaysSheetBookInDate"),
+                                   ("bookInTime", "palletwaysSheetBookInTime")):
                 delivery.pop(target, None)
                 values = booking_fields[source].get(row["order_id"], set())
                 if len(values) == 1:

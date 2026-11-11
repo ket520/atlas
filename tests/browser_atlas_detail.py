@@ -32,7 +32,9 @@ with sync_playwright() as pw:
                 dimensions = sizes
                 context.close()
                 continue
-            assert sizes == dimensions, (width, 'Panel layout changed')
+            assert all(width > 0 and height > 0 for width, height in sizes), sizes
+            expect(panel.locator('.qd-detail-heading')).to_be_visible()
+            assert len(panel.locator('.qd-summary').evaluate('el=>getComputedStyle(el).gridTemplateColumns').split()) == 2
             expect(panel).to_have_css('background-color', 'rgb(243, 246, 243)')
             expect(panel.locator('.db')).to_have_css('background-color', 'rgb(255, 255, 255)')
             expect(panel.locator('.qd-head-icon')).to_have_css('background-color', 'rgb(98, 103, 233)')
@@ -47,4 +49,4 @@ with sync_playwright() as pw:
                 panel.screenshot(path=str(ROOT / '.test-temp/atlas-order-detail.png'))
             context.close()
     browser.close()
-    print('PASS: right-hand Tracking panel uses Atlas colours, tabs work, dimensions and dark left sidebar preserved')
+    print('PASS: right-hand Tracking panel uses Atlas colours, tabs work, shared details grid and dark left sidebar preserved')

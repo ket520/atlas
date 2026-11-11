@@ -26,7 +26,7 @@ class PalletwaysMediaTests(unittest.TestCase):
             portal.portal_details('60000000001')
             portal.portal_details('60000000002')
             self.assertEqual(portal.portal_media('photo.jpg'), (b'image', 'image/jpeg'))
-            launch.assert_called_once_with(manager.start.return_value, headless=False)
+            launch.assert_called_once_with(manager.start.return_value, headless=True)
             context.close.assert_not_called()
             self.assertEqual(len(set(threads)), 1)
             self.assertNotEqual(threads[0], threading.get_ident())

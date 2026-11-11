@@ -7,7 +7,7 @@ with sync_playwright() as pw:
     page.route('https://deliverydesk.test/**',serve)
     page.route('https://fonts.googleapis.com/**',lambda route:route.abort())
     page.goto('https://deliverydesk.test/pages/dashboard.html')
-    page.evaluate("""() => {const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const rows=['Cancelled','On Hold'].flatMap((carrier,c)=>Array.from({length:3},(_,i)=>({id:carrier+i,order:String(65000+c*10+i),orderRef:'REF-'+(65000+c*10+i),carrier,st:c?'Unassigned':'Cancelled',orderDate:date,cust:'Example',logs:[]})));DeliveryStore.hydrate({deliveries:rows,activity:[],integrations:[]});D=DeliveryStore.deliveries();R();}""")
+    page.evaluate("""() => {const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const rows=['Cancelled','On Hold'].flatMap((carrier,c)=>Array.from({length:3},(_,i)=>({id:carrier+i,order:String(65000+c*10+i),orderRef:'REF-'+(65000+c*10+i),carrier,st:c?'Unassigned':'Cancelled',orderDate:date,deliveryMethodRaw:carrier==='Cancelled'?'TO BE CANCELLED':'On hold - TBC',cancelledFromDeliveryMethod:carrier==='Cancelled'?'Standard Van Delivery':'',cust:'Example',logs:[]})));DeliveryStore.hydrate({deliveries:rows,activity:[],integrations:[]});D=DeliveryStore.deliveries();R();}""")
     for key in ['cancelled','hold']:
         card=page.locator(f'[data-dash-widget="{key}"]')
         card.locator('[data-table-search-open]').click()

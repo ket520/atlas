@@ -1,4 +1,74 @@
 /* Failed Deliveries page: shared table and liquid primitives are in tracking.css. */
+/* Keep the workspace within the viewport; scroll records inside the table. */
+body[data-page="Failed Deliveries"] {
+  height: var(--atlas-viewport-height, 100dvh);
+  overflow: hidden;
+}
+body[data-page="Failed Deliveries"] .app {
+  height: var(--atlas-viewport-height, 100dvh);
+  min-height: 0;
+}
+body[data-page="Failed Deliveries"] .rt {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+body[data-page="Failed Deliveries"] .hd { flex: none; }
+body[data-page="Failed Deliveries"] main,
+body[data-page="Failed Deliveries"] #v {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+body[data-page="Failed Deliveries"] #v > :is(.delivery-page-head, .delivery-scope-row, .delivery-filters, .tracking-list-footer) {
+  flex: none;
+}
+body[data-page="Failed Deliveries"] .failed-table-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: hidden;
+}
+body[data-page="Failed Deliveries"] .failed-table-wrap .failed-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+body[data-page="Failed Deliveries"] .failed-table thead { flex: none; }
+body[data-page="Failed Deliveries"] .failed-table tbody {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+/* Yellow controls distinguish the failed-record table from Tracking. */
+body[data-page="Failed Deliveries"] .failed-table thead .delivery-item-switch {
+  border-color: #ffd75e;
+  background: #ffd75e;
+}
+body[data-page="Failed Deliveries"] .failed-table thead .delivery-item-switch:hover {
+  background: #ffe892;
+}
+body[data-page="Failed Deliveries"] .failed-table thead :is(.delivery-item-switch, .table-date-sort):focus-visible {
+  outline: 2px solid #ffd75e;
+  outline-offset: 3px;
+}
+body[data-page="Failed Deliveries"] .failed-table .table-date-sort-indicator,
+body[data-page="Failed Deliveries"] .failed-table .table-date-sort-indicator svg {
+  color: #b36b00;
+  stroke: currentColor;
+  stroke-width: 2.2;
+}
+body[data-page="Failed Deliveries"] .failed-table .table-date-sort:is(:hover, :focus-visible) {
+  color: inherit;
+}
+
 .failed-scope-sections {
   --failed-liquid: #fbe5e5;}
 

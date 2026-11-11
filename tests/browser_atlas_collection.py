@@ -19,10 +19,10 @@ with sync_playwright() as pw:
 
         def assert_records():
             page.mouse.move(0,0)
-            expect(page.locator('.collection-open-note')).to_have_count(2)
-            expect(page.locator('.delivery-page-head > .collection-note-link')).to_have_css('background-color','rgb(98, 103, 233)')
+            expect(page.locator('[data-open-collection-record]')).to_have_count(2)
+            expect(page.locator('.collection-records-toolbar > .collection-note-link')).to_have_css('background-color','rgb(98, 103, 233)')
             expect(page.locator('.collection-records-table th').first).to_have_css('background-color','rgb(37, 44, 74)')
-            expect(page.locator('.collection-open-note').first).to_have_css('color','rgb(255, 255, 255)')
+            expect(page.locator('[data-open-collection-record]').first).to_have_css('cursor','pointer')
             expect(page.locator('.qd-customer-copy').first).to_have_css('background-color','rgb(110, 227, 238)')
             assert page.locator('link[href="/static/css/collection-records.css"]').count()==1
             return page.evaluate(RECORD_STYLES)

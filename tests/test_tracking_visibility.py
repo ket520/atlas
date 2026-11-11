@@ -8,6 +8,20 @@ import delivery_data
 
 
 class TrackingVisibilityTests(unittest.TestCase):
+    def test_tracking_counts_and_rows_share_the_same_credit_exclusion(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+            delivery_data.archive([
+                {'Order no': '100', 'Delivery method': 'Palletways', 'Status': 'W'},
+                {'Order no': '101', 'Delivery method': 'Palletways', 'Status': 'W', 'Order Category': 'Credit/Refund', 'Original order Number': '100'},
+                {'Order no': '102', 'Delivery method': 'Palletways', 'Status': 'W', 'Order Category': 'Credit/Refund'},
+            ])
+            facets = delivery_data.summary()['filterFacets']
+            self.assertEqual(sum(item['count'] for item in facets if item['creditRefund']), 2)
+            visible_count = sum(item['count'] for item in facets if not item['creditRefund'])
+            page = delivery_data.query_records(carrier='Palletways', exclude_refunds=True)
+            self.assertEqual(visible_count, page['total'])
+            self.assertEqual(visible_count, 1)
+
     def test_palletways_b2b_hidden_before_paging_using_details_or_shipment_cache(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
             with delivery_data.connect() as db:

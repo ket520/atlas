@@ -21,7 +21,7 @@ window.CollectionNote = (() => {
     const itemRow = i => `<tr class="cn-item-row${i >= 3 ? ' cn-item-tall' : ''}"><td>${input(`sku-${i}`, `Item ${i + 1} code`)}</td><td><textarea name="description-${i}" aria-label="Item ${i + 1} description" rows="1"></textarea></td><td>${input(`quantity-${i}`, `Item ${i + 1} quantity`, 'number')}</td><td>${input(`condition-${i}`, `Item ${i + 1} condition`)}</td><td>${input(`return-reason-${i}`, `Item ${i + 1} reason of return`)}</td></tr>`;
     root.innerHTML = `<form class="cn-form">
       <div class="cn-toolbar">
-        <div><h1 class="cn-heading">Collective Note</h1><p class="cn-subheading">Collection note</p></div>
+        <div><h1 class="cn-heading">Collection Note</h1><p class="cn-subheading">Collection note <span class="collection-status" data-collection-note-status>Pending</span></p></div>
         <div class="cn-actions"><button type="button" class="cn-button cn-button-primary" data-collection-save>Save note</button><button type="button" class="cn-button" data-collection-add-item>Add item row</button><button type="reset" class="cn-button">Clear note</button><button type="button" class="cn-button cn-button-primary" data-collection-print>Print note</button></div>
       </div>
       <div class="cn-format-toolbar" role="toolbar" aria-label="Cell formatting">
@@ -57,13 +57,13 @@ window.CollectionNote = (() => {
           <tbody class="cn-table-section">
             <tr class="cn-hdr-row cn-peach">
               <th scope="col" class="cn-small-head">Order Number:</th>
-              <th scope="col" class="cn-small-head">Order Date</th>
+              <th scope="col" class="cn-small-head">Document date</th>
               <th scope="col" class="cn-small-head">Order reference number</th>
               <th scope="col" class="cn-small-head">Company</th>
             </tr>
             <tr class="cn-data-row">
               <td class="cn-value-cell">${input('order', 'Order number')}</td>
-              <td class="cn-value-cell">${input('date', 'Order Date', 'date')}</td>
+              <td class="cn-value-cell">${input('date', 'Document date', 'date')}</td>
               <td class="cn-value-cell">${input('orderRef', 'Order reference')}</td>
               <td class="cn-value-cell">${input('company', 'Company')}</td>
             </tr>
@@ -97,8 +97,10 @@ window.CollectionNote = (() => {
           <colgroup><col class="cn-col-a"><col class="cn-col-b"><col class="cn-col-c"><col class="cn-col-d"></colgroup>
           <tbody>
             ${inlineField('Collection Date:', 'availableDate')}
-            ${blankRows(4)}
-            ${inlineField('Date:', 'returnDate', 'date')}
+            ${inlineField('Collection Method:', 'collectionType')}
+            ${inlineField('Refund Amount:', 'refundAmount')}
+            ${inlineField('Replacement Order:', 'replacementOrder')}
+            ${inlineField('Collection Fee:', 'collectionFee')}
             ${blankRows(3)}
           </tbody>
         </table>
@@ -106,6 +108,12 @@ window.CollectionNote = (() => {
     </form>`;
     const form = root.querySelector('form');
     const paper = root.querySelector('.cn-paper');
+    const showNoteStatus = status => {
+      const badge = root.querySelector('[data-collection-note-status]');
+      badge.textContent = ['Approved', 'Rejected'].includes(status) ? status : 'Pending';
+      badge.classList.toggle('is-approved', status === 'Approved');
+      badge.classList.toggle('is-rejected', status === 'Rejected');
+    };
     const events = new AbortController();
     const on = (target, name, handler, options = {}) => target.addEventListener(name, handler, { ...options, signal: events.signal });
     root.querySelectorAll('[data-collection-download]').forEach(button => {
@@ -207,6 +215,24 @@ window.CollectionNote = (() => {
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     };
     const editableCells = () => [...paper.querySelectorAll('td:not(.cn-address-unused),th')];
+    const syncCollectionMethod = () => {
+      control('deliveryMethod')?.closest('tr')?.remove();
+      const method = control('collectionType');
+      if (method?.value === 'Credit/Refund') method.value = 'Refund';
+      const row = control('replacementOrder')?.closest('tr');
+      if (row) row.hidden = method?.value.trim().toLowerCase() !== 'replacement';
+      if (!control('refundAmount') && method) {
+        method.closest('tr').insertAdjacentHTML('afterend', inlineField('Refund Amount:', 'refundAmount'));
+      }
+      const refund = control('refundAmount');
+      if (refund) {
+        refund.closest('tr').hidden = method?.value.trim().toLowerCase() !== 'refund';
+        const raw = refund.value.trim().replace(/[£,\s]/g, '').replace(/^\((.*)\)$/, '-$1');
+        if (raw && /^-?\d+(?:\.\d+)?$/.test(raw) && Number.isFinite(Number(raw))) {
+          refund.value = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Math.abs(Number(raw)));
+        }
+      }
+    };
     const snapshot = () => {
       const copy = paper.cloneNode(true);
       const originals = paper.querySelectorAll('input,textarea');
@@ -293,6 +319,12 @@ window.CollectionNote = (() => {
       reportProgress(0, 1, 'Ready');
     };
     const prepare = () => {
+      syncCollectionMethod();
+      // Saved notes retain their original table markup; upgrade the old date label.
+      paper.querySelectorAll('th, .cn-small-head').forEach(heading => {
+        if (/^order\s+date$/i.test(heading.textContent.trim())) heading.textContent = 'Document date';
+      });
+      control('date')?.setAttribute('aria-label', 'Document date');
       paper.querySelectorAll('input[name^="description-"]').forEach(field => {
         const textarea = document.createElement('textarea');
         textarea.name = field.name;
@@ -339,11 +371,10 @@ window.CollectionNote = (() => {
     if (savedPaper) paper.innerHTML = savedPaper;
     else {
       control('date').value = today();
-      control('returnDate').value = today();
     }
     normalizeItemRows();
     prepare();
-    if (!savedPaper) flashCells([control('date'), control('returnDate')]);
+    if (!savedPaper) flashCells([control('date')]);
     remember();
     paintMessages();
     syncToolbar();
@@ -391,6 +422,7 @@ window.CollectionNote = (() => {
     }
     const autoNames = () => ['orderRef', 'company', 'customer', 'street1', 'street2',
       ...(control('street3') ? ['street3'] : []), 'city', 'country', 'postcode', 'phone', 'collectionOrder',
+      ...['collectionType', 'replacementOrder', 'refundAmount'].filter(name => control(name)),
       ...[...paper.querySelectorAll('.cn-item-row input,.cn-item-row textarea')].filter(field => /^(sku|description|quantity)-/.test(field.name)).map(field => field.name)];
     const exportColor = value => {
       const parts = String(value).match(/[\d.]+/g);
@@ -426,7 +458,7 @@ window.CollectionNote = (() => {
         const round = value => Math.round(value * 100) / 100;
         const rows = tables.flatMap(table => {
           const bounds = AtlasViewport.rect(table);
-          return [...table.rows].map(row => ({
+          return [...table.rows].filter(row => !row.hidden).map(row => ({
             height: round(AtlasViewport.rect(row).height),
             cells: [...row.cells].map(cell => {
               const rect = AtlasViewport.rect(cell);
@@ -613,6 +645,7 @@ window.CollectionNote = (() => {
           }
           reportProgress(++filled, names.length, `Cells processed: ${filled} / ${names.length}`);
         }
+        syncCollectionMethod();
         normalizeItemRows();
         resizeDescriptions();
         foundSkus = result.items.map(item => item.sku);
@@ -638,6 +671,8 @@ window.CollectionNote = (() => {
       if (!rawOrder()) return message('Enter an order number before saving.');
       if (lookupController) cancelLookup();
       const summary = Object.fromEntries(['order', 'orderRef', 'collectionOrder', 'customer', 'postcode'].map(key => [key, control(key).value.trim()]));
+      summary.channel = control('company')?.value.trim() || '';
+      summary.phone = control('phone')?.value.trim() || '';
       summary.order = rawOrder();
       summary.collectionDate = control('availableDate')?.value || '';
       summary.items = [...paper.querySelectorAll('[name^="sku-"]')].map(field => field.value.trim()).filter(Boolean).join(', ');
@@ -652,6 +687,7 @@ window.CollectionNote = (() => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Could not save collection note.');
         recordId = result.id;
+        showNoteStatus(result.status);
         const url = new URL(location.href);
         url.search = new URLSearchParams({view: 'create', record: recordId}).toString();
         history.replaceState(history.state, '', url);
@@ -699,6 +735,7 @@ window.CollectionNote = (() => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Could not open collection note.');
         if (!root.isConnected) return;
+        showNoteStatus(result.status);
         // Restore only note table elements and safe attributes from stored markup.
         const parsed = new DOMParser().parseFromString(result.paper, 'text/html');
         const tags = new Set(['TABLE', 'COLGROUP', 'COL', 'TBODY', 'THEAD', 'TFOOT', 'TR', 'TD', 'TH', 'INPUT', 'TEXTAREA', 'LABEL', 'SPAN', 'BR']);
@@ -709,6 +746,11 @@ window.CollectionNote = (() => {
           if (element.tagName === 'INPUT' && !['text', 'date', 'number', 'tel'].includes(element.type)) element.type = 'text';
         }
         paper.replaceChildren(...parsed.body.childNodes);
+        const collectionMethod = paper.querySelector('[name="collectionType"]');
+        const collectionMethodLabel = collectionMethod?.closest('label')?.querySelector('span');
+        if (collectionMethodLabel) collectionMethodLabel.textContent = 'Collection Method:';
+        if (collectionMethod) collectionMethod.setAttribute('aria-label', 'Collection Method:');
+        if (collectionMethod?.value === 'Credit/Refund') collectionMethod.value = 'Refund';
         normalizeItemRows();
         prepare();
         undoStack = [];
@@ -869,6 +911,7 @@ window.CollectionNote = (() => {
       pendingInput = snapshot();
     });
     on(form, 'input', event => {
+      if (event.target.name === 'collectionType') syncCollectionMethod();
       if (event.target.name === 'order') displayOrder();
       if (event.target.matches('textarea[name^="description-"]')) resizeDescriptions();
       if (event.target === control('order') && event.inputType?.startsWith('delete')) {
@@ -898,12 +941,12 @@ window.CollectionNote = (() => {
       });
       editableCells().forEach(cell => ['bold', 'italic', 'underline', 'border', 'line'].forEach(style => cell.classList.remove(`cn-cell-${style}`)));
       control('date').value = today();
-      control('returnDate').value = today();
+      syncCollectionMethod();
       select(null);
       foundSkus = [];
       foundItems = [];
       record(before);
-      message(keepOrder ? 'Note cleared. Order number kept; dates reset to today.' : 'Note cleared. Dates reset to today.');
+      message(keepOrder ? 'Note cleared. Order number kept; document date reset to today.' : 'Note cleared. Document date reset to today.');
     }
     on(form, 'reset', event => {
       event.preventDefault();

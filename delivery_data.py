@@ -9,14 +9,20 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from sales_activity import product_items, sku_value, store_code, store_name
+from tracking_status import global_tracking_status
+from van_cancellations import ow_cancelled_van
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "data" / "delivery-desk.sqlite3"
 SYNC_LOCK = threading.Lock()
 CACHE_SECONDS = 300
-INDEX_VERSION = 39
+INDEX_VERSION = 41
 ROUTINE_LIVE_SOURCE = 'Routine Dashboard - Live'
 OWN_VAN_CARRIERS = {"Own van", "Self Delivery", "LOCAL MULTIDROP"}
+CREDIT_REFUND_SQL = (
+    "(lower(coalesce(nullif(json_extract(payload, '$.orderRelationKind'), ''), json_extract(payload, '$.relatedKind'), ''))='credit/refund' "
+    "OR lower(coalesce(json_extract(payload, '$.salesActivityDetails.\"Order Category\"'), ''))='credit/refund')"
+)
 _cache = {"at": None, "payload": None}
 _statuses_refreshed = False
 _background_lock = threading.Lock()
@@ -1045,6 +1051,7 @@ def row_to_delivery(row):
         "orderDate": date_value(row.get("Order date")),
         "orderDateTime": clean(row.get("Order date")),
         "dispatchDate": date_value(row.get("Despatch Date")),
+        "dispatchDateTime": clean(row.get("Despatch Date")),
         "date": "",
         "win": "",
         "eta": "",
@@ -1062,6 +1069,8 @@ def connect():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(DB_PATH, timeout=20)
     db.row_factory = sqlite3.Row
+    db.create_function('global_tracking_status', 1, global_tracking_status, deterministic=True)
+    db.create_function('ow_cancelled_van', 1, lambda payload: int(ow_cancelled_van(payload)), deterministic=True)
     db.create_function('purchase_store', 1, lambda payload: purchase_store(json.loads(payload)), deterministic=True)
     db.create_function('tracking_today', 2, lambda payload, day: int(tracking_today(json.loads(payload), day)), deterministic=True)
     shipment_classes, reference_classes = {}, {}
@@ -1120,6 +1129,8 @@ def connect():
             WHERE order_id=NEW.order_id;
         END;
     """)
+    from order_exclusions import install
+    install(db)
     try:
         yield db
     finally:
@@ -1145,6 +1156,14 @@ def archive(rows, observed_at=None):
             group["delivery"] = delivery
     for group in grouped.values():
         delivery = group["delivery"]
+        ecommerce_numbers = {clean(row.get('eCommerce order number')) for row in group['rows']}
+        delivery['salesActivityDetails']['eCommerce order number'] = (
+            next(iter(ecommerce_numbers)) if len(ecommerce_numbers) == 1 else ''
+        )
+        from tracking_relations import sheet_order_link
+        link = sheet_order_link(delivery['order'], group['rows'])
+        delivery['orderRelationKind'] = ('Replacement' if link[1] == 'order' else 'Credit/Refund') if link else ''
+        delivery['originalOrder'] = link[0] if link else ''
         delivery["items"] = product_items(group["rows"])
         delivery['productSkuItems'] = list(dict.fromkeys(item['sku'] for row in group['rows']
             for item in product_items([{'Product SKU': row.get('Product SKU')}])) )
@@ -1175,6 +1194,12 @@ def archive(rows, observed_at=None):
                 )
             else:
                 old = json.loads(previous["payload"])
+                if clean(delivery.get('deliveryMethodRaw')).lower() == 'to be cancelled':
+                    previous_method = clean(old.get('deliveryMethodRaw'))
+                    if previous_method.lower() == 'to be cancelled':
+                        previous_method = clean(old.get('cancelledFromDeliveryMethod'))
+                    if previous_method:
+                        delivery['cancelledFromDeliveryMethod'] = previous_method
                 if delivery['carrier'] == 'Own van' and old.get('carrier') == 'Own van':
                     for field in ('routineLiveStatus', 'routineLiveColour', 'routineLiveCell', 'routineLiveObservedAt'):
                         if old.get(field):
@@ -1195,12 +1220,15 @@ def archive(rows, observed_at=None):
                     "reason",
                     "fu",
                     "providerCheckedAt",
+                    "providerMatchField",
+                    "providerMatchValue",
                     "carrierIssueEntries",
                     "followUps",
                     "carrierIssueReason",
                     "carrierIssueNote",
                     "carrierIssueDate",
                     "carrierIssueDispatchDate",
+                    "carrierIssueDispatchDateTime",
                     "carrierIssueFailure",
                     "failedDate",
                     "messagedStatus",
@@ -1234,7 +1262,8 @@ def archive(rows, observed_at=None):
                 if delivery["carrier"] == "Palletways" and old.get("carrier") == "Palletways" and old.get("palletwaysSheetConsignmentNumber"):
                     delivery["palletwaysSheetConsignmentNumber"] = old["palletwaysSheetConsignmentNumber"]
                 if delivery["carrier"] == "Palletways" and old.get("carrier") == "Palletways":
-                    for field in ("palletwaysSheetTrackingNumber", "palletwaysSheetBookedIn", "palletwaysSheetBookInRequest"):
+                    for field in ("palletwaysSheetMatched", "palletwaysSheetTrackingNumber", "palletwaysSheetBookedIn", "palletwaysSheetBookInRequest",
+                                  "palletwaysSheetBookInDate", "palletwaysSheetBookInTime"):
                         if field in old:
                             delivery[field] = old[field]
                 if delivery['carrier'] == 'XDP' and old.get('carrier') == 'XDP' and old.get('xdpConsignmentNo'):
@@ -1486,6 +1515,7 @@ def archive_palletways(rows, observed_at=None):
             dispatch = date_value(row.get("Dispatch Date"))
             if dispatch:
                 delivery["dispatchDate"] = dispatch
+                delivery["dispatchDateTime"] = clean(row.get("Dispatch Date"))
             note = clean(row.get("Status"))
             if note:
                 previous_status = delivery.get("palletwaysStatus")
@@ -1571,22 +1601,15 @@ def enrich_optimoroute_today():
             break
     if not orders:
         return 0
-    refs = {}
-    for item in orders:
-        reference = clean((item.get("data") or {}).get("orderNo"))
-        if reference:
-            refs.setdefault(reference, []).append(item)
+    from optimoroute_matching import resolve
     with connect() as db:
-        own_van = {}
-        for row in db.execute("SELECT order_id, payload FROM deliveries"):
-            delivery = json.loads(row["payload"])
-            if delivery["carrier"] in OWN_VAN_CARRIERS and delivery.get("orderRef"):
-                own_van.setdefault(delivery["orderRef"], []).append((row["order_id"], delivery))
-        matched = [
-            (items[0], own_van[reference][0])
-            for reference, items in refs.items()
-            if len(items) == 1 and len(own_van.get(reference, [])) == 1
-        ]
+        saved = {row['order_id']: json.loads(row['payload'])
+                 for row in db.execute('SELECT order_id, payload FROM deliveries')}
+        resolved, _ = resolve(list(saved.values()), orders, complete=not tag)
+        matched = [(item, (order_id, saved[order_id]))
+                   for order_id, (item, field, value) in resolved.items()]
+        for order_id, (_, field, value) in resolved.items():
+            saved[order_id].update(providerMatchField=field, providerMatchValue=value)
     enriched = 0
     for start in range(0, len(matched), 25):
         chunk = matched[start : start + 25]
@@ -1639,7 +1662,7 @@ def enrich_optimoroute_page(deliveries):
     now = datetime.now(timezone.utc)
     candidates = []
     for delivery in deliveries:
-        if delivery["carrier"] not in OWN_VAN_CARRIERS or not delivery.get("orderRef"):
+        if delivery["carrier"] not in OWN_VAN_CARRIERS:
             continue
         checked = delivery.get("providerCheckedAt")
         if checked:
@@ -1653,31 +1676,15 @@ def enrich_optimoroute_page(deliveries):
         return
     from server import api, normalize
 
-    refs = {delivery["orderRef"] for delivery in candidates}
+    from optimoroute_matching import search, resolve
     with connect() as db:
-        counts = {}
-        for row in db.execute("SELECT payload FROM deliveries"):
-            saved = json.loads(row["payload"])
-            reference = saved.get("orderRef")
-            if saved.get("carrier") in OWN_VAN_CARRIERS and reference in refs:
-                counts[reference] = counts.get(reference, 0) + 1
-    refs = {reference for reference in refs if counts.get(reference) == 1}
-    if not refs:
-        return
-    response = api(
-        "search_orders",
-        {
-            "orders": [{"orderNo": reference} for reference in refs],
-            "includeOrderData": True,
-            "includeScheduleInformation": True,
-        },
-    )
+        saved = [json.loads(row['payload']) for row in db.execute('SELECT payload FROM deliveries')]
+    orders, complete = search(candidates, api)
+    resolved, warnings = resolve(saved, orders, complete)
     found = {}
-    for item in response["orders"]:
-        reference = clean((item.get("data") or {}).get("orderNo"))
-        if reference in refs:
-            found.setdefault(reference, []).append(item)
-    unique = [items[0] for reference, items in found.items() if len(items) == 1]
+    for order_id, (item, field, value) in resolved.items():
+        found[order_id] = item
+    unique = [found[d['order']] for d in candidates if d['order'] in found]
     details = (
         api("get_completion_details", {"orders": [{"id": item["id"]} for item in unique]})
         if unique
@@ -1685,15 +1692,17 @@ def enrich_optimoroute_page(deliveries):
     )
     completions = {item.get("id"): item for item in details["orders"]}
     matched = {
-        reference: normalize(items[0], completions.get(items[0].get("id")))
-        for reference, items in found.items()
-        if len(items) == 1
+        order_id: normalize(item, completions.get(item.get("id")))
+        for order_id, item in found.items()
     }
     with connect() as db:
         for delivery in candidates:
-            source = matched.get(delivery["orderRef"])
+            source = matched.get(delivery['order'])
             delivery["providerCheckedAt"] = now.isoformat()
             if source:
+                _, field, value = resolved[delivery['order']]
+                delivery.update(providerMatchField=field, providerMatchValue=value)
+                delivery.pop('matchWarning', None)
                 apply_optimoroute_fields(delivery, source)
                 prior = delivery.get("providerStatus")
                 delivery["providerStatus"] = source.get("status")
@@ -1721,20 +1730,22 @@ def enrich_optimoroute_page(deliveries):
                         ),
                     )
             elif (
-                not found.get(delivery["orderRef"])
-                and not response.get("after_tag")
+                delivery['order'] not in warnings
+                and complete
                 and not delivery.get("providerStatus")
             ):
                 delivery["providerLookup"] = "not_found"
                 delivery["statusSource"] = "OW"
                 delivery["st"] = ow_status_name(delivery.get("rawStatus"))
                 delivery["statusSource"] = "OW"
-            elif len(found.get(delivery["orderRef"], [])) > 1 and not delivery.get(
+            elif delivery['order'] in warnings and not delivery.get(
                 "providerStatus"
             ):
                 delivery["providerLookup"] = "ambiguous"
                 delivery["st"] = ow_status_name(delivery.get("rawStatus"))
                 delivery["statusSource"] = "OW"
+            if delivery['order'] in warnings:
+                delivery['matchWarning'] = warnings[delivery['order']]
             apply_routine_live_status(delivery, db)
             db.execute(
                 "UPDATE deliveries SET payload=? WHERE order_id=?",
@@ -2076,11 +2087,20 @@ def query_records(
     hide_wilko=False,
     hide_palletways_b2b=False,
     dashboard_widget='',
+    order_kind='',
+    exclude_refunds=False,
+    global_status=False,
 ):
     limit = max(1, min(int(limit), 100))
     offset = max(0, int(offset))
     clauses = []
     values = []
+    source_prefix = ''
+    if order_kind:
+        from tracking_relations import workflow_source
+        source_prefix = workflow_source(order_kind)
+    if exclude_refunds:
+        clauses.append("NOT " + CREDIT_REFUND_SQL)
     if dashboard_widget:
         from dashboard_data import widget_condition
         clause, widget_values = widget_condition(dashboard_widget)
@@ -2123,17 +2143,28 @@ def query_records(
             + clean(search).lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             + "%"
         )
-        fields = ("order", "orderRef", "trk", "palletwaysSheetConsignmentNumber", "cust", "phone", "email", "postcode")
-        clauses.append(
-            "("
-            + " OR ".join(
-                f"lower(coalesce(json_extract(payload, '$.{field}'), '')) LIKE ? ESCAPE '\\'"
-                for field in fields
-            )
-            + ")"
+        fields = ("order", "orderRef", "trk", "palletwaysSheetTrackingNumber", "palletwaysSheetConsignmentNumber", "cust", "phone", "email", "postcode")
+        search_case = (
+            "CASE WHEN EXISTS (SELECT 1 FROM deliveries exact_order WHERE exact_order.order_id=?) "
+            "THEN order_id=? "
         )
-        values.extend([pattern] * len(fields))
-    if carrier == "Own van / Self Delivery":
+        search_values = [clean(search), clean(search)]
+        if order_kind == 'refund':
+            search_case += (
+                "WHEN EXISTS (SELECT 1 FROM deliveries linked_credit "
+                "WHERE json_extract(linked_credit.payload, '$.originalOrder')=?) "
+                "THEN json_extract(payload, '$.originalOrder')=? "
+            )
+            search_values.extend([clean(search), clean(search)])
+        partial_match = " OR ".join(
+            f"lower(coalesce(json_extract(payload, '$.{field}'), '')) LIKE ? ESCAPE '\\'"
+            for field in fields
+        )
+        clauses.append("(" + search_case + "ELSE (" + partial_match + ") END)")
+        values.extend(search_values + [pattern] * len(fields))
+    if dashboard_widget in ('cancelled', 'cancelled-month') and carrier in ('Own van', 'Own van / Self Delivery'):
+        clauses.append('ow_cancelled_van(payload)=1')
+    elif carrier == "Own van / Self Delivery":
         clauses.append("json_extract(payload, '$.carrier') IN (?, ?)")
         values.extend(["Own van", "Self Delivery"])
     elif carrier:
@@ -2148,19 +2179,32 @@ def query_records(
                                 ("palletwaysSheetBookInRequest", book_in_request)):
             selected = clean(selected).lower()
             if selected:
-                if selected not in {"yes", "no"}:
-                    raise ValueError("Choose Yes or No for Palletways booking filters.")
+                allowed = {"yes", "no", "not-yet"} if field == "palletwaysSheetBookedIn" else {"yes", "no"}
+                if selected not in allowed:
+                    raise ValueError("Choose Yes, No or Not Yet for Booked In; Yes or No for Book In Request.")
                 clauses.append(f"lower(trim(coalesce(json_extract(payload, '$.{field}'), '')))=?")
-                values.append(selected)
+                values.append("no" if selected == "not-yet" else selected)
+                if field == "palletwaysSheetBookedIn" and selected in {"no", "not-yet"}:
+                    method = "lower(trim(coalesce(json_extract(payload, '$.deliveryMethodRaw'), '')))"
+                    clauses.append(f"{method}{'=' if selected == 'no' else '!='}?")
+                    values.append("palletways next day")
     statuses = list(dict.fromkeys(value for value in (status if isinstance(status, (list, tuple)) else [status]) if value))
     if statuses:
-        if issue_cases and courier_status:
+        if order_kind == 'refund':
+            status_expression = ("CASE upper(trim(json_extract(payload, '$.rawStatus'))) "
+                "WHEN 'C' THEN 'refund:complete' WHEN 'COMPLETED' THEN 'refund:complete' "
+                "WHEN 'X' THEN 'refund:cancelled' WHEN 'CANCELLED' THEN 'refund:cancelled' ELSE 'refund:not-yet' END")
+        elif issue_cases and not courier_status:
+            status_expression = "global_tracking_status(payload)"
+        elif issue_cases and courier_status:
             status_expression = ("CASE "
                 "WHEN json_extract(payload, '$.carrier')='AMZ' AND coalesce(nullif(json_extract(payload, '$.amazonSheetStatus'), ''), nullif(json_extract(payload, '$.amazonStatus'), '')) IS NOT NULL THEN 'amazon:' || coalesce(nullif(json_extract(payload, '$.amazonSheetStatus'), ''), json_extract(payload, '$.amazonStatus')) "
                 "WHEN json_extract(payload, '$.carrier')='XDP' AND nullif(json_extract(payload, '$.xdpStatus'), '') IS NOT NULL THEN 'xdp:' || json_extract(payload, '$.xdpStatus') "
                 "WHEN json_extract(payload, '$.carrier')='Palletways' AND nullif(json_extract(payload, '$.palletwaysSheetStatus'), '') IS NOT NULL THEN 'palletways:' || json_extract(payload, '$.palletwaysSheetStatus') "
                 "WHEN json_extract(payload, '$.carrier')='Stopstart' AND nullif(json_extract(payload, '$.stopstartStatus'), '') IS NOT NULL THEN 'stopstart:' || json_extract(payload, '$.stopstartStatus') "
-                "ELSE json_extract(payload, '$.st') END")
+                "ELSE global_tracking_status(payload) END")
+        elif global_status and not carrier and not issue_cases and not order_kind:
+            status_expression = "global_tracking_status(payload)"
         elif carrier == "AMZ" and courier_status:
             status_expression = ("CASE WHEN coalesce(nullif(json_extract(payload, '$.amazonSheetStatus'), ''), nullif(json_extract(payload, '$.amazonStatus'), '')) IS NOT NULL THEN 'amazon:' || coalesce(nullif(json_extract(payload, '$.amazonSheetStatus'), ''), json_extract(payload, '$.amazonStatus')) ELSE json_extract(payload, '$.st') END")
         elif carrier == "Stopstart" and courier_status:
@@ -2169,16 +2213,19 @@ def query_records(
             status_expression = ("CASE WHEN nullif(json_extract(payload, '$.xdpStatus'), '') IS NOT NULL THEN 'xdp:' || json_extract(payload, '$.xdpStatus') ELSE json_extract(payload, '$.st') END")
         elif carrier == "Palletways" and courier_status:
             statuses = list(dict.fromkeys('Delivered' if value == 'palletways:Delivered' else value for value in statuses))
-            status_expression = ("CASE WHEN lower(trim(coalesce(nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), ''), json_extract(payload, '$.st'))))='delivered' THEN 'Delivered' "
-                "WHEN nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), '') IS NOT NULL THEN 'palletways:' || trim(json_extract(payload, '$.palletwaysSheetStatus')) ELSE json_extract(payload, '$.st') END")
+            status_expression = ("CASE WHEN lower(trim(json_extract(payload, '$.palletwaysSheetStatus'))) IN ('palletways not assigned','unscheduled') THEN 'Unscheduled' "
+                "WHEN lower(trim(json_extract(payload, '$.palletwaysSheetStatus')))='delivered' THEN 'Delivered' "
+                "WHEN nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), '') IS NOT NULL THEN 'palletways:' || trim(json_extract(payload, '$.palletwaysSheetStatus')) WHEN coalesce(json_extract(payload, '$.palletwaysSheetMatched'),0)=0 THEN trim(coalesce(json_extract(payload, '$.rawStatus'), '')) ELSE '' END")
         else:
             status_expression = ("json_extract(payload, '$.st')")
         clauses.append(status_expression + " IN (" + ",".join("?" for _ in statuses) + ")")
         values.extend(statuses)
     if issue_cases:
         clauses.append(
-            "json_extract(payload, '$.st') IN ('Failed', 'Rejected')"
+            "global_tracking_status(payload) IN ('Failed', 'Rejected', 'Lost')"
         )
+        if not exclude_refunds:
+            clauses.append("NOT " + CREDIT_REFUND_SQL)
     issue_date = "COALESCE(NULLIF(json_extract(payload, '$.failedAt'), ''), NULLIF(json_extract(payload, '$.failedDate'), ''), NULLIF(json_extract(payload, '$.carrierIssueDate'), ''))"
     filter_date = issue_date if issue_cases else "json_extract(payload, '$.date')"
     if date_from:
@@ -2202,7 +2249,9 @@ def query_records(
         clauses.append("json_extract(payload, '$.st') IN ('Scheduled', 'Out for Delivery')")
     where = " WHERE " + " AND ".join(clauses) if clauses else ""
     sort_fields = {
+        "created": "coalesce(nullif(json_extract(payload, '$.orderDateTime'), ''), json_extract(payload, '$.orderDate'))",
         "scheduled": "json_extract(payload, '$.date')",
+        "dispatch": "coalesce(nullif(json_extract(payload, '$.dispatchDate'), ''), json_extract(payload, '$.carrierIssueDispatchDate'))",
         "issue": issue_date,
     }
     sort_column, _, sort_direction = date_sort.partition("_")
@@ -2211,15 +2260,18 @@ def query_records(
         order_by = f" ORDER BY CASE WHEN {expression} IS NULL OR {expression}='' THEN 1 ELSE 0 END, {expression} {sort_direction.upper()}, order_id DESC"
     else:
         order_by = " ORDER BY last_seen DESC, order_id DESC"
-    if dashboard_widget == "palletways-depot-3days":
+    if dashboard_widget == "palletways-depot-3days" and not (sort_column in sort_fields and sort_direction in {"asc", "desc"}):
         order_by = (
             " ORDER BY json_extract(payload, '$.palletwaysDepotStay.arrivedAt') ASC, order_id DESC"
         )
     def load_page():
         with connect() as db:
-            total = db.execute("SELECT COUNT(*) FROM deliveries" + where, values).fetchone()[0]
+            if order_kind:
+                from tracking_relations import initialize
+                initialize(db)
+            total = db.execute(source_prefix + "SELECT COUNT(*) FROM deliveries" + where, values).fetchone()[0]
             rows = db.execute(
-                "SELECT order_id, payload, first_seen, last_seen, palletways_classification(payload) AS palletways_classification FROM deliveries"
+                source_prefix + "SELECT order_id, payload, first_seen, last_seen, palletways_classification(payload) AS palletways_classification FROM deliveries"
                 + where
                 + order_by + " LIMIT ? OFFSET ?",
                 values + [limit, offset],
@@ -2227,6 +2279,8 @@ def query_records(
             deliveries = []
             for row in rows:
                 delivery = json.loads(row["payload"])
+                if issue_cases or (global_status and not carrier and not order_kind):
+                    delivery['overallStatus'] = global_tracking_status(delivery)
                 if row['palletways_classification']:
                     delivery['palletwaysDetails'] = {**(delivery.get('palletwaysDetails') or {}),
                                                     'classification': row['palletways_classification']}
@@ -2245,14 +2299,14 @@ def query_records(
 
     total, deliveries = load_page()
     provider_unavailable = False
-    if refresh_provider:
+    if refresh_provider and order_kind != 'refund':
         try:
             enrich_optimoroute_page(deliveries)
             if status or date_from or date_to or scheduled_from or scheduled_to or today or ongoing_today or issue_cases or date_sort:
                 total, deliveries = load_page()
         except Exception:
             provider_unavailable = True
-    return {
+    result = {
         "deliveries": deliveries,
         "total": total,
         "limit": limit,
@@ -2260,9 +2314,15 @@ def query_records(
         "hasMore": offset + len(deliveries) < total,
         "providerUnavailable": provider_unavailable,
     }
+    if order_kind:
+        from tracking_relations import workflow_facets
+        result['filterFacets'] = workflow_facets(order_kind)
+    return result
 
 
 def summary():
+    from dashboard_data import widget_condition
+    depot_clause, _ = widget_condition('palletways-depot-3days')
     with connect() as db:
         filter_facets = [dict(row) for row in db.execute(
             "SELECT json_extract(payload, '$.carrier') AS carrier, "
@@ -2274,8 +2334,13 @@ def summary():
             "json_extract(payload, '$.palletwaysSheetStatus') AS palletwaysSheetStatus, "
             "tracking_today(payload, ?) AS today, "
             "json_extract(payload, '$.salesActivityDetails.\"Order Type\"') AS orderType, "
-            "purchase_store(payload) AS purchaseStore, palletways_classification(payload) AS palletwaysClassification, COUNT(*) AS count "
-            "FROM deliveries GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11", (datetime.now(ZoneInfo('Europe/London')).date().isoformat(),)
+            "purchase_store(payload) AS purchaseStore, palletways_classification(payload) AS palletwaysClassification, "
+            f"{CREDIT_REFUND_SQL} AS creditRefund, "
+            "json_extract(payload, '$.palletwaysSheetMatched') AS palletwaysSheetMatched, "
+            "global_tracking_status(payload) AS overallStatus, "
+            "json_extract(payload, '$.rawStatus') AS rawStatus, "
+            f"SUM(CASE WHEN {depot_clause} THEN 1 ELSE 0 END) AS palletwaysDepotCount, "
+            "COUNT(*) AS count FROM deliveries GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15", (datetime.now(ZoneInfo('Europe/London')).date().isoformat(),)
         )]
         all_count = db.execute("SELECT COUNT(*) FROM deliveries").fetchone()[0]
         order_date_ranges = {
@@ -2316,7 +2381,7 @@ def summary():
             row[0]: row[1]
             for row in db.execute(
                 "SELECT json_extract(payload, '$.carrier'), COUNT(*) FROM deliveries "
-                "WHERE json_extract(payload, '$.st') IN ('Failed', 'Rejected') GROUP BY 1"
+                "WHERE global_tracking_status(payload) IN ('Failed', 'Rejected', 'Lost') AND NOT " + CREDIT_REFUND_SQL + " GROUP BY 1"
             )
         }
         failed_total = sum(failed_carriers.values())
@@ -2355,24 +2420,24 @@ def detail(order_id):
     if not row:
         return {"error": "Order not found."}
     delivery = json.loads(row["payload"])
-    if delivery["carrier"] in OWN_VAN_CARRIERS and delivery.get("orderRef"):
+    credit_refund = (delivery.get('orderRelationKind') or delivery.get('relatedKind')) == 'Credit/Refund' or clean((delivery.get('salesActivityDetails') or {}).get('Order Category')).lower() == 'credit/refund'
+    if credit_refund:
+        delivery['st'] = ow_status_name(delivery.get('rawStatus'))
+        delivery['statusSource'] = 'OW'
+    if delivery["carrier"] in OWN_VAN_CARRIERS and not credit_refund:
         try:
             from server import api, normalize
 
-            result = api(
-                "search_orders",
-                {
-                    "orders": [{"orderNo": delivery["orderRef"]}],
-                    "includeOrderData": True,
-                    "includeScheduleInformation": True,
-                },
-            )
-            matches = [
-                item
-                for item in result["orders"]
-                if clean((item.get("data") or {}).get("orderNo")) == delivery["orderRef"]
-            ]
+            from optimoroute_matching import search, resolve
+            orders, complete = search([delivery], api)
+            with connect() as db:
+                saved = [json.loads(r['payload']) for r in db.execute('SELECT payload FROM deliveries')]
+            resolved, warnings = resolve(saved, orders, complete)
+            choice = resolved.get(order_id)
+            matches = [choice[0]] if choice else []
             if len(matches) == 1:
+                delivery.update(providerMatchField=choice[1], providerMatchValue=choice[2])
+                delivery.pop('matchWarning', None)
                 item = matches[0]
                 completion = api("get_completion_details", {"orders": [{"id": item["id"]}]})
                 matched = normalize(
@@ -2415,10 +2480,8 @@ def detail(order_id):
                         (json.dumps(apply_routine_live_status(delivery, db)), order_id),
                     )
                     db.commit()
-            elif len(matches) > 1:
-                delivery["matchWarning"] = (
-                    "Multiple OptimoRoute orders use this reference; no automatic match was made."
-                )
+            elif order_id in warnings:
+                delivery['matchWarning'] = warnings[order_id]
                 if not delivery.get("providerStatus"):
                     delivery["providerLookup"] = "ambiguous"
                     delivery["st"] = ow_status_name(delivery.get("rawStatus"))
@@ -2429,7 +2492,7 @@ def detail(order_id):
                             (json.dumps(apply_routine_live_status(delivery, db)), order_id),
                         )
                         db.commit()
-            elif not result.get("after_tag") and not delivery.get("providerStatus"):
+            elif complete and not delivery.get("providerStatus"):
                 delivery["providerLookup"] = "not_found"
                 delivery["statusSource"] = "OW"
                 delivery["st"] = ow_status_name(delivery.get("rawStatus"))
@@ -2536,11 +2599,11 @@ def detail(order_id):
                 ] = []
 
 
-    if delivery.get("carrier") in OWN_VAN_CARRIERS and delivery.get("orderRef"):
+    if delivery.get("carrier") in OWN_VAN_CARRIERS and (delivery.get('providerMatchValue') or delivery.get("orderRef")):
         try:
             from activity_log import history
 
-            provider_entries = history(delivery["orderRef"]).get("entries", [])
+            provider_entries = history(delivery.get('providerMatchValue') or delivery['orderRef']).get("entries", [])
             for entry in provider_entries:
                 at = datetime.fromtimestamp(entry["timestamp"], timezone.utc).isoformat()
                 text = "OptimoRoute: " + clean(entry.get("kind")).replace("_", " ").capitalize()

@@ -8,18 +8,19 @@ from palletways_sheet import archive_statuses
 
 
 class TrackingMultiFilterTests(unittest.TestCase):
-    def test_palletways_delivered_combines_sheet_and_fallback(self):
+    def test_palletways_delivered_uses_only_column_f(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
             data.archive([{'Order no': str(i), 'Delivery method': 'Palletways', 'Status': 'P'} for i in range(4)])
             archive_statuses([{'order': '0', 'status': 'Delivered'}, {'order': '2', 'status': 'In Transit'}])
             with data.connect() as db:
                 db.execute("UPDATE deliveries SET payload=json_set(payload,'$.st','Delivered') WHERE order_id IN ('1','2')")
+                db.execute("UPDATE deliveries SET payload=json_set(payload,'$.st','Rejected') WHERE order_id='0'")
                 db.commit()
             filters = dict(carrier='Palletways', courier_status=True)
             result = data.query_records(**filters, status='Delivered')
-            self.assertEqual({item['order'] for item in result['deliveries']}, {'0', '1'})
-            self.assertEqual(data.query_records(**filters, status='palletways:Delivered')['total'], 2)
-            self.assertEqual(data.query_records(**filters, status=['Delivered', 'palletways:In Transit'])['total'], 3)
+            self.assertEqual({item['order'] for item in result['deliveries']}, {'0'})
+            self.assertEqual(data.query_records(**filters, status='palletways:Delivered')['total'], 1)
+            self.assertEqual(data.query_records(**filters, status=['Delivered', 'palletways:In Transit'])['total'], 2)
 
     def test_status_store_union_and_intersection_apply_before_paging(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(data, 'DB_PATH', Path(directory) / 'test.sqlite3'):

@@ -1,3 +1,75 @@
+// Animate column switches without replacing unaffected rows or cells.
+let deliveryColumnSwapBusy = false;
+let deliveryColumnSwapUpdating = false;
+function renderDeliveryRows(list, markup) {
+  if (!deliveryColumnSwapUpdating) { list.innerHTML = markup; return; }
+  const next = list.cloneNode(false);
+  next.innerHTML = markup;
+  if (next.children.length !== list.children.length || [...next.children].some((row, i) => row.children.length !== list.children[i].children.length)) {
+    list.innerHTML = markup; return;
+  }
+  [...next.children].forEach((row, i) => {
+    const current = list.children[i];
+    [...current.attributes].forEach(attr => { if (!row.hasAttribute(attr.name)) current.removeAttribute(attr.name); });
+    [...row.attributes].forEach(attr => current.setAttribute(attr.name, attr.value));
+    [...row.children].forEach((cell, column) => {
+      const existing = current.children[column];
+      if (existing.innerHTML !== cell.innerHTML) existing.innerHTML = cell.innerHTML;
+      [...cell.attributes].forEach(attr => existing.setAttribute(attr.name, attr.value));
+    });
+  });
+}
+async function swapDeliveryColumn(selector, update) {
+  if (deliveryColumnSwapBusy) return;
+  deliveryColumnSwapBusy = true;
+  const headers = [...document.querySelectorAll(selector)].map(button => button.closest('th'));
+  const cells = () => headers.flatMap(header => [header, ...header.closest('table').querySelectorAll('tbody tr > td:nth-child(' + (header.cellIndex + 1) + '):not([colspan])')]);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let outgoing = [];
+  let wordWrappers = [];
+  const unwrapWords = () => {
+    wordWrappers.forEach(word => word.replaceWith(...word.childNodes));
+    wordWrappers = [];
+  };
+  const words = () => {
+    cells().forEach(cell => {
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      const textNodes = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node.textContent.trim() && !node.parentElement.closest('svg, .tracking-number-switch, .delivery-item-switch, .qd-customer-copy')) textNodes.push(node);
+      }
+      textNodes.forEach(node => {
+        const word = document.createElement('span');
+        word.className = 'delivery-column-swap-word';
+        word.style.display = 'inline-block';
+        node.replaceWith(word);
+        word.append(node);
+        wordWrappers.push(word);
+      });
+    });
+    return wordWrappers;
+  };
+  try {
+    if (!reduced) {
+      outgoing = words().map(word => word.animate([{transform: 'translateX(0)'}, {transform: 'translateX(-24px)'}], {duration: 180, easing: 'ease-in', fill: 'forwards'}));
+      await Promise.all(outgoing.map(animation => animation.finished.catch(() => {})));
+    }
+    unwrapWords();
+    deliveryColumnSwapUpdating = true;
+    update();
+    deliveryColumnSwapUpdating = false;
+    outgoing.forEach(animation => animation.cancel());
+    if (!reduced) await Promise.all(words().map(word => word.animate([{transform: 'translateX(24px)'}, {transform: 'translateX(0)'}], {duration: 260, easing: 'cubic-bezier(.22,1,.36,1)'}).finished.catch(() => {})));
+    document.querySelector(selector)?.focus({preventScroll: true});
+  } finally {
+    outgoing.forEach(animation => animation.cancel());
+    unwrapWords();
+    deliveryColumnSwapUpdating = false;
+    deliveryColumnSwapBusy = false;
+  }
+}
+
 function splitDeliveryAddress(address) {
   const text = String(address || '').trim();
   const postcode = text.match(/\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})$/i);
@@ -29,6 +101,23 @@ function palletwaysNumberCell(delivery) {
   return `<span class="tracking-order-number"><span>${esc(value || '\u2014')}</span>${value ? `<button type="button" class="qd-customer-copy" ${tracking ? 'data-copy-palletways-tracking' : 'data-copy-consignment-number'}="${esc(value)}" aria-label="Copy ${tracking ? 'tracking' : 'consignment'} number ${esc(value)}" title="Copy ${tracking ? 'tracking' : 'consignment'} number">${ico('copy', 13, 1.8)}</button>` : ''}</span>`;
 }
 
+function palletwaysBookedInFilterValue(delivery) {
+  const booked = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
+  if (booked !== 'no') return booked;
+  return String(delivery.deliveryMethodRaw || '').trim().toLowerCase() === 'palletways next day' ? 'no' : 'not-yet';
+}
+
+function palletwaysBookedInCell(delivery) {
+  const booked = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
+  if (booked === 'no') {
+    return palletwaysBookedInFilterValue(delivery) === 'no' ? 'N/A' : 'Not Yet';
+  }
+  if (booked !== 'yes') return '\u2014';
+  const date = String(delivery.palletwaysSheetBookInDate || '').trim();
+  const time = String(delivery.palletwaysSheetBookInTime || '').trim();
+  return `<span class="tracking-cell-line">${esc(date || '\u2014')}</span>${time ? `<small class="tracking-cell-line mut">${esc(time)}</small>` : ''}`;
+}
+
 function palletwaysNumberHeading() {
   const tracking = palletwaysNumberType === 'tracking';
   const next = tracking ? 'Consignment No' : 'Tracking ID';
@@ -38,19 +127,67 @@ document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-palletways-number-type]');
   if (!button) return;
   event.preventDefault();
+  void swapDeliveryColumn('[data-palletways-number-type]', () => {
   palletwaysNumberType = palletwaysNumberType === 'tracking' ? 'consignment' : 'tracking';
   try {
     localStorage.setItem('atlas-palletways-number-type', palletwaysNumberType);
   } catch {}
   button.closest('th').innerHTML = palletwaysNumberHeading();
   rows();
-  document.querySelector('[data-palletways-number-type]')?.focus({
-    preventScroll: true,
+  });
+});
+
+let trackingDateType = 'scheduled';
+try {
+  if (localStorage.getItem('atlas-tracking-date-type') === 'dispatch') trackingDateType = 'dispatch';
+} catch {}
+
+function trackingDateValue(delivery) {
+  return trackingDateType === 'dispatch'
+    ? delivery.dispatchDate || delivery.carrierIssueDispatchDate || ''
+    : delivery.date;
+}
+
+function trackingDateSortDirection() {
+  return trackingDateSortType === trackingDateType ? trackingDateSort : '';
+}
+
+function trackingDateHeading() {
+  const label = trackingDateType === 'dispatch' ? 'Dispatch' : 'Scheduled';
+  const next = trackingDateType === 'dispatch' ? 'Scheduled date' : 'Dispatch date';
+  return `<div class="tracking-number-heading"><button class="table-date-sort" type="button" data-table-date-sort="tracking" aria-label="Sort ${label.toLowerCase()} date"><span>${label}<br>date</span><span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(trackingDateSortDirection())}</span></button><button type="button" class="tracking-number-switch" data-tracking-date-type aria-label="Show ${next}" title="Switch to ${next}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg></button></div>`;
+}
+
+function trackingDateCell(delivery) {
+  const value = trackingDateValue(delivery);
+  const date = esc(value ? hd(value) : '\u2014');
+  if (trackingDateType === 'dispatch') {
+    const timestamp = delivery.dispatchDate
+      ? delivery.dispatchDateTime
+      : delivery.carrierIssueDispatchDateTime;
+    const time = /[T ](\d{2}:\d{2}(?::\d{2})?)/.exec(timestamp || '')?.[1];
+    return `${date}${time ? `<small class="tracking-cell-line mut">${esc(time)}</small>` : ''}`;
+  }
+  return `${date}${delivery.amazonScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.amazonScheduledAt))} UK time</small>` : delivery.providerScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.providerScheduledAt) || optimoTime(delivery.providerScheduledAt))}</small>` : ''}${delivery.eta ? `<small class="tracking-cell-line mut">ETA ${esc(optimoClock(delivery.eta) || optimoTime(delivery.eta))}</small>` : ''}`;
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-tracking-date-type]');
+  if (!button) return;
+  event.preventDefault();
+  void swapDeliveryColumn('[data-tracking-date-type]', () => {
+  trackingDateType = trackingDateType === 'scheduled' ? 'dispatch' : 'scheduled';
+  try { localStorage.setItem('atlas-tracking-date-type', trackingDateType); } catch {}
+  const header = button.closest('th');
+  header.innerHTML = trackingDateHeading();
+  header.setAttribute('aria-sort', trackingDateSortDirection() === 'asc' ? 'ascending' : trackingDateSortDirection() === 'desc' ? 'descending' : 'none');
+  rows();
   });
 });
 
 let trackingLoaded = [];
 let trackingRelations = null;
+let trackingCreditRefundMatch = null;
 let trackingOffset = 0;
 let trackingTotal = 0;
 let trackingHasMore = false;
@@ -64,7 +201,10 @@ let liveSummary = null;
 let liveReady = false;
 let liveSummaryError = false;
 let trackingDateSort = 'desc';
+let trackingDateSortType = 'scheduled';
 let failedDateSort = '';
+let failedDateSortType = 'issue';
+const orderCreatedDate = delivery => delivery.orderDateTime || delivery.orderDate || '';
 
 function dateSortIcon(direction) {
   const up = '<path d="m4 7 3-3 3 3"/><path d="M7 4v9"/>';
@@ -84,26 +224,29 @@ function sortDeliveriesByDate(deliveries, direction, dateOf) {
 }
 
 function toggleTableDateSort(table) {
-  if (table === 'tracking') {
-    trackingDateSort = trackingDateSort === 'desc' ? 'asc' : 'desc';
-    if (document.body.dataset.live === 'true') loadTrackingPage(true);
-    else rows();
-  } else {
-    failedDateSort = failedDateSort === 'desc' ? 'asc' : 'desc';
+  const failed = table === 'failed' || table === 'failed-created';
+  const type = table.endsWith('-created') ? 'created' : failed ? 'issue' : trackingDateType;
+  if (failed) {
+    failedDateSort = failedDateSortType === type && failedDateSort === 'desc' ? 'asc' : 'desc';
+    failedDateSortType = type;
     if (document.body.dataset.live === 'true') loadFailedPage(true);
     else failedRows();
+  } else {
+    trackingDateSort = trackingDateSortType === type && trackingDateSort === 'desc' ? 'asc' : 'desc';
+    trackingDateSortType = type;
+    if (document.body.dataset.live === 'true') loadTrackingPage(true);
+    else rows();
   }
-  const header = document.querySelector(`th[data-date-sort-header="${table}"]`);
-  if (header)
-    header.setAttribute(
-      'aria-sort',
-      (table === 'tracking' ? trackingDateSort : failedDateSort) === 'asc'
-        ? 'ascending'
-        : 'descending',
-    );
-  const indicator = header?.querySelector('.table-date-sort-indicator');
-  if (indicator)
-    indicator.innerHTML = dateSortIcon(table === 'tracking' ? trackingDateSort : failedDateSort);
+  document.querySelectorAll('[data-table-date-sort]').forEach(button => {
+    const target = button.dataset.tableDateSort;
+    const direction = target === 'tracking' ? trackingDateSortDirection()
+      : target === 'failed' ? (failedDateSortType === 'issue' ? failedDateSort : '')
+      : target === 'failed-created' ? (failedDateSortType === 'created' ? failedDateSort : '')
+      : trackingDateSortType === 'created' ? trackingDateSort : '';
+    button.closest('th')?.setAttribute('aria-sort', direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : 'none');
+    const indicator = button.querySelector('.table-date-sort-indicator');
+    if (indicator) indicator.innerHTML = dateSortIcon(direction);
+  });
 }
 
 const courierAssets = {
@@ -115,26 +258,8 @@ const courierAssets = {
   Wayfair: ['wayfair.jpg', '#8515a5'],
 };
 
-function groupedDeliveryCarriers(counts) {
-  const groupedCounts = {
-    ...counts,
-  };
-  groupedCounts[SELF_DELIVERY_GROUP] = SELF_DELIVERY_CARRIERS.reduce(
-    (total, carrier) => total + (counts[carrier] || 0),
-    0,
-  );
-  const carriers = [
-    ...new Set(
-      [...APP_CONFIG.carriers.supported, ...Object.keys(counts)].map((carrier) =>
-        SELF_DELIVERY_CARRIERS.includes(carrier) ? SELF_DELIVERY_GROUP : carrier,
-      ),
-    ),
-  ];
-  return {
-    carriers,
-    counts: groupedCounts,
-  };
-}
+const isMainTrackingMethod = (value) =>
+  value === SELF_DELIVERY_GROUP || Object.prototype.hasOwnProperty.call(courierAssets, value);
 
 function selfDeliveryCourierCard(count, active, failed = false) {
   return `<button class="tracking-courier-card tracking-courier-self fx-tab ${active ? 'on' : ''}" type="button" role="tab" aria-selected="${active}" aria-label="${esc(SELF_DELIVERY_GROUP)}, ${count} deliveries" title="${esc(SELF_DELIVERY_GROUP)}" ${failed ? `data-failed-method="${esc(SELF_DELIVERY_GROUP)}"` : `data-delivery-filter-action="method" data-value="${esc(SELF_DELIVERY_GROUP)}"`} style="--courier-brand-color:var(--gr)">
@@ -180,11 +305,12 @@ function trackingMatchesScope(item, scope = trackingScope) {
 function trackingFilterFacets() {
   if (document.body.dataset.live === 'true')
     return (
-      (dashboardWidgetFilter ? trackingWidgetFacets : null) ||
+      ((dashboardWidgetFilter || trackingOrderKind()) ? trackingWidgetFacets : null) ||
       liveSummary?.filterFacets ||
       []
     ).filter(
       (item) =>
+        (page !== 'Deliveries' || !(item.creditRefund || item.orderRelationKind === 'Credit/Refund' || item.relatedKind === 'Credit/Refund')) &&
         TrackingVisibility.includesOrderType(item.orderType) &&
         TrackingVisibility.includesCarrier(item.carrier) &&
         TrackingVisibility.includesStore(item.purchaseStore) &&
@@ -195,6 +321,7 @@ function trackingFilterFacets() {
     );
   return D.filter(
     (delivery) =>
+      (page !== 'Deliveries' || !isCreditRefundRecord(delivery)) &&
       TrackingVisibility.includesOrderType(delivery.salesActivityDetails?.['Order Type']) &&
       TrackingVisibility.includesCarrier(delivery.carrier) &&
       TrackingVisibility.includesStore(purchaseChannel(delivery)) &&
@@ -205,6 +332,10 @@ function trackingFilterFacets() {
   ).map((delivery) => ({
     carrier: delivery.carrier,
     status: trackingStatus(delivery.st),
+    overallStatus: overallTrackingStatus(delivery),
+    creditRefund: isCreditRefundRecord(delivery),
+    palletwaysDepotCount: palletwaysDepotEligible(delivery) ? 1 : 0,
+    rawStatus: delivery.rawStatus,
     orderType: delivery.salesActivityDetails?.['Order Type'],
     purchaseStore: purchaseChannel(delivery),
     palletwaysClassification: delivery.palletwaysDetails?.classification,
@@ -213,6 +344,7 @@ function trackingFilterFacets() {
     stopstartStatus: delivery.stopstartStatus,
     xdpStatus: delivery.xdpStatus,
     palletwaysSheetStatus: delivery.palletwaysSheetStatus,
+    palletwaysSheetMatched: delivery.palletwaysSheetMatched,
     count: 1,
     today: deliveryIsToday(delivery),
   }));
@@ -296,15 +428,16 @@ function availableTrackingStores() {
 }
 
 function palletwaysFilterStatus(sheetStatus, fallbackStatus) {
-  const sheet = String(sheetStatus || '').trim();
-  const value = sheet || fallbackStatus;
+  const sheet = palletwaysSpecificStatus(sheetStatus);
+  if (sheet === 'Unscheduled') return 'Unscheduled';
+  const value = sheet;
   return String(value || '')
     .trim()
     .toLowerCase() === 'delivered'
     ? 'Delivered'
     : sheet
       ? `palletways:${sheet}`
-      : fallbackStatus;
+      : fallbackStatus || '';
 }
 
 function trackingLevelCounts() {
@@ -312,12 +445,6 @@ function trackingLevelCounts() {
   const scoped = facets.filter((item) => trackingMatchesScope(item));
   const carriers = {};
   scoped.forEach((item) => {
-    if (
-      [...TRACKING_GENERAL_OPTIONS, ['LOCAL MULTIDROP'], ['SUPPLIER'], ['UK Next Day']].some(
-        ([value]) => value && value !== 'today' && value === item.carrier,
-      )
-    )
-      return;
     const carrier = SELF_DELIVERY_CARRIERS.includes(item.carrier)
       ? SELF_DELIVERY_GROUP
       : item.carrier;
@@ -333,16 +460,16 @@ function trackingLevelCounts() {
     )
     .forEach((item) => {
       const status =
-        fsrc === 'AMZ' && item.amazonStatus
+        trackingOrderKind() === 'refund' ? refundStatusValue(item) : fsrc === 'AMZ' && item.amazonStatus
           ? `amazon:${item.amazonStatus}`
           : fsrc === 'Stopstart' && item.stopstartStatus
             ? `stopstart:${item.stopstartStatus}`
             : fsrc === 'XDP' && item.xdpStatus
               ? `xdp:${item.xdpStatus}`
               : fsrc === 'Palletways'
-                ? palletwaysFilterStatus(item.palletwaysSheetStatus, item.status)
-                : item.status;
-      statuses[status] = (statuses[status] || 0) + item.count;
+                ? palletwaysFilterStatus(item.palletwaysSheetStatus, palletwaysOwFallback(item))
+                : usesGlobalTrackingStatus() ? overallTrackingStatus(item) : item.status;
+      if (status) statuses[status] = (statuses[status] || 0) + item.count;
     });
   return {
     facets,
@@ -396,17 +523,18 @@ function vDel() {
     .map(([value, count]) => [value, value === 'AMZ' ? 'Amazon Shipping' : value, count]);
   const methodTabs = [
     ['', 'All methods', levelCounts.scopeTotal],
-    ...scopedMethods.filter(([value]) => !courierAssets[value] && value !== SELF_DELIVERY_GROUP),
   ];
   const courierOrder = ['Palletways', 'AMZ', 'XDP', 'Stopstart', 'Yodel', 'Wayfair'];
   const courierTabs = scopedMethods
     .filter(([value]) => courierAssets[value])
     .sort(([first], [second]) => courierOrder.indexOf(first) - courierOrder.indexOf(second));
+  const mainMethodTotal = scopedMethods.reduce((sum, [value, , count]) =>
+    sum + (isMainTrackingMethod(value) ? count : 0), 0);
   const renderScopeTab = ([value, label, count], level = 'general') => {
     const active = value === (level === 'general' ? trackingScope : fsrc);
     return `<button class="fx-tab ${active ? 'on' : ''}" type="button" role="tab" aria-selected="${active}" data-delivery-filter-action="${level}" data-value="${esc(value)}"><span class="scope-option-label">${esc(label)}</span><span>${count}</span></button>`;
   };
-  return `<div class="delivery-page-head"><h2 class="fx-title">Tracking</h2>${dashboardWidgetFilter && dashboardWidgetFilter !== 'palletways-depot-3days' ? `<button class="dash-cohort-filter" type="button" data-dash-clear-cohort>${esc(DashboardHome.title(dashboardWidgetFilter))} ${ico('x', 13)}</button>` : ''}</div>
+  return `<div class="delivery-page-head"><h2 class="fx-title">${esc(trackingOrderKind() ? page : 'Tracking')}</h2>${dashboardWidgetFilter && dashboardWidgetFilter !== 'palletways-depot-3days' ? `<button class="dash-cohort-filter" type="button" data-dash-clear-cohort>${esc(DashboardHome.title(dashboardWidgetFilter))} ${ico('x', 13)}</button>` : ''}</div>
     ${dashboardWidgetFilter && dashboardWidgetFilter !== 'palletways-depot-3days' && dashboardWidgetControls().conditions ? `<p class="tracking-widget-conditions" role="status"><strong>Active filters:</strong> ${esc(dashboardWidgetControls().conditions)}</p>` : ''}
     <div class="delivery-scope-row tracking-scope-sections">
       ${sections
@@ -430,7 +558,7 @@ function vDel() {
                 label,
                 count,
               ]) => `<button class="tracking-courier-card fx-tab ${value === fsrc ? 'on' : ''}" type="button" role="tab" aria-selected="${value === fsrc}" aria-label="${esc(label)}, ${count} deliveries" title="${esc(label)} · ${count} deliveries" data-delivery-filter-action="method" data-value="${esc(value)}" style="--courier-brand-color:${courierAssets[value][1]}">
-            <span class="tracking-courier-logo"><img src="/assets/${courierAssets[value][0]}" alt="" width="1920" height="600" decoding="async"></span>
+            <span class="tracking-courier-logo"><img src="/assets/${courierAssets[value][0]}" alt="" width="110" height="35" decoding="async"></span>
             <span class="tracking-courier-count">${count}</span>
           </button>`,
             )
@@ -442,11 +570,12 @@ function vDel() {
         )
         .join('')}
     </div>
+    <p class="tracking-method-totals" aria-label="Delivery method count reconciliation">Main delivery methods (${mainMethodTotal.toLocaleString()}) + Other Delivery Method (${(levelCounts.scopeTotal - mainMethodTotal).toLocaleString()}) = All methods (${levelCounts.scopeTotal.toLocaleString()})</p>
     ${DeliveryFilters.render()}
     <div class="tracking-table-wrap tracking-records-scroll" tabindex="0" role="region" aria-label="Tracking table, scroll horizontally to view all columns">
       <table class="tracking-table current-table" data-tracking-carrier="${esc(fsrc)}"><thead><tr>
-        <th>Order No</th><th>Order Ref No</th><th>Customer &amp; contact</th>${fsrc === 'Palletways' ? `<th>${palletwaysNumberHeading()}</th><th>${deliveryItemColumnHeading()}</th><th>Postcode</th><th data-date-sort-header="tracking" aria-sort="${trackingDateSort === 'asc' ? 'ascending' : trackingDateSort === 'desc' ? 'descending' : 'none'}"><button class="table-date-sort" type="button" data-table-date-sort="tracking" aria-label="Sort scheduled date"><span>Scheduled<br>date</span><span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(trackingDateSort)}</span></button></th>` : `${fsrc === 'AMZ' ? '<th>Tracking ID</th>' : fsrc === 'XDP' ? '<th>Consignment No</th>' : ''}<th>${deliveryItemColumnHeading()}</th><th>Postcode</th><th data-date-sort-header="tracking" aria-sort="${trackingDateSort === 'asc' ? 'ascending' : trackingDateSort === 'desc' ? 'descending' : 'none'}"><button class="table-date-sort" type="button" data-table-date-sort="tracking" aria-label="Sort scheduled date"><span>Scheduled<br>date</span><span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(trackingDateSort)}</span></button></th>${!['AMZ', 'XDP', 'Stopstart'].includes(fsrc) ? '<th>Special instructions</th>' : ''}`}<th><div class="tracking-method-heading"><span>Delivery<br>method</span><button class="tracking-method-filter ${fclassification.length ? 'on' : ''}" type="button" data-delivery-filter-action="toggle-classification" aria-label="Filter delivery-method classification" aria-haspopup="menu" aria-expanded="false" aria-controls="tracking-classification-menu" title="${esc(fclassification.length ? fclassification.join(', ') : 'Filter delivery-method classification')}">${ico('filter', 16)}</button></div></th>
-        <th>Status</th>${fsrc === 'Palletways' ? `<th>${DeliveryFilters.renderBookingHeading('booked_in')}</th><th>${DeliveryFilters.renderBookingHeading('book_in_request')}</th>` : fsrc === 'Stopstart' ? '<th>Special instructions</th>' : '<th>Booking status</th>'}${fsrc === 'Stopstart' ? '<th>Tracking</th>' : ''}
+        <th>Order No</th>${trackingOrderKind() === 'replacement' ? '<th title="Sales Activity column N: Original order Number">Original Order Number</th>' : '<th>Order Ref No</th>'}${trackingOrderKind() === 'refund' ? '<th title="Sales Activity column R: Gross (base)">Refund Amount</th>' : ''}<th>Customer &amp; contact</th>${fsrc === 'Palletways' ? `<th>${palletwaysNumberHeading()}</th><th ${deliveryItemColumnSortAttributes()}>${deliveryItemColumnHeading()}</th><th>Postcode</th><th data-date-sort-header="tracking" aria-sort="${trackingDateSortDirection() === 'asc' ? 'ascending' : trackingDateSortDirection() === 'desc' ? 'descending' : 'none'}">${trackingDateHeading()}</th>` : `${fsrc === 'AMZ' ? '<th>Tracking ID</th>' : fsrc === 'XDP' ? '<th>Consignment No</th>' : ''}<th ${deliveryItemColumnSortAttributes()}>${deliveryItemColumnHeading()}</th><th>Postcode</th><th data-date-sort-header="tracking" aria-sort="${trackingDateSortDirection() === 'asc' ? 'ascending' : trackingDateSortDirection() === 'desc' ? 'descending' : 'none'}">${trackingDateHeading()}</th>${!['AMZ', 'XDP', 'Stopstart'].includes(fsrc) ? '<th>Special instructions</th>' : ''}`}<th><div class="tracking-method-heading"><span>Delivery<br>method</span><button class="tracking-method-filter ${fclassification.length ? 'on' : ''}" type="button" data-delivery-filter-action="toggle-classification" aria-label="Filter delivery-method classification" aria-haspopup="menu" aria-expanded="false" aria-controls="tracking-classification-menu" title="${esc(fclassification.length ? fclassification.join(', ') : 'Filter delivery-method classification')}">${ico('filter', 16)}</button></div></th>
+        <th>Status</th>${trackingOrderKind() === 'refund' ? (fsrc === 'Stopstart' ? '<th>Special instructions</th>' : '') : fsrc === 'Palletways' ? `<th>${DeliveryFilters.renderBookingHeading('booked_in')}</th><th>${DeliveryFilters.renderBookingHeading('book_in_request')}</th>` : fsrc === 'Stopstart' ? '<th>Special instructions</th>' : '<th>Booking status</th>'}${fsrc === 'Stopstart' ? '<th>Tracking</th>' : ''}
       </tr></thead><tbody id="tb" tabindex="0" role="rowgroup" aria-label="Tracking records, scroll to view more deliveries"></tbody></table>
       <div class="tracking-scroll-overlay" role="scrollbar" tabindex="0" aria-label="Scroll tracking records" aria-controls="tb" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" hidden><span class="tracking-scroll-thumb"></span></div>
     </div>
@@ -455,17 +584,14 @@ function vDel() {
     ${DeliveryFilters.renderClassificationMenu()}${DeliveryFilters.renderBookingMenus()}`;
 }
 
+function palletwaysDepotEligible(delivery) {
+  return delivery.carrier === 'Palletways' && !['Delivered', 'Cancelled', 'Return'].includes(delivery.st) &&
+    delivery.palletwaysDepotStay?.verified &&
+    Date.now() - Date.parse(delivery.palletwaysDepotStay.arrivedAt) > 72 * 3600000;
+}
+
 function deliveryMatchesFilters(delivery) {
-  if (dashboardWidgetFilter === 'palletways-depot-3days') {
-    const stay = delivery.palletwaysDepotStay;
-    if (
-      delivery.carrier !== 'Palletways' ||
-      ['Delivered', 'Cancelled', 'Return'].includes(delivery.st) ||
-      !stay?.verified ||
-      !(Date.now() - Date.parse(stay.arrivedAt) > 72 * 3600000)
-    )
-      return false;
-  }
+  if (dashboardWidgetFilter === 'palletways-depot-3days' && !palletwaysDepotEligible(delivery)) return false;
   if (!filterIncludes(fstore, purchaseChannel(delivery))) return false;
   if (
     !(
@@ -491,15 +617,15 @@ function deliveryMatchesFilters(delivery) {
     delivery.phone,
   ];
   const status =
-    fsrc === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus)
+    trackingOrderKind() === 'refund' && isCreditRefundRecord(delivery) ? refundStatusValue(delivery) : fsrc === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus)
       ? `amazon:${delivery.amazonSheetStatus || delivery.amazonStatus}`
       : fsrc === 'Stopstart' && delivery.stopstartStatus
         ? `stopstart:${delivery.stopstartStatus}`
         : fsrc === 'XDP' && delivery.xdpStatus
           ? `xdp:${delivery.xdpStatus}`
           : fsrc === 'Palletways'
-            ? palletwaysFilterStatus(delivery.palletwaysSheetStatus, trackingStatus(delivery.st))
-            : trackingStatus(delivery.st);
+            ? palletwaysFilterStatus(delivery.palletwaysSheetStatus, palletwaysOwFallback(delivery))
+            : usesGlobalTrackingStatus() ? overallTrackingStatus(delivery) : trackingStatus(delivery.st);
   return (
     filterIncludes(fs, status) &&
     trackingMatchesScope({
@@ -513,9 +639,7 @@ function deliveryMatchesFilters(delivery) {
     (!fclassification.length || fclassification.includes(delivery.deliveryMethodRaw)) &&
     (fsrc !== 'Palletways' ||
       !fbookedIn ||
-      String(delivery.palletwaysSheetBookedIn || '')
-        .trim()
-        .toLowerCase() === fbookedIn) &&
+      palletwaysBookedInFilterValue(delivery) === fbookedIn) &&
     (fsrc !== 'Palletways' ||
       !fbookInRequest ||
       String(delivery.palletwaysSheetBookInRequest || '')
@@ -533,10 +657,11 @@ function deliveryMatchesFilters(delivery) {
 }
 
 async function loadTrackingPage(reset = true) {
-  if (document.body.dataset.live !== 'true' || page !== 'Deliveries') return;
+  if (document.body.dataset.live !== 'true' || !isTrackingPage()) return;
   if (!reset && (trackingLoading || !trackingHasMore)) return;
   const request = ++trackingRequest;
   if (reset) {
+    trackingCreditRefundMatch = null;
     trackingLoadError = false;
     if ($('#tb')) $('#tb').scrollTop = 0;
     trackingOffset = 0;
@@ -551,7 +676,9 @@ async function loadTrackingPage(reset = true) {
     hide_wayfair: TrackingVisibility.wayfairEnabled() ? 1 : '',
     hide_wilko: TrackingVisibility.wilkoEnabled() ? 1 : '',
     hide_palletways_b2b: TrackingVisibility.palletwaysB2bEnabled() ? 1 : '',
-    tracking_related: 1,
+    tracking_related: trackingOrderKind() ? '' : 1,
+    order_kind: trackingOrderKind(),
+    exclude_refunds: page === 'Deliveries' ? 1 : '',
     dashboard_widget: dashboardWidgetFilter,
     q: q.trim(),
     store: fstore,
@@ -562,8 +689,9 @@ async function loadTrackingPage(reset = true) {
     from: fd,
     to: ft,
     general_scope: trackingScope,
+    global_status: usesGlobalTrackingStatus() ? 1 : '',
     today: trackingScope === 'today' ? 1 : '',
-    date_sort: trackingDateSort ? `scheduled_${trackingDateSort}` : '',
+    date_sort: trackingDateSort ? `${trackingDateSortType}_${trackingDateSort}` : '',
     booked_in: fsrc === 'Palletways' ? fbookedIn : '',
     book_in_request: fsrc === 'Palletways' ? fbookInRequest : '',
   };
@@ -581,7 +709,34 @@ async function loadTrackingPage(reset = true) {
   rows();
   try {
     const result = await DeliveryApi.list(params);
-    if (request !== trackingRequest || page !== 'Deliveries') return;
+    if (request !== trackingRequest || !isTrackingPage()) return;
+    if (['refund', 'replacement'].includes(trackingOrderKind()) && /^\d+$/.test(params.q) && !result.orderRelations) {
+      try {
+        const linkedResult = await DeliveryApi.list({ q: params.q, tracking_related: 1, limit: 1 });
+        if (request !== trackingRequest || !isTrackingPage()) return;
+        if (linkedResult.orderRelations) {
+          const allowed = ['Original', 'Secondary Original', 'Earlier Original', ...(trackingOrderKind() === 'refund' ? ['Credit/Refund'] : ['Replacement', 'Later Replacement'])];
+          result.orderRelations = {
+            ...linkedResult.orderRelations,
+            related: (linkedResult.orderRelations.related || []).filter(record => allowed.includes(record.relatedKind)),
+          };
+        }
+      } catch (error) {
+        if (request !== trackingRequest || !isTrackingPage()) return;
+        toast('Linked orders could not be loaded. Search again to retry.');
+      }
+    }
+    // A search result without records under its courier falls back to All methods.
+    if (reset && result.total === 0 && !q.trim() && fsrc &&
+        dashboardSearchHighlight?.page === page &&
+        dashboardSearchHighlight.carrier === fsrc && !dashboardSearchHighlight.fallbackApplied) {
+      dashboardSearchHighlight.fallbackApplied = true;
+      fsrc = '';
+      trackingWidgetFacets = result.filterFacets || null;
+      $('#v').innerHTML = vDel();
+      return loadTrackingPage(true);
+    }
+
     trackingLoaded = reset
       ? result.deliveries
       : [
@@ -591,6 +746,7 @@ async function loadTrackingPage(reset = true) {
         ];
     trackingLoadedQuery = queryKey;
     trackingRelations = result.orderRelations || null;
+    trackingCreditRefundMatch = result.creditRefundMatch || null;
     trackingOffset = offset;
     trackingTotal = result.total;
     trackingHasMore = result.hasMore;
@@ -608,7 +764,7 @@ async function loadTrackingPage(reset = true) {
     if (selectedDelivery && !get(sel)) DeliveryStore.add(selectedDelivery);
     D = DeliveryStore.deliveries();
     if (
-      dashboardWidgetFilter &&
+      (dashboardWidgetFilter || trackingOrderKind()) &&
       result.filterFacets &&
       JSON.stringify(trackingWidgetFacets) !== JSON.stringify(result.filterFacets)
     ) {
@@ -643,9 +799,23 @@ function deliveryItemColumnLabel() {
   return deliveryItemColumn === 'order-date' ? 'Order date created' : 'SKU of items';
 }
 
+function deliveryItemColumnSortAttributes() {
+  if (deliveryItemColumn !== 'order-date') return '';
+  const failed = page === 'Failed Deliveries';
+  const direction = failed ? (failedDateSortType === 'created' ? failedDateSort : '')
+    : trackingDateSortType === 'created' ? trackingDateSort : '';
+  return `aria-sort="${direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : 'none'}"`;
+}
+
 function deliveryItemColumnHeading() {
   const next = deliveryItemColumn === 'order-date' ? 'SKU of items' : 'Order date created';
-  return `<div class="delivery-item-heading"><span>${deliveryItemColumnLabel()}</span><button type="button" class="delivery-item-switch" data-delivery-item-column aria-label="Show ${next}" title="Switch to ${next}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg></button></div>`;
+  const failed = page === 'Failed Deliveries';
+  const direction = failed ? (failedDateSortType === 'created' ? failedDateSort : '')
+    : trackingDateSortType === 'created' ? trackingDateSort : '';
+  const label = deliveryItemColumn === 'order-date'
+    ? `<button class="table-date-sort" type="button" data-table-date-sort="${failed ? 'failed-created' : 'tracking-created'}" aria-label="Sort order date created"><span>${deliveryItemColumnLabel()}</span><span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(direction)}</span></button>`
+    : `<span>${deliveryItemColumnLabel()}</span>`;
+  return `<div class="delivery-item-heading">${label}<button type="button" class="delivery-item-switch" data-delivery-item-column aria-label="Show ${next}" title="Switch to ${next}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></svg></button></div>`;
 }
 
 function deliveryItemColumnCell(delivery) {
@@ -660,17 +830,24 @@ document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-delivery-item-column]');
   if (!button) return;
   event.preventDefault();
+  void swapDeliveryColumn('[data-delivery-item-column]', () => {
   deliveryItemColumn = deliveryItemColumn === 'sku' ? 'order-date' : 'sku';
   try {
     localStorage.setItem('atlas-delivery-item-column', deliveryItemColumn);
   } catch {}
   document.querySelectorAll('[data-delivery-item-column]').forEach((control) => {
-    control.closest('th').innerHTML = deliveryItemColumnHeading();
+    const header = control.closest('th');
+    header.innerHTML = deliveryItemColumnHeading();
+    if (deliveryItemColumn === 'sku') header.removeAttribute('aria-sort');
+    else {
+      const direction = page === 'Failed Deliveries'
+        ? (failedDateSortType === 'created' ? failedDateSort : '')
+        : trackingDateSortType === 'created' ? trackingDateSort : '';
+      header.setAttribute('aria-sort', direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : 'none');
+    }
   });
   rows();
   failedRows();
-  document.querySelector('[data-delivery-item-column]')?.focus({
-    preventScroll: true,
   });
 });
 
@@ -794,7 +971,7 @@ function trackingOrderFlowMarkup(relations, options = {}) {
           ? 'Credit/Refund'
           : 'Replacement'
         : 'Order';
-      const canOpenDetails = delivery.canOpenDetails !== false;
+      const canOpenDetails = options.dashboardOrders || delivery.canOpenDetails !== false;
       const status =
         delivery.st ||
         delivery.palletwaysSheetStatus ||
@@ -819,7 +996,7 @@ function trackingOrderFlowMarkup(relations, options = {}) {
         return shortened ? line.slice(0, statusLineLength - 3) + '\u2026' : line;
       });
       const statusMarkup = `<text class="order-flow-status" x="${x + nodeWidth / 2}" y="${y + (options.compact ? 61 : 82)}" text-anchor="middle"><title>${esc(status)}</title>${visibleLines.map((line, index) => `<tspan x="${x + nodeWidth / 2}" dy="${index ? 15 : 0}">${esc(line)}</tspan>`).join('')}</text>`;
-      return `<g class="order-flow-node${searched ? ' is-searched' : ''}" data-flow-order="${esc(id)}" data-flow-kind="${esc(orderType)}" data-flow-searched="${searched}" ${canOpenDetails ? `role="button" tabindex="0" data-flow-open="${esc(id)}"` : 'role="group"'} aria-label="${canOpenDetails ? 'Open details for order' : 'Order'} ${esc(id)}, ${esc(status)}${searched ? ', searched order' : ''}${canOpenDetails ? '' : ', delivery details unavailable'}"><rect x="${x}" y="${y}" width="${nodeWidth}" height="${boxHeight}" rx="${options.compact ? 8 : 11}"/><text class="order-flow-id" x="${x + nodeWidth / 2}" y="${y + (options.compact ? 18 : 26)}" text-anchor="middle">${esc(id)}</text><text class="order-flow-node-label" x="${x + nodeWidth / 2}" y="${y + (options.compact ? 34 : 46)}" text-anchor="middle">${esc(orderType)}</text>${statusMarkup}</g>`;
+      return `<g class="order-flow-node${searched ? ' is-searched' : ''}" data-flow-order="${esc(id)}" data-flow-kind="${esc(orderType)}" data-flow-searched="${searched}" ${canOpenDetails ? `role="button" tabindex="0" ${options.dashboardOrders ? 'data-dash-order' : 'data-flow-open'}="${esc(id)}"` : 'role="group"'} aria-label="${canOpenDetails ? 'Open details for order' : 'Order'} ${esc(id)}, ${esc(status)}${searched ? ', searched order' : ''}${canOpenDetails ? '' : ', delivery details unavailable'}"><rect x="${x}" y="${y}" width="${nodeWidth}" height="${boxHeight}" rx="${options.compact ? 8 : 11}"/><text class="order-flow-id" x="${x + nodeWidth / 2}" y="${y + (options.compact ? 18 : 26)}" text-anchor="middle">${esc(id)}</text><text class="order-flow-node-label" x="${x + nodeWidth / 2}" y="${y + (options.compact ? 34 : 46)}" text-anchor="middle">${esc(orderType)}</text>${statusMarkup}</g>`;
     })
     .join('');
   const header = `<div class="order-flow-heading"><h3>Order link flow</h3><span><i aria-hidden="true"></i> Searched order</span></div><p>Follow the arrows from the original order to its replacement or credit/refund.</p>`;
@@ -855,6 +1032,7 @@ function trackingRelatedMarkup(relations) {
     return `${level}${suffix}`;
   };
   const section = (kind, title, description, records) => {
+    if (page === 'Deliveries' && kind === 'Credit/Refund') return '';
     if (!records.length) return '';
     const heading = `<tr class="tracking-related-heading" data-related-kind="${esc(kind)}"><td colspan="20"><span>${ico('note', 18)}${esc(title)} <strong>${records.length}</strong></span><small>${esc(description)}</small></td></tr>`;
     return heading + records.map((delivery) => deliveryListRow(delivery, true)).join('');
@@ -926,7 +1104,8 @@ function trackingOrderTypeMarkup(delivery) {
 
 function deliveryListRow(delivery, related = false) {
   related = related === true;
-  const canOpen = !related || delivery.canOpenDetails;
+  const canOpen = (trackingOrderKind() === 'refund' && isCreditRefundRecord(delivery)) ||
+    (delivery.canOpenDetails !== false && (!related || delivery.canOpenDetails));
   const stopstartUrl =
     delivery.carrier === 'Stopstart' &&
     String(delivery.stopstartTrackability || '')
@@ -941,10 +1120,12 @@ function deliveryListRow(delivery, related = false) {
   const followUpNotice = courierIssueFollowUpNotice(delivery);
   const storeLogo = purchaseStoreLogo(delivery, 'purchase-store-logo-tracking');
   const isSearchedOrder =
-    /^\d{1,20}$/.test(q.trim()) && String(delivery.order || delivery.id) === q.trim();
-  return `<tr class="${canOpen ? 'tracking-row' : ''}${related ? ' tracking-related-row' : ''}${isSearchedOrder ? ' tracking-searched-row' : ''}" ${related ? `data-related-kind="${esc(delivery.relatedKind)}"` : ''} ${canOpen ? `tabindex="0" data-delivery-id="${esc(delivery.id)}" aria-label="Open details for ${esc(delivery.order)}"` : ''} data-status="${esc(trackingStatus(delivery.st))}">
-    <td><span class="tracking-order-number"><strong>${esc(delivery.order || '—')}</strong>${delivery.order ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(delivery.order)}" aria-label="Copy order number ${esc(delivery.order)}" title="Copy order number">${ico('copy', 13, 1.8)}</button>` : ''}</span>${trackingOrderTypeMarkup(delivery)}</td>
-    <td><span class="tracking-order-number tracking-order-reference"><span class="tracking-order-value">${esc(delivery.orderRef || delivery.orderReference || '—')}</span>${delivery.orderRef || delivery.orderReference ? `<button type="button" class="qd-customer-copy" data-copy-order-reference="${esc(delivery.orderRef || delivery.orderReference)}" aria-label="Copy order reference ${esc(delivery.orderRef || delivery.orderReference)}" title="Copy order reference">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>
+    /^\d{1,20}$/.test(q.trim()) && String(delivery.order || delivery.id) === q.trim() &&
+    !(page === 'Deliveries' && dashboardSearchHighlight?.order === q.trim());
+  return `<tr class="${canOpen ? 'tracking-row' : ''}${related ? ' tracking-related-row' : ''}${isSearchedOrder ? ' tracking-searched-row' : ''}" ${related ? `data-related-kind="${esc(delivery.relatedKind)}"` : ''} ${canOpen ? `tabindex="0" data-delivery-id="${esc(delivery.id)}" aria-label="Open details for ${esc(delivery.order)}"` : ''} data-status="${esc(trackingStatus(carrierBadgeStatus(delivery)))}">
+    <td><span class="tracking-order-number"><strong>${esc(delivery.order || '—')}</strong>${delivery.order ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(delivery.order)}" aria-label="Copy order number ${esc(delivery.order)}" title="Copy order number">${ico('copy', 13, 1.8)}</button>` : ''}</span>${trackingOrderTypeMarkup(delivery)}${trackingOrderKind() === 'replacement' ? `<div class="replacement-order-reference">${replacementBadge(delivery)}</div>` : trackingOrderKind() === 'refund' ? `<div class="replacement-order-reference">${creditRefundBadge(delivery)}${delivery.originalOrder ? `<small class="refund-original-order">Original order <strong>${esc(delivery.originalOrder)}</strong></small>` : ''}</div>` : ''}</td>
+    ${trackingOrderKind() === 'replacement' ? `<td title="Sales Activity column N: Original order Number"><span class="tracking-order-number"><span>${esc(delivery.originalOrder || '\u2014')}</span>${delivery.originalOrder ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(delivery.originalOrder)}" aria-label="Copy original order number ${esc(delivery.originalOrder)}" title="Copy original order number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>` : `<td><span class="tracking-order-number tracking-order-reference"><span class="tracking-order-value">${esc(delivery.orderRef || delivery.orderReference || '—')}</span>${canCopyOrderReference(delivery.orderRef || delivery.orderReference) ? `<button type="button" class="qd-customer-copy" data-copy-order-reference="${esc(delivery.orderRef || delivery.orderReference)}" aria-label="Copy order reference ${esc(delivery.orderRef || delivery.orderReference)}" title="Copy order reference">${ico('copy', 13, 1.8)}</button>` : ''}</span>${replacementBadge(delivery)}</td>`}
+    ${trackingOrderKind() === 'refund' ? `<td class="tracking-refund-amount" title="Sales Activity column R: Gross (base)">${isCreditRefundRecord(delivery) ? esc(refundAmountLabel(delivery)) : '\u2014'}</td>` : ''}
     <td><div class="tracking-customer-box${storeLogo ? ' has-store-logo' : ''}">${storeLogo}<strong class="tracking-cell-line">${esc(delivery.cust || '—')}</strong>${contact.length ? contact.map((value) => `<span class="tracking-cell-line tracking-customer-contact">${esc(value)}</span>`).join('') : ''}</div></td>
     ${
       fsrc === 'Palletways'
@@ -952,27 +1133,29 @@ function deliveryListRow(delivery, related = false) {
     <td class="tracking-palletways-number">${palletwaysNumberCell(delivery)}</td>
     ${deliveryItemColumnCell(delivery)}
     <td>${esc(postcode || '—')}</td>
-    <td>${esc(delivery.date ? hd(delivery.date) : '—')}${delivery.amazonScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.amazonScheduledAt))} UK time</small>` : delivery.providerScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.providerScheduledAt) || optimoTime(delivery.providerScheduledAt))}</small>` : ''}${delivery.eta ? `<small class="tracking-cell-line mut">ETA ${esc(optimoClock(delivery.eta) || optimoTime(delivery.eta))}</small>` : ''}</td>
+    <td>${trackingDateCell(delivery)}</td>
     `
         : `
     ${fsrc === 'XDP' ? `<td><span class="tracking-order-number"><span>${esc(delivery.xdpConsignmentNo || '\u2014')}</span>${delivery.xdpConsignmentNo ? `<button type="button" class="qd-customer-copy" data-copy-consignment-number="${esc(delivery.xdpConsignmentNo)}" aria-label="Copy consignment number ${esc(delivery.xdpConsignmentNo)}" title="Copy consignment number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>` : ''}
     ${fsrc === 'AMZ' ? `<td><span class="tracking-order-number"><span>${esc(delivery.owTrackingNo || '\u2014')}</span>${delivery.owTrackingNo ? `<button type="button" class="qd-customer-copy" data-copy-amazon-tracking="${esc(delivery.owTrackingNo)}" aria-label="Copy tracking ID ${esc(delivery.owTrackingNo)}" title="Copy tracking ID">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>` : ''}
     ${deliveryItemColumnCell(delivery)}
     <td>${esc(postcode || '—')}</td>
-    <td>${esc(delivery.date ? hd(delivery.date) : '—')}${delivery.amazonScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.amazonScheduledAt))} UK time</small>` : delivery.providerScheduledAt ? `<small class="tracking-cell-line mut">Scheduled ${esc(optimoClock(delivery.providerScheduledAt) || optimoTime(delivery.providerScheduledAt))}</small>` : ''}${delivery.eta ? `<small class="tracking-cell-line mut">ETA ${esc(optimoClock(delivery.eta) || optimoTime(delivery.eta))}</small>` : ''}</td>
-    ${!['AMZ', 'XDP', 'Stopstart'].includes(fsrc) ? `<td>${esc(delivery.specialInstructions || delivery.instructions || '—')}</td>` : ''}
+    <td>${trackingDateCell(delivery)}</td>
+    ${!['AMZ', 'XDP', 'Stopstart'].includes(fsrc) ? `<td>${specialInstructionsMarkup(delivery.specialInstructions || delivery.instructions)}</td>` : ''}
     `
     }
     <td>${esc(delivery.carrier ? carName(delivery.carrier) : '\u2014')}${delivery.deliveryMethodRaw ? `<small class="tracking-cell-line mut">${esc(delivery.deliveryMethodRaw)}</small>` : ''}</td>
-    <td class="tracking-status-cell" title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && delivery.relatedKind === 'Credit/Refund' ? esc(delivery.rawStatus || '\u2014') : related && !delivery.st ? '\u2014' : stat(delivery.st, carrierStatusLabel(delivery))}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${depotDelayLabel(delivery) ? `<small class="tracking-cell-line status-followup-warning">${esc(depotDelayLabel(delivery))}</small>` : ''}${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
+    <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''} title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && !delivery.st && !isCreditRefundRecord(delivery) ? '\u2014' : stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${depotDelayLabel(delivery) ? `<small class="tracking-cell-line status-followup-warning">${esc(depotDelayLabel(delivery))}</small>` : ''}${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
     ${
-      fsrc === 'Palletways'
+      trackingOrderKind() === 'refund'
+        ? (fsrc === 'Stopstart' ? `<td>${specialInstructionsMarkup(delivery.specialInstructions || delivery.instructions)}</td>` : '')
+        : fsrc === 'Palletways'
         ? `
-    <td class="tracking-booked-in-cell" title="Palletways sheet column Z">${esc(delivery.palletwaysSheetBookedIn || '\u2014')}</td>
+    <td class="tracking-booked-in-cell" title="Palletways sheet: Z (Booked In), BT (Book In Date), BU (Book In Time)">${palletwaysBookedInCell(delivery)}</td>
     <td title="Palletways sheet column AA">${esc(delivery.palletwaysSheetBookInRequest || '\u2014')}</td>
     `
         : fsrc === 'Stopstart'
-          ? `<td>${esc(delivery.specialInstructions || delivery.instructions || '\u2014')}</td>`
+          ? `<td>${specialInstructionsMarkup(delivery.specialInstructions || delivery.instructions)}</td>`
           : `<td title="${delivery.bookingStatusSource === 'Routine Dashboard - Live' ? 'Routine Dashboard - Live · E' : 'Routine Dashboard · Status'}">${esc(delivery.bookingStatus || '—')}</td>`
     }
     ${fsrc === 'Stopstart' ? `<td>${stopstartUrl ? `<a class="stopstart-tracking-link" href="${esc(stopstartUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open Stopstart tracking for order ${esc(delivery.order)}">Open tracking ${ico('right', 14)}</a>` : '\u2014'}</td>` : ''}
@@ -1108,11 +1291,65 @@ const TrackingScrollbar = (() => {
   };
 })();
 
+let linkedOrderFocusRequest = 0;
+async function openLinkedOrderRow(id) {
+  const record = get(id);
+  const kind = trackingOrderKind();
+  const linkedRecord = kind === 'refund' ? isCreditRefundRecord(record)
+    : kind === 'replacement' && orderRecordType(record) === 'Replacement';
+  if (!linkedRecord) { op(id); return; }
+  const order = String(record.order || id);
+  if (q.trim() === order && trackingRelations?.order === order) { op(id); return; }
+  const request = ++linkedOrderFocusRequest;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  op(id);
+  const others = [...document.querySelectorAll('#tb > tr')].filter(row => row.dataset.deliveryId !== String(id));
+  if (!reducedMotion) {
+    await Promise.allSettled(others.map(row => row.animate(
+      [{ opacity: 1 }, { opacity: 0, transform: 'translateY(4px)' }],
+      { duration: 200, easing: 'ease-out', fill: 'forwards' },
+    ).finished));
+  }
+  if (request !== linkedOrderFocusRequest || trackingOrderKind() !== kind) return;
+  q = order;
+  dashboardSelectedId = id;
+  const input = document.getElementById('q');
+  if (input) input.value = order;
+  if (document.body.dataset.live === 'true') await loadTrackingPage(true);
+  else rows();
+  if (request !== linkedOrderFocusRequest || trackingOrderKind() !== kind || q !== order) return;
+  if (!reducedMotion) document.querySelectorAll('#tb [data-related-kind]').forEach(row => {
+    row.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 320, easing: 'ease-out' });
+  });
+}
+
+function trackingCreditRefundNotice() {
+  const match = trackingCreditRefundMatch;
+  if (page !== 'Deliveries' || trackingLoading || !match || String(match.order || match.id) !== q.trim()) return '';
+  return `<tr><td colspan="20" class="tracking-empty tracking-refund-notice">
+    <section class="refund-discovery" role="link" tabindex="0" data-view-credit-refund="${esc(match.id || match.order)}" aria-label="View credit/refund order ${esc(match.order || match.id)}">
+      <div class="refund-discovery-glow" aria-hidden="true"></div>
+      <div class="refund-discovery-symbol" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle class="refund-discovery-orbit" cx="32" cy="32" r="27" stroke-dasharray="3 7"/><circle cx="32" cy="32" r="18"/><path class="refund-discovery-currency" d="M38 24h-9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8h-9m6-20v24"/><path d="m7 15 1-8 8 1M8 8l6 6"/></svg>
+      </div>
+      <div class="refund-discovery-copy">
+        <div class="refund-discovery-eyebrow"><span class="refund-discovery-dot"></span>Credit / Refund found<span class="refund-discovery-order">#${esc(match.order || match.id)}</span></div>
+        <h3>It looks like this is a credit/refund order.</h3>
+        <p>Click anywhere here to view it on the Credit/Refund page.</p>
+      </div>
+      <span class="refund-discovery-link-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+    </section>
+  </td></tr>`;
+
+}
+
 function rows() {
   const live = document.body.dataset.live === 'true';
   const deliveries = live
     ? trackingLoaded.filter(
         (delivery) =>
+          (page !== 'Deliveries' || !isCreditRefundRecord(delivery)) &&
           TrackingVisibility.includesOrderType(delivery.salesActivityDetails?.['Order Type']) &&
           TrackingVisibility.includesCarrier(delivery.carrier) &&
           TrackingVisibility.includesStore(purchaseChannel(delivery)) &&
@@ -1122,13 +1359,16 @@ function rows() {
           ),
       )
     : sortDeliveriesByDate(
-        D.filter(deliveryMatchesFilters),
+        exactOrderMatches(D, q).filter(delivery => (page !== 'Deliveries' || !isCreditRefundRecord(delivery)) && (!trackingOrderKind() || (delivery.orderRelationKind || delivery.relatedKind) === (trackingOrderKind() === 'replacement' ? 'Replacement' : 'Credit/Refund')) && deliveryMatchesFilters(delivery)),
         trackingDateSort,
-        (delivery) => delivery.date,
+        (delivery) => trackingDateSortType === 'created' ? orderCreatedDate(delivery) : trackingDateSortType === 'dispatch'
+          ? delivery.dispatchDate || delivery.carrierIssueDispatchDate || ''
+          : delivery.date,
       );
   const selectedDelivery =
     sel &&
     dashboardSelectedId === sel &&
+    (page !== 'Deliveries' || !isCreditRefundRecord(get(sel))) &&
     TrackingVisibility.includesOrderType(get(sel)?.salesActivityDetails?.['Order Type']) &&
     TrackingVisibility.includesCarrier(get(sel)?.carrier) &&
     TrackingVisibility.includesStore(purchaseChannel(get(sel))) &&
@@ -1157,7 +1397,12 @@ function rows() {
   const linkedIds = new Set(
     relations ? [relations.order, ...relations.related.map((delivery) => delivery.id)] : [],
   );
-  const content = relations
+  const refundOriginalSearch = !relations && trackingOrderKind() === 'refund' && /^\d+$/.test(q.trim()) &&
+    visibleDeliveries.some(delivery => String(delivery.originalOrder || '') === q.trim()) &&
+    !visibleDeliveries.some(delivery => String(delivery.order || delivery.id) === q.trim());
+  const content = refundOriginalSearch
+    ? trackingRelatedMarkup({ order: q.trim(), related: visibleDeliveries.map(delivery => ({ ...delivery, relatedKind: 'Credit/Refund' })) })
+    : relations
     ? (relations.original
         ? deliveryListRow(relations.original, relations.original.canOpenDetails === false)
         : '') +
@@ -1167,9 +1412,10 @@ function rows() {
         .map(deliveryListRow)
         .join('')
     : visibleDeliveries.map(deliveryListRow).join('');
-  list.innerHTML = content
-    ? content
-    : `<tr><td colspan="10" class="tracking-empty" ${live && (trackingLoading || !liveReady) ? 'role="status"' : ''}>${live && (trackingLoading || !liveReady) ? 'Loading deliveries…' : emptyMessage}</td></tr>`;
+  const displayedContent = trackingCreditRefundNotice() || content;
+  renderDeliveryRows(list, displayedContent
+    ? displayedContent
+    : `<tr><td colspan="10" class="tracking-empty" ${live && (trackingLoading || !liveReady) ? 'role="status"' : ''}>${live && (trackingLoading || !liveReady) ? 'Loading deliveries…' : emptyMessage}</td></tr>`);
   const flowContainer = $('#tracking-order-flow');
   if (flowContainer) {
     const flowMarkup = trackingOrderFlowMarkup(relations);
@@ -1178,6 +1424,24 @@ function rows() {
   }
   list.scrollTop = scrollTop;
   syncSelectedTrackingRow();
+  if (dashboardSearchHighlight?.page === page && !q.trim() && dashboardSearchHighlight.id === String(sel)) {
+    const elapsed = performance.now() - dashboardSearchHighlight.startedAt;
+    const row = [...list.querySelectorAll('[data-delivery-id]')].find(
+      node => node.dataset.deliveryId === dashboardSearchHighlight.id,
+    );
+    if (row && elapsed < 2600) {
+      row.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        row.querySelectorAll('td').forEach(cell => {
+          const animation = cell.animate(
+            [{ backgroundColor: '#a8e8bd' }, { backgroundColor: getComputedStyle(cell).backgroundColor }],
+            { duration: 2600, easing: 'ease-out' },
+          );
+          animation.currentTime = elapsed;
+        });
+      }
+    }
+  }
   TrackingScrollbar.attach();
   list.setAttribute('aria-busy', String(live && trackingLoading));
   const footer = $('#tracking-list-footer');
@@ -1238,21 +1502,23 @@ function failedScheduledLabel() {
   return failedScheduledFrom ? `From ${hd(failedScheduledFrom)}` : `To ${hd(failedScheduledTo)}`;
 }
 
+function failedCombinedDateLabel() {
+  const failed = Boolean(failedDateFrom || failedDateTo);
+  const scheduled = Boolean(failedScheduledFrom || failedScheduledTo);
+  if (failed && scheduled) return '2 date ranges';
+  return failed ? failedDateLabel() : scheduled ? failedScheduledLabel() : 'Delivery date';
+}
+
 function closeFailedDateFilter() {
-  for (const [menuId, triggerId] of [
-    ['fdpn', 'fdbtn'],
-    ['fspn', 'fsbtn'],
-  ]) {
-    const menu = $(`#${menuId}`);
-    const trigger = $(`#${triggerId}`);
-    if (menu) menu.hidden = true;
-    if (trigger) trigger.setAttribute('aria-expanded', 'false');
-  }
+  const menu = $('#fdpn'), trigger = $('#fdbtn');
+  if (menu) menu.hidden = true;
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
 }
 
 function failedDeliveryVisible(delivery) {
   return (
     Boolean(delivery) &&
+    !isCreditRefundRecord(delivery) && isGlobalException(delivery) &&
     TrackingVisibility.includesOrderType(delivery.salesActivityDetails?.['Order Type']) &&
     TrackingVisibility.includesCarrier(delivery.carrier) &&
     TrackingVisibility.includesStore(purchaseChannel(delivery)) &&
@@ -1295,7 +1561,7 @@ async function loadFailedPage(reset = true) {
     failedLoaded = canUsePreview
       ? (liveSummary?.failedPreview || []).filter(
           (delivery) =>
-            ['Failed', 'Rejected'].includes(trackingStatus(delivery.st)) &&
+            isGlobalException(delivery) &&
             failedDeliveryVisible(delivery),
         )
       : [];
@@ -1322,14 +1588,14 @@ async function loadFailedPage(reset = true) {
       general_scope: failedScope,
       store: failedStore,
       status: failedStatus,
-      courier_status: 1,
+      courier_status: failedCarrier ? 1 : '',
       carrier: failedCarrier,
       q: failedSearch.trim(),
       from: failedDateFrom,
       to: failedDateTo,
       scheduled_from: failedScheduledFrom,
       scheduled_to: failedScheduledTo,
-      date_sort: failedDateSort ? `issue_${failedDateSort}` : '',
+      date_sort: failedDateSort ? `${failedDateSortType}_${failedDateSort}` : '',
     });
     if (request !== failedRequest || page !== 'Failed Deliveries') return;
     failedLoaded = reset
@@ -1373,11 +1639,12 @@ async function loadFailedPage(reset = true) {
 
 function failedFilterFacets() {
   return trackingFilterFacets().filter((item) =>
-    ['Failed', 'Rejected'].includes(trackingStatus(item.status)),
+    !item.creditRefund && isGlobalException(item),
   );
 }
 
 function failedStatusKey(item) {
+  if (!failedCarrier) return overallTrackingStatus(item);
   if (item.carrier === 'AMZ' && (item.amazonSheetStatus || item.amazonStatus))
     return `amazon:${item.amazonSheetStatus || item.amazonStatus}`;
   if (item.carrier === 'XDP' && item.xdpStatus) return `xdp:${item.xdpStatus}`;
@@ -1385,7 +1652,7 @@ function failedStatusKey(item) {
     return `palletways:${item.palletwaysSheetStatus}`;
   if (item.carrier === 'Stopstart' && item.stopstartStatus)
     return `stopstart:${item.stopstartStatus}`;
-  return trackingStatus(item.st || item.status);
+  return overallTrackingStatus(item);
 }
 
 function availableFailedStatuses() {
@@ -1395,7 +1662,7 @@ function availableFailedStatuses() {
       (item) =>
         trackingMatchesScope(item, failedScope) &&
         matchesDeliveryCarrier(item.carrier, failedCarrier) &&
-        (!failedStore || item.purchaseStore === failedStore),
+        filterIncludes(failedStore, item.purchaseStore),
     )
     .forEach((item) => {
       const key = failedStatusKey(item);
@@ -1434,78 +1701,51 @@ function availableFailedStores() {
   return PURCHASE_STORES.filter((store) => present.has(store));
 }
 
+function failedCategoryOptions() {
+  const facets = failedFilterFacets().filter(item => matchesDeliveryCarrier(item.carrier, failedCarrier) &&
+    filterIncludes(failedStore, item.purchaseStore));
+  return TRACKING_SCOPE_OPTIONS.filter(([value]) => value !== 'hygienic' || !TrackingVisibility.enabled())
+    .map(([value, label]) => [value, label, facets.filter(item => trackingMatchesScope(item, value)).reduce((sum, item) => sum + item.count, 0)])
+    .filter(([value, , count]) => !value || count > 0 || filterValues(failedScope).includes(value))
+    .map(([value, label, count]) => [value, value ? `${label} (${count})` : 'All categories']);
+}
+
 function failedScopeMarkup() {
-  const facets = failedFilterFacets();
-  const scoped = facets.filter((item) => trackingMatchesScope(item, failedScope));
+  const facets = failedFilterFacets().filter(item => trackingMatchesScope(item, failedScope));
+  const nonDelivery = new Set([...TRACKING_GENERAL_OPTIONS, ...TRACKING_SCOPE_OPTIONS].map(([value]) => value).filter(value => value && value !== 'today' && value !== 'hygienic'));
   const counts = {};
-  scoped.forEach((item) => {
-    if (
-      TRACKING_GENERAL_OPTIONS.some(
-        ([value]) => value && value !== 'today' && value === item.carrier,
-      )
-    )
-      return;
-    const carrier = SELF_DELIVERY_CARRIERS.includes(item.carrier)
-      ? SELF_DELIVERY_GROUP
-      : item.carrier;
+  facets.forEach(item => {
+    if (!item.carrier || nonDelivery.has(item.carrier)) return;
+    const carrier = SELF_DELIVERY_CARRIERS.includes(item.carrier) ? SELF_DELIVERY_GROUP : item.carrier;
     counts[carrier] = (counts[carrier] || 0) + item.count;
   });
-  const tab = (value, label, count, general = false) =>
-    `<button class="fx-tab ${(general ? failedScope : failedCarrier) === value ? 'on' : ''}" type="button" role="tab" aria-selected="${(general ? failedScope : failedCarrier) === value}" ${general ? 'data-failed-scope' : 'data-failed-method'}="${esc(value)}"><span class="scope-option-label">${esc(label)}</span><span>${count}</span></button>`;
-  const methods = Object.entries(counts).filter(([, count]) => count > 0);
-  const courierOrder = ['Palletways', 'AMZ', 'XDP', 'Stopstart', 'Yodel', 'Wayfair'];
+  const courierOrder = [SELF_DELIVERY_GROUP, 'Palletways', 'AMZ', 'XDP', 'Stopstart', 'Yodel', 'Wayfair'];
+  const methods = Object.entries(counts).filter(([, count]) => count > 0)
+    .sort(([first], [second]) => (courierOrder.indexOf(first) < 0 ? 99 : courierOrder.indexOf(first)) - (courierOrder.indexOf(second) < 0 ? 99 : courierOrder.indexOf(second)));
   return `<div class="delivery-scope-row tracking-scope-sections failed-scope-sections">
-    <section class="tracking-scope-section tracking-general-section" aria-label="General & non-delivery">
-      <h3 class="tracking-scope-heading">General &amp; non-delivery</h3>
-      <div class="fx-tabs" role="tablist" aria-label="General & non-delivery">${TRACKING_GENERAL_OPTIONS.filter(
-        ([value]) => value !== 'hygienic' || !TrackingVisibility.enabled(),
-      )
-        .map(([value, label]) =>
-          tab(
-            value,
-            label,
-            facets
-              .filter((item) => trackingMatchesScope(item, value))
-              .reduce((sum, item) => sum + item.count, 0),
-            true,
-          ),
-        )
-        .join('')}</div>
-    </section>
     <section class="tracking-scope-section" aria-label="Delivery methods">
       <h3 class="tracking-scope-heading">Delivery methods</h3>
-      <div class="fx-tabs" role="tablist" aria-label="Delivery methods">${tab(
-        '',
-        'All methods',
-        scoped.reduce((sum, item) => sum + item.count, 0),
-      )}${methods
-        .filter(([value]) => !courierAssets[value] && value !== SELF_DELIVERY_GROUP)
-        .map(([value, count]) => tab(value, value, count))
-        .join('')}</div>
-      <div class="tracking-courier-grid" role="tablist" aria-label="Courier delivery methods">
-        ${counts[SELF_DELIVERY_GROUP] ? selfDeliveryCourierCard(counts[SELF_DELIVERY_GROUP], failedCarrier === SELF_DELIVERY_GROUP, true) : ''}
-        ${methods
-          .filter(([value]) => courierAssets[value])
-          .sort(([a], [b]) => courierOrder.indexOf(a) - courierOrder.indexOf(b))
-          .map(
-            ([value, count]) =>
-              `<button class="tracking-courier-card fx-tab ${value === failedCarrier ? 'on' : ''}" type="button" role="tab" aria-selected="${value === failedCarrier}" aria-label="${esc(value === 'AMZ' ? 'Amazon Shipping' : value)}, ${count} deliveries" data-failed-method="${esc(value)}" style="--courier-brand-color:${courierAssets[value][1]}"><span class="tracking-courier-logo"><img src="/assets/${courierAssets[value][0]}" alt="" width="1920" height="600" decoding="async"></span><span class="tracking-courier-count">${count}</span></button>`,
-          )
-          .join('')}
-      </div>
+      <div class="fx-tabs" role="tablist" aria-label="Delivery methods"><button class="fx-tab ${!failedCarrier ? 'on' : ''}" type="button" role="tab" aria-selected="${!failedCarrier}" data-failed-method=""><span class="scope-option-label">All methods</span><span>${facets.reduce((sum, item) => sum + item.count, 0)}</span></button></div>
+      <div class="tracking-courier-grid" role="tablist" aria-label="Courier delivery methods">${methods.map(([value, count]) => {
+        if (value === SELF_DELIVERY_GROUP) return selfDeliveryCourierCard(count, failedCarrier === value, true);
+        const asset = courierAssets[value];
+        const label = value === 'AMZ' ? 'Amazon Shipping' : value;
+        return `<button class="tracking-courier-card fx-tab ${value === failedCarrier ? 'on' : ''}" type="button" role="tab" aria-selected="${value === failedCarrier}" aria-label="${esc(label)}, ${count} deliveries" data-failed-method="${esc(value)}" style="--courier-brand-color:${asset?.[1] || 'var(--atlas-indigo)'}"><span class="tracking-courier-logo">${asset ? `<img src="/assets/${asset[0]}" alt="" width="110" height="35" decoding="async">` : `${ico('truck', 24)}<span>${esc(label)}</span>`}</span><span class="tracking-courier-count">${count}</span></button>`;
+      }).join('')}</div>
     </section>
   </div>`;
 }
 
 function vFail() {
   const stores = availableFailedStores();
-  if (failedStore && !stores.includes(failedStore)) failedStore = '';
+  failedStore = compactFilter(filterValues(failedStore).filter(value => stores.includes(value)));
   const statuses = availableFailedStatuses();
-  if (failedStatus && !statuses.some(([value]) => value === failedStatus)) failedStatus = '';
+  const categories = failedCategoryOptions();
+  failedStatus = compactFilter(filterValues(failedStatus).filter(value => statuses.some(([status]) => status === value)));
   return `<div class="delivery-page-head"><h2 class="fx-title">Failed Deliveries</h2></div>
-    <p class="failed-page-note">Current failed and rejected deliveries.</p>
+    <p class="failed-page-note">Current global Failed, Rejected and Lost deliveries.</p>
     ${failedScopeMarkup()}
-    <div class="bar failed-toolbar delivery-filters">
+    <div class="bar delivery-filters">
       <label class="delivery-search">
         ${ico('search', 18)}
         <input id="failed-search" type="search" aria-label="Search failed deliveries" placeholder="Search delivery" value="${esc(failedSearch)}">
@@ -1517,6 +1757,8 @@ function vFail() {
         {
           ariaLabel: 'Filter by store',
           className: 'delivery-store-select',
+          multiple: true,
+          selectionLabel: 'stores selected',
           onChange: (value) => {
             failedStore = value;
             failedStatus = '';
@@ -1524,45 +1766,40 @@ function vFail() {
           },
         },
       )}
+      ${categories.length > 1 ? UiSelect.render('failed-scope-value', failedScope, categories, {
+        ariaLabel: 'Filter categories', className: 'delivery-scope-select', multiple: true,
+        selectionLabel: 'categories selected',
+        onChange: value => { failedScope = value; failedStatus = ''; dashboardSelectedId = null; R(); },
+      }) : ''}
       ${UiSelect.render('failed-status-value', failedStatus, [['', 'All statuses'], ...statuses], {
-        ariaLabel: 'Filter by status',
-        className: 'delivery-select',
-        onChange: (value) => {
-          failedStatus = value;
-          R();
-        },
+        ariaLabel: 'Filter by status', className: 'delivery-select', multiple: true,
+        selectionLabel: 'statuses selected',
+        onChange: value => { failedStatus = value; dashboardSelectedId = null; R(); },
       })}
       <div class="ui-select delivery-date-select" data-failed-date-filter>
-        <button class="ui-select-trigger" id="fdbtn" type="button" aria-expanded="false" aria-label="Filter by failed or issue date" data-failed-toggle-date>
-          <span class="ui-select-label">${esc(failedDateLabel())}</span>
-          <span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span>
+        <button class="ui-select-trigger" id="fdbtn" type="button" aria-expanded="false" aria-label="Filter by delivery date" data-failed-toggle-date>
+          <span class="ui-select-label">${esc(failedCombinedDateLabel())}</span><span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span>
         </button>
         <div class="ui-select-menu ui-date-menu" id="fdpn" hidden>
+          <span class="failed-date-heading">Failed / issue date</span>
           <div class="delivery-date-fields">
             <label><span>From</span><input id="failed-date-from" type="date" aria-label="Failed or issue date from" value="${esc(failedDateFrom)}"></label>
             <label><span>To</span><input id="failed-date-to" type="date" aria-label="Failed or issue date to" value="${esc(failedDateTo)}"></label>
           </div>
-          <button class="delivery-date-clear" type="button" data-failed-clear-dates>Clear dates</button>
-        </div>
-      </div>
-      <div class="ui-select delivery-date-select" data-failed-date-filter>
-        <button class="ui-select-trigger" id="fsbtn" type="button" aria-expanded="false" aria-label="Filter by scheduled date" data-failed-toggle-date="scheduled">
-          <span class="ui-select-label">${esc(failedScheduledLabel())}</span>
-          <span class="ui-select-chevron">${ico('chevdown', 16, 2)}</span>
-        </button>
-        <div class="ui-select-menu ui-date-menu" id="fspn" hidden>
+          <button class="delivery-date-clear" type="button" data-failed-clear-dates>Clear failed dates</button>
+          <span class="failed-date-heading">Scheduled date</span>
           <div class="delivery-date-fields">
             <label><span>From</span><input id="failed-scheduled-from" type="date" aria-label="Scheduled date from" value="${esc(failedScheduledFrom)}"></label>
             <label><span>To</span><input id="failed-scheduled-to" type="date" aria-label="Scheduled date to" value="${esc(failedScheduledTo)}"></label>
           </div>
-          <button class="delivery-date-clear" type="button" data-failed-clear-dates="scheduled">Clear dates</button>
+          <button class="delivery-date-clear" type="button" data-failed-clear-dates="scheduled">Clear scheduled dates</button>
         </div>
       </div>
       <button class="delivery-clear" type="button" data-failed-clear-filters ${hasFailedFilters() ? '' : 'hidden'}>Clear filters</button>
     </div>
     <div class="tracking-table-wrap failed-table-wrap tracking-records-scroll" tabindex="0" role="region" aria-label="Failed deliveries table, scroll horizontally to view all columns">
       <table class="tracking-table failed-table current-table">
-        <thead><tr><th>Order No</th><th>Order Ref No</th><th>Customer &amp; contact</th><th>${deliveryItemColumnHeading()}</th><th>Postcode</th><th>Scheduled date</th><th data-date-sort-header="failed" aria-sort="${failedDateSort === 'asc' ? 'ascending' : failedDateSort === 'desc' ? 'descending' : 'none'}"><button class="table-date-sort" type="button" data-table-date-sort="failed" aria-label="Sort failed or issue date">Failed / issue date <span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(failedDateSort)}</span></button></th><th>Failed reason / issue</th><th>Delivery method</th><th>Status</th></tr></thead>
+        <thead><tr><th>Order No</th><th>Order Ref No</th><th>Customer &amp; contact</th><th ${deliveryItemColumnSortAttributes()}>${deliveryItemColumnHeading()}</th><th>Postcode</th><th>Scheduled date</th><th data-date-sort-header="failed" aria-sort="${failedDateSortType !== 'issue' ? 'none' : failedDateSort === 'asc' ? 'ascending' : failedDateSort === 'desc' ? 'descending' : 'none'}"><button class="table-date-sort" type="button" data-table-date-sort="failed" aria-label="Sort failed or issue date">Failed / issue date <span class="table-date-sort-indicator" aria-hidden="true">${dateSortIcon(failedDateSortType === 'issue' ? failedDateSort : '')}</span></button></th><th>Failed reason / issue</th><th>Delivery method</th><th>Status</th></tr></thead>
         <tbody id="failed-list" tabindex="0" aria-label="Failed delivery records"></tbody>
       </table>
       <div class="tracking-scroll-overlay" role="scrollbar" tabindex="0" aria-label="Scroll failed deliveries" aria-controls="failed-list" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" hidden><span class="tracking-scroll-thumb"></span></div>
@@ -1580,17 +1817,17 @@ function failedRows() {
             failedDeliveryVisible(delivery) &&
             failedMatchesScope(delivery) &&
             matchesDeliveryCarrier(delivery.carrier, failedCarrier) &&
-            (!failedStore || purchaseChannel(delivery) === failedStore) &&
-            (!failedStatus || failedStatusKey(delivery) === failedStatus),
+            filterIncludes(failedStore, purchaseChannel(delivery)) &&
+            filterIncludes(failedStatus, failedStatusKey(delivery)),
         )
       : sortDeliveriesByDate(
-          D.filter(
+          exactOrderMatches(D, search).filter(
             (delivery) =>
               failedDeliveryVisible(delivery) &&
-              ['Failed', 'Rejected'].includes(trackingStatus(delivery.st)) &&
+              isGlobalException(delivery) &&
               failedMatchesScope(delivery) &&
-              (!failedStore || purchaseChannel(delivery) === failedStore) &&
-              (!failedStatus || failedStatusKey(delivery) === failedStatus) &&
+              filterIncludes(failedStore, purchaseChannel(delivery)) &&
+              filterIncludes(failedStatus, failedStatusKey(delivery)) &&
               matchesDeliveryCarrier(delivery.carrier, failedCarrier) &&
               (!failedDateFrom ||
                 String(
@@ -1622,7 +1859,7 @@ function failedRows() {
                 )),
           ),
           failedDateSort,
-          (delivery) => delivery.failedAt || delivery.failedDate || delivery.carrierIssueDate,
+          (delivery) => failedDateSortType === 'created' ? orderCreatedDate(delivery) : delivery.failedAt || delivery.failedDate || delivery.carrierIssueDate,
         );
   const selectedDelivery =
     sel && dashboardSelectedId === sel && !hasFailedFilters() && failedDeliveryVisible(get(sel))
@@ -1633,7 +1870,7 @@ function failedRows() {
     : failed;
 
   const scrollTop = list.scrollTop;
-  list.innerHTML = visibleFailed.length
+  renderDeliveryRows(list, visibleFailed.length
     ? visibleFailed
         .map((delivery) => {
           const storeLogo = purchaseStoreLogo(delivery, 'purchase-store-logo-tracking');
@@ -1642,7 +1879,7 @@ function failedRows() {
           return `
     <tr class="tracking-row failed-table-row" tabindex="0" data-delivery-id="${esc(delivery.id)}" aria-label="Open failed delivery details for ${esc(delivery.order)}">
     <td><span class="tracking-order-number"><strong>${esc(delivery.order || '—')}</strong>${delivery.order ? `<button type="button" class="qd-customer-copy" data-copy-order-number="${esc(delivery.order)}" aria-label="Copy order number ${esc(delivery.order)}" title="Copy order number">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>
-    <td><span class="tracking-order-number tracking-order-reference"><span class="tracking-order-value">${esc(delivery.orderRef || delivery.orderReference || '—')}</span>${delivery.orderRef || delivery.orderReference ? `<button type="button" class="qd-customer-copy" data-copy-order-reference="${esc(delivery.orderRef || delivery.orderReference)}" aria-label="Copy order reference ${esc(delivery.orderRef || delivery.orderReference)}" title="Copy order reference">${ico('copy', 13, 1.8)}</button>` : ''}</span></td>
+    <td><span class="tracking-order-number tracking-order-reference"><span class="tracking-order-value">${esc(delivery.orderRef || delivery.orderReference || '—')}</span>${canCopyOrderReference(delivery.orderRef || delivery.orderReference) ? `<button type="button" class="qd-customer-copy" data-copy-order-reference="${esc(delivery.orderRef || delivery.orderReference)}" aria-label="Copy order reference ${esc(delivery.orderRef || delivery.orderReference)}" title="Copy order reference">${ico('copy', 13, 1.8)}</button>` : ''}</span>${replacementBadge(delivery)}</td>
     <td><div class="tracking-customer-box${storeLogo ? ' has-store-logo' : ''}">${storeLogo}<strong class="tracking-cell-line">${esc(delivery.cust || '—')}</strong>${[
       delivery.phone,
       delivery.email,
@@ -1659,11 +1896,11 @@ function failedRows() {
       <td>${esc(failedDate ? hd(String(failedDate).slice(0, 10)) : '—')}</td>
       <td>${esc(deliveryReason(delivery.reason).label || delivery.carrierIssueReason || '—')}${!delivery.reason && delivery.carrierIssueReason ? `<small class="tracking-cell-line mut">Source: Courier Issues · ${esc(delivery.carrier === 'Own van' ? 'Van' : delivery.carrier)}</small>` : ''}</td>
       <td>${esc(carName(delivery.carrier))}${delivery.deliveryMethodRaw ? `<small class="tracking-cell-line mut">${esc(delivery.deliveryMethodRaw)}</small>` : ''}</td>
-      <td class="tracking-status-cell">${stat(delivery.st, carrierStatusLabel(delivery))}<small class="tracking-cell-line failed-history-note">${esc(statusSourceDisplay(delivery))}</small>${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
+      <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''}>${stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}<small class="tracking-cell-line failed-history-note">${esc(statusSourceDisplay(delivery))}</small>${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
     </tr>`;
         })
         .join('')
-    : `<tr><td colspan="10" class="tracking-empty" ${document.body.dataset.live === 'true' && (failedLoading || !liveReady) ? 'role="status"' : ''}>${document.body.dataset.live === 'true' && (failedLoading || !liveReady) ? 'Loading failed deliveries…' : 'No matching deliveries.'}</td></tr>`;
+    : `<tr><td colspan="10" class="tracking-empty" ${document.body.dataset.live === 'true' && (failedLoading || !liveReady) ? 'role="status"' : ''}>${document.body.dataset.live === 'true' && (failedLoading || !liveReady) ? 'Loading failed deliveries…' : 'No matching deliveries.'}</td></tr>`);
   list.scrollTop = scrollTop;
   syncSelectedTrackingRow();
   TrackingScrollbar.attach();

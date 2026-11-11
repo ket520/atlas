@@ -101,14 +101,15 @@ class DashboardDataTests(unittest.TestCase):
         data = dashboard_data.snapshot()['widgets']
         for key in ['palletways-next-day', 'out-of-stock', 'van-unscheduled', 'hold', 'collect']:
             self.assertEqual(data[key]['total'], 1, key)
-        self.assertEqual(data['palletways-unbooked']['total'], 1)
-        self.assertEqual({row['order'] for row in data['palletways-unbooked']['preview']}, {'1'})
+        self.assertEqual(data['palletways-unbooked']['total'], 0)
+        self.assertEqual(data['palletways-unbooked']['preview'], [])
         self.assertFalse(data['returns']['available'])
         self.assertIsNone(data['returns']['total'])
 
     def test_cancelled_is_today_only_for_counts_previews_view_all_and_facets(self):
         for order, days in [(1, 0), (2, 1), (3, 29), (4, -1)]:
-            self.add(order, 'Cancelled', st='Cancelled', orderDate=(self.today - timedelta(days=days)).isoformat())
+            self.add(order, 'Cancelled', st='Cancelled', deliveryMethodRaw='TO BE CANCELLED',
+                     cancelledFromDeliveryMethod='Standard Van Delivery', orderDate=(self.today - timedelta(days=days)).isoformat())
         self.add(5, 'Own van', st='Scheduled')
         widget = dashboard_data.snapshot()['widgets']['cancelled']
         self.assertEqual(widget['total'], 1)
@@ -136,12 +137,13 @@ class DashboardDataTests(unittest.TestCase):
     def test_cancelled_month_uses_uk_calendar_month_and_matching_facets(self):
         first = self.today.replace(day=1)
         next_month = (first + timedelta(days=32)).replace(day=1)
-        self.add(801, 'Cancelled', st='Cancelled', orderDate=self.today.isoformat())
-        self.add(802, 'Cancelled', st='Cancelled', orderDate=first.isoformat())
-        self.add(803, 'Cancelled', st='Cancelled', orderDate=(first - timedelta(days=1)).isoformat())
-        self.add(804, 'Cancelled', st='Cancelled', orderDate=next_month.isoformat())
+        fields = dict(st='Cancelled',deliveryMethodRaw='TO BE CANCELLED',cancelledFromDeliveryMethod='Standard Van Delivery')
+        self.add(801, 'Cancelled', orderDate=self.today.isoformat(), **fields)
+        self.add(802, 'Cancelled', orderDate=first.isoformat(), **fields)
+        self.add(803, 'Cancelled', orderDate=(first - timedelta(days=1)).isoformat(), **fields)
+        self.add(804, 'Cancelled', orderDate=next_month.isoformat(), **fields)
         self.add(805, 'Own van', st='Scheduled', orderDate=first.isoformat())
-        self.add(806, 'Own van', st='Cancelled', orderDate=first.isoformat())
+        self.add(806, 'Own van', st='Cancelled', orderDate=first.isoformat(), salesActivityDetails={'Order Category':'Cancelled'})
         result = delivery_data.query_records(dashboard_widget='cancelled-month')
         self.assertEqual(result['total'], 3)
         self.assertEqual({row['order'] for row in result['deliveries']}, {'801', '802', '806'})
@@ -151,6 +153,48 @@ class DashboardDataTests(unittest.TestCase):
     def test_unknown_widget_rejected(self):
         with self.assertRaises(ValueError):
             delivery_data.query_records(dashboard_widget='unknown')
+
+    def test_cancelled_widget_requires_exact_ow_fields_and_confirmed_own_van(self):
+        self.add(1,'Own van',st='Scheduled',deliveryMethodRaw='Next Day Van Delivery',salesActivityDetails={'Order Category':'Cancelled'})
+        self.add(2,'Cancelled',st='Delivered',rawStatus='Completed',deliveryMethodRaw='TO BE CANCELLED',cancelledFromDeliveryMethod='Standard Van Delivery')
+        self.add(3,'Own van',st='Cancelled',deliveryMethodRaw='Standard Van Delivery',salesActivityDetails={'Order Category':'Order'})
+        self.add(4,'Palletways',st='Cancelled',deliveryMethodRaw='Palletways',salesActivityDetails={'Order Category':'Cancelled'})
+        self.add(5,'AMZ',st='Cancelled',deliveryMethodRaw='AMA XL',salesActivityDetails={'Order Category':'Cancelled'})
+        self.add(6,'Self Delivery',st='Cancelled',deliveryMethodRaw='Self Delivery',salesActivityDetails={'Order Category':'Cancelled'})
+        self.add(668530,'Cancelled',st='Cancelled',rawStatus='Completed',deliveryMethodRaw='TO BE CANCELLED',cancelledFromDeliveryMethod='Standard Van Delivery',salesActivityDetails={'Order Category':'Credit/Refund'})
+        self.add(668514,'Cancelled',st='Cancelled',rawStatus='Completed',deliveryMethodRaw='TO BE CANCELLED',salesActivityDetails={'Order Category':'Credit/Refund'})
+        self.add(8,'Cancelled',st='Cancelled',deliveryMethodRaw='TO BE CANCELLED',salesActivityDetails={'Order Category':'Order'})
+        result=delivery_data.query_records(dashboard_widget='cancelled')
+        self.assertEqual({row['order'] for row in result['deliveries']},{'1','2'})
+        self.assertEqual(dashboard_data.snapshot()['widgets']['cancelled']['total'],2)
+        self.assertEqual(delivery_data.query_records(dashboard_widget='cancelled',carrier='Own van')['total'],2)
+        self.assertEqual(delivery_data.query_records(dashboard_widget='cancelled-month',carrier='Own van')['total'],2)
+        self.assertEqual(delivery_data.query_records(dashboard_widget='cancelled',carrier='Palletways')['total'],0)
+        self.assertEqual(sum(row['count'] for row in dashboard_data.widget_facets('cancelled')),2)
+
+    def test_cancelled_from_van_is_retained_on_subsequent_ow_imports(self):
+        def source(method):
+            return [{'Order no':'123','Delivery method':method,'Order date':self.today.isoformat(),'Status':'Completed','Order Category':'Order'}]
+        delivery_data.archive(source('Standard Van Delivery'))
+        delivery_data.archive(source('TO BE CANCELLED'))
+        delivery_data.archive(source('TO BE CANCELLED'))
+        self.assertEqual(delivery_data.query_records(dashboard_widget='cancelled')['total'],1)
+        self.assertEqual(delivery_data.detail('123')['cancelledFromDeliveryMethod'],'Standard Van Delivery')
+        delivery_data.archive(source('AMA XL'))
+        delivery_data.archive(source('TO BE CANCELLED'))
+        self.assertEqual(delivery_data.query_records(dashboard_widget='cancelled')['total'],0)
+
+    def test_unbooked_excludes_next_day_from_both_classifications_and_facets(self):
+        for index, method in enumerate(['Palletways', 'Palletways Next Day', ' PALLETWAYS NEXT DAY ', 'Next Day (Pallet)'], 1):
+            for classification in ['B2B', 'B2C']:
+                self.add(f'{index}{classification[-1]}', 'Palletways', deliveryMethodRaw=method,
+                         palletwaysSheetBookedIn='No', palletwaysSheetStatus='In Transit',
+                         palletwaysDetails={'classification': classification})
+        self.assertEqual(delivery_data.query_records(dashboard_widget='palletways-unbooked')['total'], 2)
+        for classification in ['b2b', 'b2c']:
+            key = 'palletways-unbooked-' + classification
+            self.assertEqual(delivery_data.query_records(dashboard_widget=key)['total'], 1)
+            self.assertEqual(sum(row['count'] for row in dashboard_data.widget_facets(key)), 1)
 
     def test_unbooked_reads_palletways_z_not_aa_and_excludes_delivered(self):
         from unittest.mock import Mock

@@ -15,13 +15,14 @@ class AmazonProgressTests(unittest.TestCase):
                 on_progress(completed, f"Step {completed}")
                 observed.append(dict(job["progress"]))
                 self.assertEqual(job["state"], "loading")
-            return {"pdf": False, "excel": False}
+            return {"pdf": False, "excel": False, "raw": {}}
 
         with patch.dict(live.JOBS, {tracking_id: job}, clear=True), patch.object(
             live, "_capture", side_effect=capture
         ), patch.object(live, "snapshot", return_value={"available": True}), patch.object(
             live, "SCHEDULER_ACTIVE", True
-        ):
+        ), patch.object(live, "BROWSER_IDLE_SECONDS", 0), patch.object(live, "_close_worker_browser"):
+
             live._queue_loop()
             self.assertEqual([p["completed"] for p in observed], list(range(1, 7)))
             self.assertTrue(all(p["percent"] < 100 for p in observed))

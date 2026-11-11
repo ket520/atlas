@@ -620,6 +620,7 @@ class Handler(BaseHTTPRequestHandler):
                         classification=params.get("delivery_method", []),
                         status=params.get("status", []),
                         courier_status=params.get("courier_status", [""])[0] == "1",
+                        global_status=params.get("global_status", [""])[0] == "1",
                         date_from=params.get("from", [""])[0],
                         date_to=params.get("to", [""])[0],
                         scheduled_from=params.get("scheduled_from", [""])[0],
@@ -638,13 +639,27 @@ class Handler(BaseHTTPRequestHandler):
                         booked_in=params.get("booked_in", [""])[0],
                         book_in_request=params.get("book_in_request", [""])[0],
                         dashboard_widget=params.get('dashboard_widget', [''])[0],
+                        order_kind=params.get('order_kind', [''])[0],
+                        exclude_refunds=params.get('exclude_refunds', [''])[0] == '1',
                     )
                     if params.get('dashboard_widget', [''])[0]:
                         from dashboard_data import widget_facets
                         page['filterFacets'] = widget_facets(params['dashboard_widget'][0])
-                    if params.get('tracking_related', [''])[0] == '1' and not params.get('issues', [''])[0]:
+                    if params.get('order_kind', [''])[0] == 'refund':
+                        from tracking_relations import lookup, refund_order_relations
+                        page['orderRelations'] = refund_order_relations(lookup(params.get('q', [''])[0]))
+                    elif params.get('order_kind', [''])[0] == 'replacement':
+                        from tracking_relations import lookup, without_credit_refunds
+                        page['orderRelations'] = without_credit_refunds(lookup(params.get('q', [''])[0]))
+                    if params.get('tracking_related', [''])[0] == '1' and not params.get('issues', [''])[0] and not params.get('order_kind', [''])[0]:
                         from tracking_relations import lookup
                         page['orderRelations'] = lookup(params.get('q', [''])[0])
+                        if params.get('exclude_refunds', [''])[0] == '1':
+                            from tracking_relations import without_credit_refunds
+                            relations = page['orderRelations']
+                            page['orderRelations'] = without_credit_refunds(relations)
+                            if relations and page['orderRelations'] is None:
+                                page['creditRefundMatch'] = {**relations['original'], 'orderRelationKind': 'Credit/Refund'}
                 except ValueError:
                     return self.send_json(400, {"error": "Invalid page size or offset."})
                 return self.send_json(200, {**sync_state, **page})
@@ -699,6 +714,8 @@ class Handler(BaseHTTPRequestHandler):
                     "index.html",
                     "dashboard.html",
                     "deliveries.html",
+                    "replacement.html",
+                    "refund.html",
                     "failed-deliveries.html",
                     "collective-note.html",
                     "manufacture-claims.html",
@@ -724,7 +741,8 @@ class Handler(BaseHTTPRequestHandler):
             content = file.read_bytes()
             self.send_response(200)
             self.send_header(
-                "Content-Type", mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+                "Content-Type", {'.css': 'text/css', '.js': 'application/javascript'}.get(file.suffix)
+                or mimetypes.guess_type(file.name)[0] or "application/octet-stream"
             )
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Cache-Control", "no-store")
@@ -802,6 +820,26 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, open_bq())
             except Exception as error:
                 return self.send_json(502, {'error': str(error)})
+        status_path = urlsplit(self.path).path
+        if status_path.startswith('/api/collection-notes/') and status_path.endswith('/status'):
+            from collection_records import set_status
+            note_id = unquote(status_path[len('/api/collection-notes/'):-len('/status')])
+            if not note_id or len(note_id) > 64 or '/' in note_id:
+                return self.send_json(400, {'error': 'Invalid collection record ID.'})
+            try:
+                length = int(self.headers.get('Content-Length', '0'))
+                if not 0 < length <= 1024:
+                    raise ValueError('Invalid status request.')
+                data = json.loads(self.rfile.read(length))
+                if not isinstance(data, dict):
+                    raise ValueError('Invalid status request.')
+                return self.send_json(200, set_status(note_id, data.get('status')))
+            except FileNotFoundError as error:
+                return self.send_json(404, {'error': str(error)})
+            except (ValueError, TypeError) as error:
+                return self.send_json(400, {'error': str(error)})
+            except Exception:
+                return self.send_json(500, {'error': 'Could not update note status.'})
         if urlsplit(self.path).path == "/api/collection-notes":
             from collection_records import save_note
             try:

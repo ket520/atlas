@@ -55,6 +55,30 @@ def check_startup():
                 page.close()
                 checks += 1
 
+            for permanent in [False, True]:
+                page = context.new_page(viewport={'width':1366, 'height':768})
+                page.route('https://deliverydesk.test/**', serve)
+                page.route('https://fonts.googleapis.com/**', lambda r: r.abort())
+                requests = []
+
+                def stylesheet(route):
+                    requests.append(route.request.url)
+                    if permanent or len(requests) == 1:
+                        route.abort()
+                    else:
+                        serve(route)
+
+                page.route('**/static/css/tracking.css*', stylesheet)
+                page.goto('https://deliverydesk.test/pages/deliveries.html')
+                if permanent:
+                    page.locator('.startup-load-error').wait_for()
+                    assert len(requests) == 3, requests
+                else:
+                    page.wait_for_function("typeof R === 'function' && document.querySelector('#side a')")
+                    assert len(requests) == 2, requests
+                page.close()
+                checks += 1
+
             for failed_file in ['admin', 'boot']:
                 page = context.new_page()
                 page.route('https://deliverydesk.test/**', serve)

@@ -30,7 +30,7 @@ def main():
     profile_dir = profile_dir.resolve()
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        safe_id = re.sub(r"[^A-Z0-9_-]", "_", shipping_id.upper())
+    safe_id = re.sub(r"[^A-Z0-9_-]", "_", shipping_id.upper())
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     with sync_playwright() as playwright:

@@ -51,7 +51,7 @@ def _shared_context():
         _browser_playwright = None
     _browser_playwright = sync_playwright().start()
     try:
-        _browser_context = _open_context(_browser_playwright, headless=False)
+        _browser_context = _open_context(_browser_playwright, headless=True)
         return _browser_context
     except Exception:
         _browser_playwright.stop()
@@ -243,7 +243,7 @@ def _extract_media(notes, source=""):
 
 def _open_context(
     playwright,
-    headless=False,
+    headless=True,
 ):
     PROFILE_DIR.mkdir(
         parents=True,

@@ -22,3 +22,9 @@ venv/
 amazon_poc_profile/
 .test-temp/
 .tmp-tests/
+
+# Local browser/runtime state and generated delivery captures
+data/palletways-portal-profile/
+amazon_demo_captures/
+backups/
+debug.log

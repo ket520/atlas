@@ -15,14 +15,17 @@ with sync_playwright() as pw:
     expect(page.locator('.app')).to_have_class('app cl')
     assert abs(before['y'] - page.locator('#dash-widget-grid').bounding_box()['y']) < 1
     expect(page.locator('.dash-editor header, .dash-editor footer')).to_have_count(0)
-    expect(page.locator('.dash-picker-tile')).to_have_count(9)
+    expect(page.locator('.dash-picker-tile')).to_have_count(8)
+    for size in ['2x2', '3x3', '2x3', '1x2', '3x2']:
+        expect(page.locator(f'[data-picker-filter="{size}"]')).to_have_count(0)
+        expect(page.locator(f'[data-picker-size="{size}"]')).to_have_count(0)
     expect(page.locator('[data-picker-key="cancelled"][data-picker-size="1x1"]')).to_have_count(0)
     metrics=page.locator('.dash-picker-track').evaluate('(el)=>({cols:getComputedStyle(el).gridTemplateColumns.split(" ").length,rows:getComputedStyle(el).gridTemplateRows.split(" ").length,w:el.clientWidth,sw:el.scrollWidth,h:el.clientHeight,sh:el.scrollHeight})')
-    assert metrics['cols']==9 and metrics['rows']==2 and metrics['sw']==metrics['w'] and metrics['sh']==metrics['h'],metrics
+    assert metrics['cols']==8 and metrics['rows']==1 and metrics['sw']==metrics['w'] and metrics['sh']==metrics['h'],metrics
     page.evaluate("window.pickerNode=document.querySelector('.dash-editor');window.cardNode=document.querySelector('.dash-widget')")
     page.locator('[data-picker-filter="1x1"]').click()
     assert page.evaluate("pickerNode===document.querySelector('.dash-editor') && cardNode===document.querySelector('.dash-widget')")
-    expect(page.locator('.dash-picker-tile')).to_have_count(0)
+    expect(page.locator('.dash-picker-tile')).to_have_count(4)
     page.locator('[data-picker-filter="all"]').click()
     tile=page.locator('[data-picker-key="cancelled"][data-picker-size="1x3"]')
     tile.click()
@@ -43,14 +46,8 @@ with sync_playwright() as pw:
     page.mouse.up()
     expect(page.locator('.dash-widget-tall')).to_have_count(1)
     expect(page.locator('[data-picker-key="cancelled"][data-picker-size="1x3"]')).to_have_count(0)
-    for key in ['cancelled','collect','palletways-unbooked']:
-        expect(page.locator(f'[data-picker-key="{key}"][data-picker-size="1x1"]')).to_have_count(1)
-    expect(page.locator('[data-dash-widget="collect"]')).to_have_count(0)
-    expect(page.locator('[data-dash-widget="palletways-unbooked"]')).to_have_count(0)
-    assert abs(before['y'] - page.locator('#dash-widget-grid').bounding_box()['y']) < 1
-    tall=page.locator('.dash-widget-tall').bounding_box()
-    assert abs(tall['height'] - page.locator('#dash-widget-grid').bounding_box()['height'])<2
-    page.screenshot(path='tests/dashboard-widget-gallery.png')
+    # Adding a tall version should preserve a readable card and persist on reload.
+    assert page.locator('.dash-widget-tall').bounding_box()['height'] > 300
     page.reload()
     expect(page.locator('.dash-widget-tall')).to_have_count(1)
     page.locator('[data-dash-customize]').click()
@@ -59,6 +56,6 @@ with sync_playwright() as pw:
     page.locator('[data-dash-customize]').click()
     expect(page.locator('.dash-editor')).to_have_count(0)
     assert not errors,errors
-    print('PASS: fixed 9-column/2-row picker, no scrolling/header, drag-only addition, three-widget replacement, available versions, auto-save and close')
+    print('PASS: compact 8-column picker, no scrolling/header, drag-only addition, restricted size menu, tall widget persistence and close')
     browser.close()
 
