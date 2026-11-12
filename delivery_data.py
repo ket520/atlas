@@ -1,6 +1,8 @@
 """Read-only OW delivery snapshot with a persistent, order-keyed local history."""
 
 import json
+import logging
+import os
 import re
 import sqlite3
 import threading
@@ -14,6 +16,7 @@ from van_cancellations import ow_cancelled_van
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = ROOT / "data" / "delivery-desk.sqlite3"
+TEST_DB_PATH = ROOT / "data" / "delivery-desk-postgresql-test.sqlite3"
 SYNC_LOCK = threading.Lock()
 CACHE_SECONDS = 300
 INDEX_VERSION = 41
@@ -28,6 +31,44 @@ _statuses_refreshed = False
 _background_lock = threading.Lock()
 _background_thread = None
 _background_status = {"error": None, "checked_at": None}
+LOGGER = logging.getLogger("atlas.delivery_data")
+
+
+def configured_delivery_source():
+    value = os.environ.get("ATLAS_DELIVERY_SOURCE")
+    if value is not None:
+        return value.strip().lower()
+    for filename in (".env.local", ".env"):
+        path = ROOT / filename
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
+            if line.strip().startswith("ATLAS_DELIVERY_SOURCE="):
+                return line.split("=", 1)[1].strip().strip("\"'").lower()
+    return "google_sheets"
+
+
+def configured_db_path():
+    if configured_delivery_source() == "postgresql":
+        configured = os.environ.get("ATLAS_TEST_DB_PATH", "").strip()
+        if configured:
+            return Path(configured)
+        return TEST_DB_PATH
+    return DB_PATH
+
+
+def read_sales_activity_source():
+    """Read Sales Activity from the configured source without fallback."""
+    source = configured_delivery_source()
+    if source == "postgresql":
+        from atlas_postgres_provider import read_sales_activity
+    elif source in {"", "google_sheets", "google-sheets"}:
+        from google_sheets import read_sales_activity
+    else:
+        raise RuntimeError("ATLAS_DELIVERY_SOURCE must be google_sheets or postgresql.")
+    rows = read_sales_activity()
+    LOGGER.info("Sales Activity source=%s rows=%d database=%s", source, len(rows), configured_db_path())
+    return rows
 
 
 def clean(value):
@@ -1066,8 +1107,9 @@ def row_to_delivery(row):
 
 @contextmanager
 def connect():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DB_PATH, timeout=20)
+    db_path = configured_db_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db = sqlite3.connect(db_path, timeout=20)
     db.row_factory = sqlite3.Row
     db.create_function('global_tracking_status', 1, global_tracking_status, deterministic=True)
     db.create_function('ow_cancelled_van', 1, lambda payload: int(ow_cancelled_van(payload)), deterministic=True)
@@ -1319,6 +1361,7 @@ def archive(rows, observed_at=None):
         db.execute('INSERT OR REPLACE INTO sync_metadata VALUES (?,?)',
                    ('sales_activity_orders_snapshot', json.dumps({'observedAt': observed_at})))
         db.commit()
+    LOGGER.info("Sales Activity archive rows=%d normalized=%d database=%s", len(rows), len(normalized), configured_db_path())
     return len(normalized)
 
 
@@ -1787,9 +1830,7 @@ def sync(force=False):
         cached = _cache["payload"]
         if not force and cached and (now - _cache["at"]).total_seconds() < CACHE_SECONDS:
             return cached
-        from google_sheets import read_sales_activity
-
-        count = archive(read_sales_activity(), now.isoformat())
+        count = archive(read_sales_activity_source(), now.isoformat())
         source_updated_at = dict((cached or {}).get("sourceUpdatedAt", {}))
         source_updated_at["ow"] = datetime.now(timezone.utc).isoformat()
         try:
@@ -1914,6 +1955,7 @@ def sync(force=False):
             routine_live_count, routine_live_error = 0, True
         payload = {
             "indexVersion": INDEX_VERSION,
+            "deliverySource": configured_delivery_source(),
             "syncedAt": now.isoformat(),
             "sourceUpdatedAt": source_updated_at,
             "imported": count,
@@ -1955,6 +1997,7 @@ def _refresh_background(force):
         error = result.get("message") if result.get("stale") else None
     except Exception as exc:
         error = str(exc)
+        LOGGER.warning("Delivery background sync failed source=%s error=%s", configured_delivery_source(), error)
     with _background_lock:
         _background_status.update(error=error, checked_at=datetime.now(timezone.utc))
 

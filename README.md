@@ -4,6 +4,49 @@ Run `& ".\Start Delivery Desk.ps1"` from this folder. The script uses port 3000 
 
 The main HTML pages are in `pages/`, their JavaScript is in `src/`, and shared CSS is in `static/css/`. Browser URLs remain `/dashboard.html`, `/deliveries.html`, and the other existing page names. `templates/` holds the retained source explorer pages; `static/js/` contains their scripts and the active collection-note editor. The superseded copies of the main frontend have been removed. API notes and third-party notices are in `docs/`.
 
+## Test-only Atlas API delivery source
+
+Google Sheets remains the default source. For a separate test instance only, set
+`ATLAS_DELIVERY_SOURCE=postgresql` in that instance's `.env.local` and configure
+the server-side Starpark API request:
+
+```text
+ATLAS_DELIVERY_SOURCE=postgresql
+STAR_PARK_API_BASE_URL=https://api.starparkgroup.com
+STAR_PARK_API_ORDERS_PATH=/atlas/orders
+STAR_PARK_API_USERNAME=atlas-admin
+STAR_PARK_API_PASSWORD=your-password
+```
+
+These credentials are for the Nginx Basic Auth gateway. The backend does not
+send or configure `X-Atlas-Service-Token`; Nginx supplies that internal header
+when forwarding the request. Credentials are read only by
+`atlas_postgres_provider.py` on the server and are never sent to browser
+JavaScript. The provider requests `/atlas/orders` with `limit` and `page`,
+has a 20-second default timeout, validates the response, and maps records into
+the existing Sales Activity row shape. Adjust `STAR_PARK_API_PAGE_SIZE`,
+`STAR_PARK_API_MAX_PAGES`, and `STAR_PARK_API_TIMEOUT_SECONDS` for a test
+instance if needed.
+
+Run the read-only connection check from the test instance with:
+
+```powershell
+& "C:\Users\kaket\AppData\Local\Python\bin\python.exe" -m atlas_postgres_provider --check
+```
+
+PostgreSQL mode uses `data/delivery-desk-postgresql-test.sqlite3` by default,
+or the path in `ATLAS_TEST_DB_PATH`. It never writes the production
+`data/delivery-desk.sqlite3` cache. It still reads the other existing carrier
+and Routine Dashboard sources according to their current configuration; it
+does not modify Google Sheets.
+
+There is no fallback: an invalid source setting or Starpark authentication,
+HTTP, timeout, pagination, or response-shape failure makes the sync stale and
+reports the error. Google Sheets, Routine Dashboard's Microsoft-dependent
+source, carrier synchronizers, PostgreSQL records, and production deployment
+configuration are unchanged. Remove the setting or set
+`ATLAS_DELIVERY_SOURCE=google_sheets` to return to the default.
+
 On the first visit in a browser tab, an animated Delivery Desk startup screen
 opens while the initial overview loads. Slow loads offer Continue to workspace;
 the startup also clears automatically so the app stays accessible. Navigation and

@@ -752,6 +752,14 @@ async function loadTrackingPage(reset = true) {
     trackingHasMore = result.hasMore;
     trackingLoadError = false;
     trackingLoading = false;
+    // A new PostgreSQL test cache is populated asynchronously. Retry the
+    // initial empty page after the background sync completes, without
+    // changing normal cached Google Sheets behavior.
+    if (reset && result.deliverySource === 'postgresql' && result.syncing && result.total === 0 && !result.message) {
+      setTimeout(() => {
+        if (isTrackingPage() && !trackingLoaded.length) loadTrackingPage(true);
+      }, 5000);
+    }
     const selectedDelivery = sel ? get(sel) : null;
     DeliveryStore.hydrate({
       deliveries: trackingLoaded,
