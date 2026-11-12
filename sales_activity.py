@@ -17,6 +17,20 @@ STORE_CODES = {
     'WAYFAIR': 'Wayfair',
 }
 
+API_STORE_CHANNELS = {name.casefold(): code for code, name in STORE_CODES.items()}
+API_STORE_CHANNELS.update({
+    'b&q - neshome': 'B&Q',
+    'b&q': 'B&Q',
+    'amazon': 'AMAZON',
+    'ebay0': 'EBAY_BR',
+    'ebay1': 'EBAY_WB',
+})
+
+MARKETPLACE_ID_FIELDS = {
+    'asin': ('ASIN', 'Amazon ASIN', 'amazon_asin', 'asin'),
+    'ebayItemId': ('eBay Item ID', 'Ebay Item ID', 'ebay_item_id', 'ebayItemId'),
+}
+
 
 def store_name(code, order_type='', analysis=''):
     """AH supplies store identity; retain the existing Hygienic rule."""
@@ -27,9 +41,23 @@ def store_name(code, order_type='', analysis=''):
 
 
 def store_code(row):
+    if 'Atlas Store Code' in row:
+        return text(row['Atlas Store Code']).upper()
     # worksheet_to_records preserves source positions, including unnamed columns.
     values = list(row.values())
     return text(values[33]).upper() if len(values) > 33 else ''
+
+
+def api_store_code(row):
+    for name in ('Store Code', 'storeCode', 'store_code', 'Channel Code', 'channel_code'):
+        value = text(row.get(name)).upper()
+        if value in STORE_CODES:
+            return value
+    for name in ('Order Analysis', 'Order Type'):
+        value = text(row.get(name)).casefold()
+        if value in API_STORE_CHANNELS:
+            return API_STORE_CHANNELS[value]
+    return ''
 
 
 def text(value):
@@ -53,6 +81,11 @@ def product_items(rows):
         codes = [code.strip() for code in re.split(r"[,;|\r\n]+", sku_value(row)) if code.strip()]
         for code in codes:
             item = {"sku": code, "description": description if len(codes) == 1 else ""}
+            if len(codes) == 1:
+                for field, names in MARKETPLACE_ID_FIELDS.items():
+                    identifiers = {text(row.get(name)) for name in names if text(row.get(name))}
+                    if len(identifiers) == 1:
+                        item[field] = next(iter(identifiers))
             if len(codes) == 1 and re.fullmatch(r"\d+(?:\.\d+)?", quantity):
                 item["quantity"] = quantity
             if item not in items:

@@ -18,7 +18,7 @@ class DashboardDataTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        self.patch = patch.object(delivery_data, 'DB_PATH', Path(directory.name) / 'orders.sqlite3')
+        self.patch = patch.object(delivery_data, 'configured_db_path', return_value=Path(directory.name) / 'orders.sqlite3')
         self.patch.start()
         self.addCleanup(self.patch.stop)
         self.today = datetime.now(ZoneInfo('Europe/London')).date()

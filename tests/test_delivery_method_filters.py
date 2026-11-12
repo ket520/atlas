@@ -8,7 +8,7 @@ import delivery_data
 
 class DeliveryMethodFilterTests(unittest.TestCase):
     def test_multiple_methods_filter_before_paging_with_no_twelve_option_limit(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             methods = [f'Palletways service {index}' for index in range(15)]
             delivery_data.archive([
                 {'Order no': str(index), 'Delivery method': method, 'Status': 'P'}
@@ -27,7 +27,7 @@ class DeliveryMethodFilterTests(unittest.TestCase):
             self.assertEqual(delivery_data.query_records(classification=[])['total'], 46)
 
     def test_method_labels_containing_commas_are_kept_intact(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([
                 {'Order no': '1', 'Delivery method': 'Palletways, special', 'Status': 'P'},
                 {'Order no': '2', 'Delivery method': 'Palletways', 'Status': 'P'},

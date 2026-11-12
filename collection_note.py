@@ -121,10 +121,10 @@ def lookup(order, on_progress=None):
         on_progress({"stage": "waiting"})
     with _lock:
         if _rows is None or time.monotonic() - _read_at >= 300:
-            from google_sheets import read_sales_activity
+            from delivery_data import read_sales_activity_source
 
             if on_progress:
                 on_progress({"stage": "reading"})
-            rows = read_sales_activity()
+            rows = read_sales_activity_source()
             _rows, _read_at = rows, time.monotonic()
         return order_note(order, _rows, on_progress)

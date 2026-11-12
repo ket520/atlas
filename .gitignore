@@ -6,6 +6,8 @@ __pycache__/
 *.pyc
 credentials/*.json
 data/*.sqlite3*
+data/atlas-view-cache.json
+data/atlas-view-cache.tmp
 data/bq-browser-profile/
 .dispatch-jobs.json
 .dispatch-jobs.tmp
@@ -28,3 +30,4 @@ data/palletways-portal-profile/
 amazon_demo_captures/
 backups/
 debug.log
+data/*.log

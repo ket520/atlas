@@ -26,7 +26,7 @@ class StopstartTests(unittest.TestCase):
             rows = google_sheets.read_stopstart()
         self.assertEqual(rows[0]['details'], SAMPLE)
         self.assertEqual(rows[0]['trackability'], 'Yes')
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             source = [{'Order no': '655955', 'Delivery method': 'STOPSTART', 'Status': 'P'}]
             delivery_data.archive(source)
             stopstart.archive(rows)
@@ -74,7 +74,7 @@ class StopstartTests(unittest.TestCase):
         self.assertEqual(rows, [{"order": "123", "details": SAMPLE, "status": "Delivered_OK", "fetchResult": "", "trackability": ""}, {"order": "456", "details": "", "status": "", "fetchResult": "", "trackability": ""}])
 
     def test_column_i_status_filters_verbatim_without_changing_general_status(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             rows = [{"Order no": order, "Delivery method": "Stopstart", "Status": "P"} for order in ("123", "456")]
             delivery_data.archive(rows)
             stopstart.archive([{"order": "123", "status": " Ready_FOR Delivery "}])
@@ -93,7 +93,7 @@ class StopstartTests(unittest.TestCase):
             self.assertEqual(len(results("Scheduled")), 2)
 
     def test_exact_matching_preserves_ow_status_and_merges_history(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             delivery_data.archive([
                 {"Order no": "123", "Delivery method": "Stopstart", "Status": "P", "Order date": "15/10/2026"},
                 {"Order no": "1234", "Delivery method": "Stopstart", "Status": "C"},
@@ -120,7 +120,7 @@ class StopstartTests(unittest.TestCase):
             self.assertEqual(saved["st"], "Delivered")
 
     def test_conflicting_plans_remain_in_history_without_picking_current(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             delivery_data.archive([{"Order no": "123", "Delivery method": "Stopstart", "Status": "P"}])
             stopstart.archive([{"order": "123", "details": SAMPLE}, {"order": "123", "details": SAMPLE.replace("09:27", "10:27")}])
             with delivery_data.connect() as db:

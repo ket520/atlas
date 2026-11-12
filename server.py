@@ -298,6 +298,52 @@ class Handler(BaseHTTPRequestHandler):
         try:
             url = urlsplit(self.path)
 
+            if url.path.startswith('/api/atlas-palletways/'):
+                from atlas_palletways import order_shipments, shipment_details, shipment_records
+                from atlas_postgres_provider import AtlasProviderError
+                parts = url.path[len('/api/atlas-palletways/'):].split('/')
+                try:
+                    if len(parts) == 2 and parts[0] == 'orders':
+                        return self.send_json(200, order_shipments(unquote(parts[1])))
+                    if len(parts) == 3 and parts[0] == 'shipments':
+                        return self.send_json(200, shipment_details(unquote(parts[1]), unquote(parts[2])))
+                    if len(parts) == 4 and parts[0] == 'shipments' and parts[3] in {'events', 'audit'}:
+                        params = parse_qs(url.query)
+                        limit = int(params.get('limit', ['50'])[0])
+                        offset = int(params.get('offset', ['0'])[0])
+                        source = params.get('source', [None])[0]
+                        return self.send_json(200, shipment_records(
+                            unquote(parts[1]), unquote(parts[2]), parts[3], limit, offset, source,
+                        ))
+                    return self.send_json(404, {'error': 'Unknown Palletways resource.'})
+                except ValueError as error:
+                    return self.send_json(400, {'error': str(error)})
+                except AtlasProviderError as error:
+                    status = error.status_code if error.status_code in {400, 401, 404, 503} else 502
+                    return self.send_json(status, {'error': 'Full Palletways details are not available from Atlas API.'})
+
+            if url.path in {'/product-page', '/api/product-link'}:
+                from product_links import lookup_page, verified_product_url
+                params = parse_qs(url.query)
+                store = params.get('store', [''])[0]
+                sku = params.get('sku', [''])[0]
+                target = verified_product_url(store, sku, params.get('platform_id', [''])[0])
+                if url.path == '/api/product-link':
+                    return self.send_json(200, {'url': target})
+                if not target:
+                    content = lookup_page(store, sku, 'No verified product page is available.')
+                    self.send_response(404)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.send_header('Content-Length', str(len(content)))
+                    self.end_headers()
+                    self.wfile.write(content)
+                    return
+                self.send_response(302)
+                self.send_header('Location', target)
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                return
+
             if url.path == '/api/order-flow':
                 from tracking_relations import flow_lookup
                 try:
@@ -599,12 +645,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, read_snapshot())
             if url.path == "/api/dashboard":
                 from dashboard_data import snapshot
-                from delivery_data import cached_or_schedule_sync
+                from delivery_data import cached_or_schedule_sync, configured_delivery_source
+                from view_cache import get as cached_view
                 params = parse_qs(url.query)
-                return self.send_json(200, {**cached_or_schedule_sync(), **snapshot(
+                options = dict(
                     store=params.get('store', [''])[0], carrier=params.get('carrier', [''])[0],
                     **{key: params.get(key, [''])[0] == '1' for key in
-                       ('hide_hygienic', 'hide_wayfair', 'hide_wilko', 'hide_palletways_b2b')})})
+                       ('hide_hygienic', 'hide_wayfair', 'hide_wilko', 'hide_palletways_b2b')})
+                cache_key = 'dashboard:palletways-shipments-v1:' + configured_delivery_source() + ':' + json.dumps(options, sort_keys=True)
+                return self.send_json(200, {**cached_view(cache_key, lambda: snapshot(**options)), **cached_or_schedule_sync()})
             if url.path == "/api/deliveries":
                 from delivery_data import cached_or_schedule_sync, query_records
 
@@ -613,6 +662,7 @@ class Handler(BaseHTTPRequestHandler):
                 sync_state = cached_or_schedule_sync(force)
                 try:
                     page = query_records(
+                        status_view_scope='tracking' if params.get('status_view', [''])[0] == '1' else '',
                         search=params.get("q", [""])[0],
                         carrier=params.get("carrier", [""])[0],
                         store=params.get("store", []),
@@ -664,9 +714,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_json(400, {"error": "Invalid page size or offset."})
                 return self.send_json(200, {**sync_state, **page})
             if url.path == "/api/deliveries/summary":
-                from delivery_data import cached_or_schedule_sync, summary
+                from delivery_data import cached_or_schedule_sync, configured_delivery_source, summary
+                from view_cache import get as cached_view
 
-                return self.send_json(200, {**cached_or_schedule_sync(), **summary()})
+                return self.send_json(200, {**cached_view('summary:palletways-shipments-v2:' + configured_delivery_source(), summary), **cached_or_schedule_sync()})
             if url.path.startswith("/api/deliveries/"):
                 from delivery_data import detail
 
@@ -675,6 +726,9 @@ class Handler(BaseHTTPRequestHandler):
                 status, payload = deliveries(parse_qs(url.query, keep_blank_values=True))
                 return self.send_json(status, payload)
             if url.path == "/api/google-sheets/data":
+                from atlas_config import google_sheets_enabled
+                if not google_sheets_enabled():
+                    return self.send_json(410, {'disabled': True, 'error': 'Google Sheets is disconnected.'})
                 from google_sheets import read_sheet_data
 
                 tab = parse_qs(url.query).get("tab", [None])[0]

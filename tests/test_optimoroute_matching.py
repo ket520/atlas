@@ -49,7 +49,7 @@ class MatchingTests(unittest.TestCase):
         self.assertFalse(resolve([delivery()], [stop()], complete=False)[0])
 
     def test_conflicting_product_row_identifiers_are_not_chosen(self):
-        with tempfile.TemporaryDirectory() as folder, patch.object(delivery_data, 'DB_PATH', Path(folder) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as folder, patch.object(delivery_data, 'configured_db_path', return_value=Path(folder) / 'test.sqlite3'):
             row = {'Order no': '660755', 'Delivery method': 'Own van',
                    'eCommerce order number': '02-15349-33171'}
             delivery_data.archive([row, {**row, 'eCommerce order number': 'different'}])
@@ -81,7 +81,7 @@ class MatchingTests(unittest.TestCase):
                 'signature': {'url': 'https://example.com/signature.png'}}}}]}
         for mode in ['detail', 'page', 'today']:
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as folder, \
-                 patch.object(delivery_data, 'DB_PATH', Path(folder) / 'test.sqlite3'), \
+                 patch.object(delivery_data, 'configured_db_path', return_value=Path(folder) / 'test.sqlite3'), \
                  patch('server.api', side_effect=api), patch('activity_log.archive_records'), \
                  patch('activity_log.history', return_value={'entries': []}):
                 delivery_data.archive([row])

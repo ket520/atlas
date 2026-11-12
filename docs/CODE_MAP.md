@@ -7,7 +7,7 @@ Orientation recorded 2026-10-20. Check the implementation before changing behavi
 - `python server.py`: Python standard-library `ThreadingHTTPServer`, bound to localhost, default port 3000 (`PORT` overrides). No Flask, frontend build, or package.json.
 - `server.py`: environment loading, read-only OptimoRoute client/normalization, explorer pagination sessions, HTTP API dispatch, public-file allowlist, collection save/delete/export, PoD image proxy. Starts Amazon background prefetch when run directly.
 - Main URLs serve `pages/`: dashboard, deliveries, failed-deliveries, collective-note, integrations, settings, index and van-deliveries.
-- Main script order: `src/horizontal-scroll.js`, `api.js`, `data.js`, `services.js`, `ui.js`, `dashboard-home.js`, `dashboard.js`, `deliveries.js`, `admin.js`, `app.js`; boot.js loads them in order and startup.js runs early.
+- `src/boot.js` defines the ordered script list. Feature modules `status-views.js`, `palletways-shipments.js`, and `product-links.js` load before `ui.js`; their rendering functions run after the app starts. `startup.js` runs early.
 - Main CSS lives in `static/css/`: general, dashboard, tracking, failed-deliveries, startup, collection. README's statement that CSS is in src is stale.
 - Other top-level HTML URLs resolve under `templates/`; source explorers use retained `static/js/` scripts. Collection Note is active code in `static/js/collection.js`. The superseded main-app templates and their eight legacy scripts have been removed; main pages use `pages/` and `src/`.
 
@@ -17,6 +17,9 @@ Orientation recorded 2026-10-20. Check the implementation before changing behavi
 | --- | --- |
 | `src/api.js` | Routes, carrier/status constants, fetch timeout/error handling, delivery API |
 | `src/services.js` | In-memory DeliveryStore, order deduplication, hydration and selection lookup |
+| `src/status-views.js` | Tracking status labels and source selection |
+| `src/palletways-shipments.js` | Multiple-consignment rendering, escaped structured details and backend detail requests |
+| `src/product-links.js` | Verified product-link lookup, caching and official-domain validation |
 | `src/ui.js` | Shared state/helpers/icons, filters, sidebar animation, DeliveryDetail drawer, gallery, activity timeline, carrier data/documents and Amazon lookup polling |
 | `src/dashboard.js` | Dashboard cards and previews, paging, failed carousel, list scrolling |
 | `src/dashboard-home.js` | Current dashboard workspace: filters, widget rendering, drag/order preferences, customization dialog and cohort navigation; `vDash()` delegates here |
@@ -31,6 +34,8 @@ Orientation recorded 2026-10-20. Check the implementation before changing behavi
 Global script ordering matters. Main `R()` rendering replaces view markup; Collection Note has explicit mounted-form preservation. List requests and detail opening use request counters to discard superseded responses. Store hydration can replace visible records, so selected details are preserved explicitly.
 
 ## Backend and data flow
+
+`atlas_config.py` reads local settings. `atlas_postgres_provider.py` reads the employee API; `atlas_palletways.py` bridges structured shipment details through the same server-side authentication. `palletways_shipments.py` normalizes consignments and derives shipment stages, while `status_views.py` keeps Sales Activity and courier status displays separate. `product_links.py` resolves and verifies product pages; `shopify_products.py` reads configured Shopify product URLs. Credentials remain server-side.
 
 `GET /api/deliveries/summary` or `/api/deliveries` -> `cached_or_schedule_sync()` -> serve retained SQLite data immediately and schedule one background refresh when needed. Cache interval is 300 seconds; saved sync metadata survives restart. `query_records()` performs search/filter/sort/count/limit/offset in SQL. Normal browser page size is 25, API maximum 100.
 

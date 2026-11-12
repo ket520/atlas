@@ -116,7 +116,7 @@ class RoutineLiveReaderTests(unittest.TestCase):
 class RoutineLiveStatusTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
-        self.patch_db = patch.object(delivery_data, 'DB_PATH', Path(self.directory.name) / 'test.sqlite3')
+        self.patch_db = patch.object(delivery_data, 'configured_db_path', return_value=Path(self.directory.name) / 'test.sqlite3')
         self.patch_db.start()
 
     def tearDown(self):

@@ -740,6 +740,7 @@ function integrationTime(value) {
 }
 
 function integrationState(source, summary, unavailable) {
+  if (summary?.disabledSources?.includes(source.key)) return { label: 'Disabled', tone: 'offline' };
   if (source.disconnected) return { label: 'Not connected', tone: 'offline' };
   if (unavailable) return { label: 'Check unavailable', tone: 'warning' };
   if (!summary) return { label: 'Checking', tone: 'waiting' };
@@ -751,8 +752,9 @@ function integrationState(source, summary, unavailable) {
 
 function integrationCard(source, summary, unavailable) {
   const state = integrationState(source, summary, unavailable);
+  const method = source.key === 'ow' && summary?.deliverySource === 'postgresql' ? 'Atlas API' : source.method;
   return `<article class="card integration-card">
-    <div><h3>${esc(source.name)}</h3><small class="mut">${esc(source.method)}</small></div>
+    <div><h3>${esc(source.name)}</h3><small class="mut">${esc(method)}</small></div>
     <span class="integration-state" data-state="${state.tone}">${esc(state.label)}</span>
     <div><small class="mut">Last successful update</small><b>${esc(integrationTime(summary?.sourceUpdatedAt?.[source.key]))}</b></div>
   </article>`;

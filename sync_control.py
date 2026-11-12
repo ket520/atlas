@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import re
 import threading
 import time
+from atlas_config import google_sheets_enabled
 from zoneinfo import ZoneInfo
 
 _lock = threading.Lock()
@@ -62,6 +63,8 @@ def parse_rows(values, log_values, timezone_name):
 
 def read_snapshot():
     global _snapshot, _checked
+    if not google_sheets_enabled():
+        return {'rows': [], 'updatedAt': None, 'unavailable': False, 'disabled': True, 'timezone': None}
     with _lock:
         if _snapshot is not None and time.monotonic() - _checked < 60:
             return _snapshot

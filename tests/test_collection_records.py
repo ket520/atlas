@@ -15,7 +15,7 @@ import server
 class CollectionRecordsTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.db_patch = patch.object(delivery_data, 'DB_PATH', Path(self.temp.name) / 'notes.sqlite3')
+        self.db_patch = patch.object(delivery_data, 'configured_db_path', return_value=Path(self.temp.name) / 'notes.sqlite3')
         self.db_patch.start()
         self.addCleanup(self.temp.cleanup)
         self.addCleanup(self.db_patch.stop)

@@ -28,7 +28,7 @@ class PreviewHandler(Handler):
             super().do_GET()
 
 
-with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
     delivery_data.archive([{'Order no': order, 'Original order Number': original, 'Order Category': 'Order',
         'Delivery method': 'Palletways', 'Product SKU': sku, 'Parent SKU': 'WRONG-PARENT',
         **{f'Extra{i}': '' for i in range(27)}, 'Store code': 'B&Q'}

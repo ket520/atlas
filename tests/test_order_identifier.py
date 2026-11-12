@@ -12,7 +12,7 @@ class OrderIdentifierTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        patcher = patch.object(delivery_data, 'DB_PATH', Path(directory.name) / 'test.sqlite3')
+        patcher = patch.object(delivery_data, 'configured_db_path', return_value=Path(directory.name) / 'test.sqlite3')
         patcher.start()
         self.addCleanup(patcher.stop)
         self.add('123456', '12345678901', '987654')

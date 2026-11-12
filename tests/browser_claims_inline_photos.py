@@ -28,7 +28,7 @@ class PreviewHandler(Handler):
             super().do_GET()
 
 
-with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'claims.sqlite3'):
+with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'claims.sqlite3'):
     original = manufacture_claims.save_claim(dict(orderDate='2026-10-24', originalOrderNo='663132', replacementOrderNo='700001',
         variantCode='SKU', reason='Others', reasonOther='Custom reason', solution='Refund', sellingShop='B&Q',
         photos=[{'name': 'original.png', 'data': base64.b64encode(PNG).decode()}]))

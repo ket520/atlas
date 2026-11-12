@@ -15,6 +15,22 @@ HEADERS = ["Order no", "Order date", "Delivery name", "eCommerce order number", 
 
 
 class SalesActivityMappingTests(unittest.TestCase):
+    def setUp(self):
+        source = patch.object(delivery_data, 'configured_delivery_source', return_value='google_sheets')
+        source.start()
+        self.addCleanup(source.stop)
+
+    def test_marketplace_product_ids_stay_attached_to_single_sku(self):
+        from sales_activity import product_items
+        row = {'Product SKU': 'SKU', 'Item Quantity': '2', 'ASIN': 'B012345678',
+               'eBay Item ID': '123456789012', 'EbayUserID': 'buyer-account'}
+        item = product_items([row])[0]
+        self.assertEqual(item['asin'], 'B012345678')
+        self.assertEqual(item['ebayItemId'], '123456789012')
+        row['Product SKU'] = 'SKU,OTHER'
+        self.assertTrue(all('asin' not in item and 'ebayItemId' not in item for item in product_items([row])))
+        self.assertNotIn('ebayItemId', product_items([{'Product SKU': 'SKU', 'EbayUserID': 'buyer-account'}])[0])
+
     def rows(self, headers=HEADERS):
         base = {"Order no": "655497", "Order date": "14/10/2026", "Delivery name": "Recipient", "eCommerce order number": "EC-123",
                 "Order reference": "REF-123", "Product SKU": "SKU-ONE", "Item Name": "First item", "Item Quantity": "2",
@@ -38,7 +54,7 @@ class SalesActivityMappingTests(unittest.TestCase):
             self.assertEqual(delivery["salesActivityDetails"]["eCommerce order number"], "EC-123")
 
     def test_tracking_retains_all_product_rows_under_one_order(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             self.assertEqual(delivery_data.archive(self.rows()), 2)
             deliveries = delivery_data.snapshot()
             self.assertEqual(len(deliveries), 1)

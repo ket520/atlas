@@ -314,7 +314,7 @@ function palletwaysDetails(delivery, copyButton = () => '') {
 
   return `
     <section
-      class="qd-block qd-order-facts qd-provider"
+      class="qd-block qd-order-facts qd-provider qd-palletways-details"
       aria-label="Palletways consignment details"
     >
       <div class="qd-title-row">
@@ -453,7 +453,15 @@ function xdpDocuments(delivery) {
 
 function palletwaysDocuments(delivery) {
   if (delivery?.carrier !== 'Palletways') return '';
-  const info = palletwaysDocumentInfo(delivery);
+  const records = delivery.palletwaysDocumentRecords;
+  const documentInfos = Array.isArray(records)
+    ? records.map(record => ({
+        tracking: record.trackingId,
+        consignment: record.consignmentNumber,
+        hasPod: Boolean(record.documents?.podAvailable),
+        hasLabel: Boolean(record.documents?.labelAvailable && record.consignmentNumber),
+      }))
+    : [palletwaysDocumentInfo(delivery)];
   const portal = delivery.palletwaysPortal || {};
   const media = [
     ...new Map(
@@ -479,28 +487,34 @@ function palletwaysDocuments(delivery) {
     cards.push(card(title, url, preview, 'Palletways image'));
   });
 
-  if (info.hasPod) {
-    const url = `/api/palletways/pod/${encodeURIComponent(info.tracking)}`;
-    cards.push(
-      card(
-        'Delivery note',
-        url,
-        `<iframe title="Delivery note preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
-        'PDF document',
-      ),
-    );
-  }
-  if (info.hasLabel) {
-    const url = `/api/palletways/label/${encodeURIComponent(info.consignment)}`;
-    cards.push(
-      card(
-        'Shipping label',
-        url,
-        `<iframe title="Shipping label preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
-        `Consignment ${info.consignment}`,
-      ),
-    );
-  }
+  documentInfos.forEach(info => {
+    if (info.hasPod) {
+      const url = `/api/palletways/pod/${encodeURIComponent(info.tracking)}`;
+      cards.push(
+        card(
+          'Delivery note',
+          url,
+          `<iframe title="Delivery note preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
+          'PDF document',
+        ),
+      );
+    }
+    if (info.hasLabel) {
+      const url = `/api/palletways/label/${encodeURIComponent(info.consignment)}`;
+      cards.push(
+        card(
+          'Shipping label',
+          url,
+          `<iframe title="Shipping label preview" data-palletways-preview src="${esc(url)}#page=1&toolbar=0&navpanes=0" loading="lazy" tabindex="0"></iframe>`,
+          `Consignment ${info.consignment}`,
+        ),
+      );
+    }
+  });
+  const documentState = delivery.palletwaysDocumentsLoading
+    ? '<p class="mut" role="status">Loading Palletways documents…</p>'
+    : delivery.palletwaysDocumentsError
+      ? `<p class="mut" role="alert">${esc(delivery.palletwaysDocumentsError)}</p>` : '';
   const photoState = delivery.palletwaysPortalLoading
     ? '<p class="mut" role="status">Loading shipment photos from Palletways…</p>'
     : delivery.palletwaysPortalError
@@ -509,8 +523,8 @@ function palletwaysDocuments(delivery) {
   const retry = `<button class="qd-text" type="button" data-detail-action="refresh-palletways-photos" ${delivery.palletwaysPortalLoading ? 'disabled' : ''}>Refresh photos</button>`;
   return `<section class="qd-block qd-pod qd-palletways-documents" aria-label="Palletways documents">
     <div class="qd-title-row"><div class="qd-title">${ico('note', 18, 1.9)}<h3>Palletways documents</h3></div></div>
-    ${photoState}${retry}
-    <p class="mut" data-palletways-photo-empty ${photos.length || delivery.palletwaysPortalLoading ? 'hidden' : ''}>No shipment photos available for this tracking ID.</p>
+    ${documentState}${photoState}${retry}
+    <p class="mut" data-palletways-photo-empty ${photos.length || delivery.palletwaysPortalLoading ? 'hidden' : ''}>No shipment photos available for this order.</p>
     <div class="qd-amazon-doc-grid">${cards.join('')}</div>
   </section>`;
 }
@@ -841,6 +855,10 @@ const globalOwStatus = value => ({P:'Scheduled', S:'Scheduled', C:'Delivered', X
   REJECTED:'Rejected', RETURN:'Return'})[String(value || '').trim().toUpperCase()] || 'Unscheduled';
 const overallTrackingStatus = delivery => {
   if (delivery.overallStatus) return globalStatusCategory(delivery.overallStatus);
+  if (delivery.carrier === 'Palletways' && Array.isArray(delivery.palletwaysShipments)) {
+    const stage = delivery.statusView?.stage;
+    return ({'In Transit':'Scheduled', 'Consignment Created':'Unscheduled', 'Palletways Not Assigned':'Unscheduled'})[stage] || globalStatusCategory(stage);
+  }
   const stored = delivery.st || delivery.status;
   const category = String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderCategory ||
     delivery.orderRelationKind || delivery.relatedKind || '').trim().toLowerCase();
@@ -888,7 +906,9 @@ const palletwaysOwFallback = (delivery) => {
 };
 
 const carrierBadgeStatus = (delivery) => {
+  if (usesSourceTrackingStatus()) return trackingDisplayStatus(delivery).label;
   if (isCreditRefundRecord(delivery)) return {'refund:complete': 'Delivered', 'refund:cancelled': 'Cancelled', 'refund:not-yet': 'Scheduled'}[refundStatusValue(delivery)];
+  if (delivery.carrier === 'Palletways' && Array.isArray(delivery.palletwaysShipments)) return delivery.statusView?.stage || 'Status unavailable';
   if (page === 'Failed Deliveries') return overallTrackingStatus(delivery);
   if (usesGlobalTrackingStatus()) return overallTrackingStatus(delivery);
   if (isTrackingPage() && fsrc === 'Palletways' && delivery?.carrier === 'Palletways') {
@@ -899,7 +919,9 @@ const carrierBadgeStatus = (delivery) => {
 };
 
 const carrierStatusLabel = (delivery) => {
+  if (usesSourceTrackingStatus()) return trackingDisplayStatus(delivery).label;
   if (isCreditRefundRecord(delivery)) return refundStatusLabel(refundStatusValue(delivery));
+  if (delivery.carrier === 'Palletways' && Array.isArray(delivery.palletwaysShipments)) return delivery.statusView?.carrier || 'Status unavailable';
   if (usesGlobalTrackingStatus() && ['Palletways', 'XDP'].includes(delivery.carrier) &&
       String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderRelationKind || '').trim().toLowerCase() === 'cancelled') return 'Cancelled';
   if (usesGlobalTrackingStatus() && delivery.carrier === 'Palletways')
@@ -938,7 +960,9 @@ const carrierStatusLabel = (delivery) => {
 };
 
 const statusSourceLabel = (delivery) => {
+  if (usesSourceTrackingStatus()) return trackingDisplayStatus(delivery).source;
   if (isCreditRefundRecord(delivery)) return 'OW';
+  if (delivery.carrier === 'Palletways' && Array.isArray(delivery.palletwaysShipments)) return 'Atlas API · Palletways';
   if (usesGlobalTrackingStatus() && ['Palletways', 'XDP'].includes(delivery.carrier) &&
       String(delivery.salesActivityDetails?.['Order Category'] || delivery.orderRelationKind || '').trim().toLowerCase() === 'cancelled') return 'OW Order Category';
   if (usesGlobalTrackingStatus() && delivery.carrier === 'Palletways')
@@ -1806,8 +1830,8 @@ const DeliveryFilters = (() => {
       ${[
         ['', 'All'],
         ['yes', 'Yes'],
-        ['no', field === 'booked_in' ? 'N/A' : 'No'],
-        ...(field === 'booked_in' ? [['not-yet', 'Not Yet']] : []),
+        ...(field === 'booked_in' ? [['not-yet', 'Not Yet'], ['not-applicable', 'Not Applicable']] : [['no', 'No']]),
+        ['unknown', 'Unknown'],
       ]
         .map(
           ([value, text]) =>
@@ -1956,13 +1980,7 @@ const DeliveryFilters = (() => {
         trackingWidgetFacets = null;
       }
     }
-    if (
-      previousCarrier !== fsrc &&
-      [previousCarrier, fsrc].some((carrier) =>
-        ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(carrier),
-      )
-    )
-      fs = '';
+    if (previousCarrier !== fsrc) fs = '';
     fs = compactFilter(filterValues(fs).filter((value) => trackingLevelCounts().statuses[value]));
     history.replaceState(
       { page },
@@ -2002,8 +2020,8 @@ const DeliveryFilters = (() => {
     if (fsrc === 'Palletways' && (depotCount > 0 || dashboardWidgetFilter === 'palletways-depot-3days'))
       categoryOptions.push(['palletways-depot-3days', `At Depot 3> Days (${depotCount})`]);
     const statusOptions = [
-      ['', `All statuses (${Object.values(counts).reduce((sum, count) => sum + count, 0)})`],
-      ...(trackingOrderKind() === 'refund' ? ['refund:complete', 'refund:not-yet', 'refund:cancelled'] : ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc)
+      ['', `All statuses (${levelCounts.statusTotal})`],
+      ...(usesSourceTrackingStatus() ? Object.keys(counts).sort((a, b) => a.localeCompare(b)) : trackingOrderKind() === 'refund' ? ['refund:complete', 'refund:not-yet', 'refund:cancelled'] : ['AMZ', 'Stopstart', 'XDP', 'Palletways'].includes(fsrc)
         ? Object.keys(counts).sort((a, b) => a.localeCompare(b))
         : [
             ...(usesGlobalTrackingStatus() ? ['Other Status'] : ['Awaiting']),
@@ -3321,7 +3339,9 @@ const DeliveryDetail = (() => {
       trackingText.textContent = 'Tracking number not available';
     }
 
-    const status = trackingStatus(delivery.st);
+    const palletways = delivery.carrier === 'Palletways';
+    const palletwaysStage = delivery.statusView?.stage || 'Status unavailable';
+    const status = palletways ? palletwaysStage : trackingStatus(delivery.st);
     const source =
       statusSourceLabel(delivery) === 'OW' ? 'OrderWise' : statusSourceDisplay(delivery);
 
@@ -3334,12 +3354,13 @@ const DeliveryDetail = (() => {
         delivery.palletwaysDetails?.dueAt,
     );
 
-    const hasDispatch =
+    const hasDispatch = palletways ? ['In Transit', 'Out for Delivery', 'Delivered'].includes(status) :
       Boolean(
         delivery.dispatchDate || delivery.carrierIssueDispatchDate || delivery.providerStartedAt,
       ) || ['Out for Delivery', 'Delivered'].includes(status);
 
-    const progressStep = isDelivered
+    const progressStep = palletways ? ({Delivered: 4, 'In Transit': 3, 'Out for Delivery': 3,
+      'Consignment Created': 1, Unscheduled: 1, 'Palletways Not Assigned': 0}[status] ?? 0) : isDelivered
       ? 4
       : hasDispatch
         ? 3
@@ -3347,7 +3368,7 @@ const DeliveryDetail = (() => {
           ? 2
           : 1;
 
-    const progressLabel = {
+    const progressLabel = palletways ? (delivery.statusView?.carrier || 'Status unavailable') : {
         Awaiting: 'Awaiting XDP status',
         Unscheduled: 'Awaiting despatch',
         Unassigned: 'On hold',
@@ -3398,7 +3419,7 @@ const DeliveryDetail = (() => {
 
         <div class="qd-progress-bottom">
           <span>Order created · ${esc(createdAt)}</span>
-          <span>${isDelivered ? 'Completed' : 'Not completed'}</span>
+          <span>${palletways ? isDelivered ? 'All consignments delivered' : status === 'Status unavailable' ? 'Status unavailable' : 'Not all consignments delivered' : isDelivered ? 'Completed' : 'Not completed'}</span>
         </div>
       </section>
     `,
@@ -3422,15 +3443,16 @@ const DeliveryDetail = (() => {
         : '';
 
     const showPalletwaysBooking = isPalletwaysDelivery(delivery) &&
-      String(delivery.deliveryMethodRaw || '').trim().toLowerCase() !== 'palletways next day';
-    const sheetBookedIn = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
-    const bookingDateTime = [delivery.palletwaysSheetBookInDate, delivery.palletwaysSheetBookInTime]
-      .map(value => String(value || '').trim()).filter(Boolean).join('\n');
-    const sheetRequest = String(delivery.palletwaysSheetBookInRequest || '').trim().toLowerCase();
-    const bookingState = sheetBookedIn !== 'yes' ? 'not-yet'
-      : String(delivery.palletwaysSheetBookInDate || '').trim() && String(delivery.palletwaysSheetBookInTime || '').trim() ? 'booked' : 'unknown';
+      !palletwaysNextDay(delivery);
+    const bookingRows = showPalletwaysBooking ? palletwaysBookingRows(delivery, 'booked_in') : [];
+    const bookingState = bookingRows.some(row => row.state === 'not-yet') ? 'not-yet'
+      : bookingRows.every(row => row.state === 'yes') ? 'booked' : 'unknown';
+    const bookingValue = bookingRows.map(row => [row.identity, row.text].filter(Boolean).join(': ')).join('\n');
+    const requestValue = showPalletwaysBooking
+      ? palletwaysBookingRows(delivery, 'book_in_request').map(row => [row.identity, row.text].filter(Boolean).join(': ')).join('\n')
+      : '';
     const bookedInRow = showPalletwaysBooking
-      ? factRow('Booked In', sheetBookedIn === 'yes' ? bookingDateTime || '\u2014' : 'Not Yet')
+      ? factRow('Booked In', bookingValue)
           .replace('data-summary-field="booked-in"', `data-summary-field="booked-in" data-booking-state="${bookingState}"`)
       : '';
     const orderWiseRow = delivery.rawStatus ? factRow('OrderWise status', owStatusDescription(delivery.rawStatus)) : '';
@@ -3448,7 +3470,7 @@ const DeliveryDetail = (() => {
         factRow('Order reference', delivery.orderRef || delivery.orderReference).replace('</b>', `</b>${replacementBadge(delivery)}`),
         factRow('Booking status', delivery.bookingStatus),
         showPalletwaysBooking ? orderWiseRow : '',
-        showPalletwaysBooking ? factRow('Book In Request', sheetRequest === 'yes' ? 'Yes' : sheetRequest === 'no' ? 'No' : '\u2014') : '',
+        showPalletwaysBooking ? factRow('Book In Request', requestValue) : '',
         ['AMZ', 'XDP', 'Stopstart'].includes(delivery.carrier) || isPalletwaysDelivery(delivery)
           ? factRow('Special instructions', delivery.specialInstructions || delivery.instructions, true)
           : '',
@@ -3524,6 +3546,7 @@ const DeliveryDetail = (() => {
 
   function palletwaysTrackingId(delivery) {
     return String(
+      palletwaysApiShipments(delivery).find(item => /^\d{11}$/.test(String(item.tracking_id || '').trim()))?.tracking_id ||
       delivery?.palletwaysDetails?.trackingId || delivery?.trk || delivery?.owTrackingNo || '',
     ).trim();
   }
@@ -3906,6 +3929,51 @@ const DeliveryDetail = (() => {
     delivery.statusSource = 'Palletways';
   }
 
+  const palletwaysDocumentsPending = new Set();
+
+  async function loadPalletwaysDocuments(deliveryId, force = false) {
+    const delivery = get(deliveryId);
+    if (!delivery || !isPalletwaysDelivery(delivery) || palletwaysDocumentsPending.has(deliveryId)) return;
+    if (!force && Array.isArray(delivery.palletwaysDocumentRecords)) return;
+    const shipments = [...new Map(palletwaysBookingShipments(delivery)
+      .filter(item => /^\d{11}$/.test(String(item.tracking_id || '').trim()))
+      .map(item => [String(item.tracking_id).trim(), item])).values()];
+    if (!shipments.length) return;
+    palletwaysDocumentsPending.add(deliveryId);
+    delivery.palletwaysDocumentsLoading = true;
+    delivery.palletwaysDocumentsError = '';
+    try {
+      const results = await Promise.allSettled(shipments.map(async shipment => {
+        const response = await fetch(`/api/palletways/live/${encodeURIComponent(shipment.tracking_id)}`, {cache: 'no-store'});
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Palletways documents unavailable.');
+        const record = {carrier: 'Palletways'};
+        applyPalletwaysLive(record, data);
+        return {
+          trackingId: shipment.tracking_id,
+          consignmentNumber: shipment.consignment_number,
+          documents: data.documents || {},
+          details: record.palletwaysDetails,
+        };
+      }));
+      delivery.palletwaysDocumentRecords = results.filter(item => item.status === 'fulfilled').map(item => item.value);
+      const failed = results.find(item => item.status === 'rejected');
+      if (failed) delivery.palletwaysDocumentsError = failed.reason.message;
+    } catch (error) {
+      delivery.palletwaysDocumentsError = error.message || 'Palletways documents unavailable.';
+    } finally {
+      palletwaysDocumentsPending.delete(deliveryId);
+      delivery.palletwaysDocumentsLoading = false;
+      const current = get(deliveryId);
+      if (current && current !== delivery) Object.assign(current, {
+        palletwaysDocumentRecords: delivery.palletwaysDocumentRecords,
+        palletwaysDocumentsLoading: false,
+        palletwaysDocumentsError: delivery.palletwaysDocumentsError,
+      });
+      if (String(sel) === String(deliveryId)) render();
+    }
+  }
+
   const palletwaysPortalCache = new Map();
   const palletwaysPortalPending = new Set();
 
@@ -3922,45 +3990,43 @@ const DeliveryDetail = (() => {
     const pendingKey = `order:${order}`;
     if (palletwaysPortalPending.has(pendingKey)) return;
     palletwaysPortalPending.add(pendingKey);
+    const trackingIds = [...new Set(palletwaysBookingShipments(delivery)
+      .map(item => String(item.tracking_id || '').trim())
+      .filter(value => /^\d{11}$/.test(value)))];
     delivery.palletwaysPortalLoading = true;
-    delivery.palletwaysLookupMatched = false;
+    delivery.palletwaysLookupMatched = trackingIds.length > 0;
     delivery.palletwaysPortalError = '';
     if (String(sel) === String(deliveryId)) render();
-    let trackingId = '';
     try {
-      const query = force ? '?refresh=1' : '';
-      const matched = await fetch(
-        `/api/palletways/order-tracking/${encodeURIComponent(order)}${query}`,
-        { cache: 'no-store' },
-      );
-      const mapping = await matched.json();
-      if (!matched.ok)
-        throw new Error(mapping.error || 'Could not match this order in the Palletways tab.');
-      trackingId = String(mapping.trackingId || '').trim();
-      if (!/^\d{11}$/.test(trackingId))
-        throw new Error('The matched column B value is not a valid Palletways tracking ID.');
-      delivery.trk = trackingId;
-      delivery.palletwaysLookupMatched = true;
-      delivery.palletwaysDetails = { ...(delivery.palletwaysDetails || {}), trackingId };
-      const current = get(deliveryId);
-      if (current && current !== delivery) {
-        current.trk = trackingId;
-        current.palletwaysDetails = { ...(current.palletwaysDetails || {}), trackingId };
+      if (!trackingIds.length) {
+        throw new Error('No Palletways tracking ID is available from Atlas API for this order.');
       }
-      loadPalletwaysLive(deliveryId);
-      const cached = palletwaysPortalCache.get(trackingId);
-      if (!force && cached && Date.now() - cached.fetchedAt < 120000) {
-        delivery.palletwaysPortal = cached.data;
-      } else {
+      const query = force ? '?refresh=1' : '';
+      const results = await Promise.allSettled(trackingIds.map(async trackingId => {
+        const cached = palletwaysPortalCache.get(trackingId);
+        if (!force && cached && Date.now() - cached.fetchedAt < 120000) return cached.data;
         const response = await fetch(
           `/api/palletways/portal/${encodeURIComponent(trackingId)}${query}`,
           { cache: 'no-store' },
         );
         const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error || `Palletways portal HTTP ${response.status}`);
+        if (!response.ok) throw new Error(data.error || `Palletways portal HTTP ${response.status}`);
         palletwaysPortalCache.set(trackingId, { data, fetchedAt: Date.now() });
-        delivery.palletwaysPortal = data;
+        return data;
+      }));
+      const available = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+      delivery.palletwaysPortal = {
+        media: available.flatMap(result => result.media || []),
+        consignments: available.map(result => ({
+          ...result,
+          consignmentNumbers: palletwaysBookingShipments(delivery)
+            .filter(shipment => String(shipment.tracking_id || '').trim() === String(result.trackingId || '').trim())
+            .map(shipment => shipment.consignment_number).filter(Boolean),
+        })),
+      };
+      const failed = results.filter(result => result.status === 'rejected');
+      if (failed.length) {
+        throw new Error(`${failed.length} of ${trackingIds.length} Palletways photo lookups failed: ${failed[0].reason?.message || 'Portal unavailable'}`);
       }
     } catch (error) {
       delivery.palletwaysPortalError =
@@ -3975,10 +4041,6 @@ const DeliveryDetail = (() => {
           palletwaysPortalLoading: false,
           palletwaysPortalError: delivery.palletwaysPortalError,
         });
-        if (trackingId) {
-          current.trk = trackingId;
-          current.palletwaysDetails = { ...(current.palletwaysDetails || {}), trackingId };
-        }
       }
       if (String(sel) === String(deliveryId)) render();
     }
@@ -3996,7 +4058,7 @@ const DeliveryDetail = (() => {
       const completed = !matched ? 0 : 1 + Number(!live) + Number(!portal);
       const percent = Math.round(completed * 100 / 3);
       const label = !matched ? 'Matching Palletways tracking number' :
-        live && portal ? 'Loading activity and documents' : live ? 'Loading tracking activity' : 'Loading shipment documents';
+        live && portal ? 'Loading activity and consignment details' : live ? 'Loading tracking activity' : 'Loading consignment details and photos';
       tabs.insertAdjacentHTML('afterend', `<div class="qd-amazon-fetching qd-amazon-loading qd-palletways-loading" role="status" aria-live="polite"><div class="qd-amazon-progress"><span class="qd-amazon-spinner" role="progressbar" aria-label="Palletways lookup steps completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}" aria-valuetext="${completed} of 3 steps completed" style="--qd-amazon-progress:${percent}%"></span><small>${percent}% · ${completed}/3 steps completed · ${esc(label)}</small></div></div>`);
     } else if (delivery.palletwaysLiveError) {
       tabs.insertAdjacentHTML('afterend', `<p class="qd-amazon-empty" role="alert">${esc(delivery.palletwaysLiveError)}</p>`);
@@ -4907,6 +4969,7 @@ const DeliveryDetail = (() => {
         .trim()
         .toLowerCase() === 'palletways'
     ) {
+      loadPalletwaysDocuments(id);
       loadPalletwaysPortal(id);
     }
 
@@ -5091,7 +5154,7 @@ const DeliveryDetail = (() => {
             <div class="qd-purchase-actions-row">
             ${purchaseStoreLogo(delivery, 'purchase-store-logo-detail')}
             </div>
-            <div class="qd-purchase-skus"><span class="mut">SKU of items</span><div>${deliverySkuMarkup(delivery)}</div></div>
+            <div class="qd-purchase-skus">${deliverySkuQuantityMarkup(delivery)}</div>
           </div>`
               : ''
           }
@@ -5110,7 +5173,7 @@ const DeliveryDetail = (() => {
             ${delivery.carrier === 'Palletways' && postcode ? `<span class="qd-tracking-postcode">Customer delivery postcode: <strong>${esc(postcode)}</strong></span>` : ''}
           </div>
         </section>
-        ${isCreditRefundRecord(delivery) ? '' : palletwaysDetails(delivery, customerCopyButton)}
+        ${isCreditRefundRecord(delivery) ? '' : palletwaysPortalDetailsMarkup(delivery, customerCopyButton)}
         ${isCreditRefundRecord(delivery) ? '' : stopstartDetailsMarkup(delivery)}
         ${
           !isCreditRefundRecord(delivery) && delivery.carrier === 'XDP'
@@ -5157,6 +5220,7 @@ const DeliveryDetail = (() => {
     </aside>`;
 
     decorateTrackingPanel(delivery, provider, podItems);
+    hydrateProductLinks(container());
     renderPalletwaysProgress(delivery);
     renderAmazonShippingContent(delivery);
     const renderedPanel = container().querySelector('.qd-tracking-view');
@@ -5350,6 +5414,7 @@ const DeliveryDetail = (() => {
 
     if (button.dataset.detailAction === 'close') close();
     if (button.dataset.detailAction === 'refresh-palletways-photos' && sel)
+      loadPalletwaysDocuments(sel, true);
       loadPalletwaysPortal(sel, true);
 
     if (button.dataset.detailAction === 'close-gallery') closeGallery();

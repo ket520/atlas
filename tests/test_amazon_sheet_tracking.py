@@ -8,7 +8,7 @@ import delivery_data
 
 class AmazonSheetTrackingTests(unittest.TestCase):
     def test_lost_and_undeliverable_are_failed_and_recover_dynamically(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             source = [{'Order no': str(658386 + i), 'Delivery method': 'AMA XL', 'Tracking No': f'TRACK-{i}', 'Status': 'P'} for i in range(3)]
             delivery_data.archive(source)
             rows = [{'trackingId': f'TRACK-{i}', 'status': status} for i, status in enumerate(['UNDELIVERABLE', 'LOST', 'IN_TRANSIT'])]
@@ -23,7 +23,7 @@ class AmazonSheetTrackingTests(unittest.TestCase):
             self.assertEqual(delivery_data.detail('658387')['st'], 'Delivered')
 
     def test_sales_activity_tracking_stays_with_its_order_and_is_not_replaced_by_amazon_tab(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             source = [
                 {'Order no': '658386', 'Delivery method': 'AMA XL', 'Tracking No': 'SALES-TRACKING-1', 'Status': 'P'},
                 {'Order no': '658387', 'Delivery method': 'AMA XL', 'Tracking No': 'SALES-TRACKING-2', 'Status': 'P'},

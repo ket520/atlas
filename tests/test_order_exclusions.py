@@ -9,7 +9,7 @@ from order_exclusions import exclude
 
 class OrderExclusionTests(unittest.TestCase):
     def test_deleted_orders_cannot_return_from_sync_or_direct_insert(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             rows = [
                 {'Order no': '640477', 'Delivery method': 'Palletways', 'Status': 'P'},
                 {'Order no': '640318', 'Delivery method': 'Palletways', 'Order Category': 'Credit/Refund', 'Original order Number': '100', 'Status': 'C'},
@@ -33,7 +33,7 @@ class OrderExclusionTests(unittest.TestCase):
                 self.assertFalse(db.execute("SELECT 1 FROM deliveries WHERE order_id='640477'").fetchone())
 
     def test_invalid_id_does_not_delete_records(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([{'Order no': '100', 'Delivery method': 'Palletways'}])
             with delivery_data.connect() as db:
                 with self.assertRaises(ValueError):

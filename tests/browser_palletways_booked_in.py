@@ -1,6 +1,6 @@
-"""Booked In presents BT/BU on two lines while filters retain Z's Yes/No facts."""
 from playwright.sync_api import sync_playwright, expect
 from browser_responsive_tables import serve
+
 
 with sync_playwright() as pw:
     browser = pw.chromium.launch()
@@ -14,38 +14,36 @@ with sync_playwright() as pw:
     page.wait_for_function("typeof R === 'function'")
     page.evaluate("""() => {
       const facts = [
-        {deliveryMethodRaw: 'Palletways Next Day', palletwaysSheetBookedIn: 'No'},
-        {deliveryMethodRaw: 'Palletways', palletwaysSheetBookedIn: 'No'},
-        {deliveryMethodRaw: 'Palletways BQ', palletwaysSheetBookedIn: ' no '},
-        {deliveryMethodRaw: 'Palletways Next Day', palletwaysSheetBookedIn: ' YES ', palletwaysSheetBookInDate: '05/11/2026', palletwaysSheetBookInTime: '14:30'},
-        {deliveryMethodRaw: 'Palletways', palletwaysSheetBookedIn: 'Yes'},
-        {deliveryMethodRaw: 'Palletways', palletwaysSheetBookedIn: ''},
+        {method:'Palletways Next Day',booked:false},
+        {method:'Palletways',booked:false},
+        {method:'Palletways BQ',booked:false},
+        {method:'Palletways Next Day',booked:true},
+        {method:'Palletways',booked:true,date:'05/11/2026'},
+        {method:'Palletways',booked:null},
       ];
-      DeliveryStore.hydrate({deliveries: facts.map((row, i) => ({id: 'booking-' + i, order: '65000' + i, carrier: 'Palletways', st: 'Scheduled', logs: [], ...row})), activity: [], integrations: []});
-      D = DeliveryStore.deliveries(); fsrc = 'Palletways'; R();
+      DeliveryStore.hydrate({deliveries:facts.map((fact,i)=>({
+        id:'booking-'+i,order:'65000'+i,carrier:'Palletways',st:'Scheduled',logs:[],
+        deliveryMethodRaw:fact.method,palletwaysShipments:[{
+          tracking_id:'6000000000'+i,consignment_number:'CON-'+i,
+          booking_summary:{booked_in:fact.booked,book_in_request:null,booking_date:fact.date||null}
+        }]
+      })),activity:[],integrations:[]});
+      D=DeliveryStore.deliveries();fsrc='Palletways';R();
     }""")
     cells = page.locator('.tracking-booked-in-cell')
     expect(cells).to_have_count(6)
-    expect(cells.nth(0)).to_have_text('N/A')
+    expect(cells.nth(0)).to_have_text('Not Applicable')
     expect(cells.nth(1)).to_have_text('Not Yet')
     expect(cells.nth(2)).to_have_text('Not Yet')
-    expect(cells.nth(3)).to_contain_text('05/11/2026')
-    expect(cells.nth(3)).to_contain_text('14:30')
-    assert cells.nth(3).evaluate("el => el.children[1].getBoundingClientRect().top >= el.children[0].getBoundingClientRect().bottom")
-    expect(cells.nth(4)).to_have_text('\u2014')
-    expect(cells.nth(5)).to_have_text('\u2014')
-    page.evaluate("fbookedIn = 'yes'; rows()")
-    expect(cells).to_have_count(2)
-    page.evaluate("fbookedIn = 'no'; rows()")
-    expect(cells).to_have_count(1)
-    expect(cells.nth(0)).to_have_text('N/A')
-    page.evaluate("fbookedIn = 'not-yet'; rows()")
-    expect(cells).to_have_count(2)
-    expect(cells.nth(0)).to_have_text('Not Yet')
+    expect(cells.nth(3)).to_have_text('—')
+    expect(cells.nth(4)).to_have_text('05/11/2026')
+    expect(cells.nth(5)).to_have_text('—')
+    for value, count in [('yes', 1), ('not-applicable', 1), ('not-yet', 2), ('unknown', 1)]:
+        page.evaluate('(value) => {fbookedIn=value;rows()}', value)
+        expect(cells).to_have_count(count)
     page.locator('[data-booking-field="booked_in"][data-delivery-filter-action="toggle-booking"]').click()
-    expect(page.locator('#tracking-booked_in-menu [data-value="yes"]')).to_have_text('Yes')
-    expect(page.locator('#tracking-booked_in-menu [data-value="no"]')).to_have_text('N/A')
-    expect(page.locator('#tracking-booked_in-menu [data-value="not-yet"]')).to_have_text('Not Yet')
+    for value in ('yes', 'not-yet', 'not-applicable', 'unknown'):
+        expect(page.locator(f'#tracking-booked_in-menu [data-value="{value}"]')).to_have_count(1)
     assert not errors, errors
     browser.close()
-    print('PASS: Next Day No, other services Not Yet, sheet date/time on two lines, blank fallback and unchanged booking filters')
+    print('PASS: API Booked In values and filters')

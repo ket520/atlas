@@ -1,11 +1,13 @@
 import html
 import re
 import time
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote, unquote
 
 from playwright.sync_api import sync_playwright
+from palletways_portal_details import extract_consignment_details
 
 
 ROOT = Path(__file__).resolve().parent
@@ -28,7 +30,6 @@ _browser_context = None
 
 
 def _shared_context():
-    """Own Playwright on one thread and retain its browser between HTTP requests."""
     global _browser_playwright, _browser_context
     if _browser_context is not None:
         try:
@@ -51,7 +52,7 @@ def _shared_context():
         _browser_playwright = None
     _browser_playwright = sync_playwright().start()
     try:
-        _browser_context = _open_context(_browser_playwright, headless=True)
+        _browser_context = _open_context(_browser_playwright, headless=False)
         return _browser_context
     except Exception:
         _browser_playwright.stop()
@@ -381,6 +382,8 @@ def portal_details(tracking_id, force=False):
     result = {
         "ok": True,
         "trackingId": tracking_id,
+        "details": extract_consignment_details(source),
+        "readAt": datetime.now(timezone.utc).isoformat(),
 
         "bookInRequested":
             _yes_no(
