@@ -24,7 +24,7 @@ class CarrierIssueTests(unittest.TestCase):
     def test_exact_carrier_and_reference_join_with_followup_history(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "issues.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "issues.sqlite3"),
         ):
             delivery_data.archive(
                 [

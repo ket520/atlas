@@ -9,7 +9,11 @@
     loading.textContent = 'Opening your workspace\u2026';
     view.append(loading);
   }
-  const modules = ['viewport', 'horizontal-scroll', 'api', 'data', 'services', 'ui', 'dashboard-home', 'dashboard', 'deliveries', 'manufacture-claims', 'admin', 'app'];
+  const modules = [
+    'viewport', 'horizontal-scroll', 'api', 'data', 'services',
+    'status-views', 'palletways-shipments', 'product-links', 'ui',
+    'dashboard-home', 'dashboard', 'deliveries', 'manufacture-claims', 'admin', 'app',
+  ];
   const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
   async function ensureStyles(link) {

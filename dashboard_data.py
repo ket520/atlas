@@ -106,6 +106,9 @@ def snapshot(store='', carrier='', **visibility):
                     "carrier",
                     "postcode",
                     "palletwaysSheetStatus",
+                    "palletwaysShipments",
+                    "statusView",
+                    "rawStatus",
                     "st",
                     "bookingStatus",
                     "skuItems",
@@ -160,7 +163,10 @@ def widget_facets(key):
             f"{CREDIT_REFUND_SQL} AS creditRefund, "
             "global_tracking_status(payload) AS overallStatus, "
             "json_extract(payload, '$.rawStatus') AS rawStatus, "
+            "tracking_view_status(payload, 'sales') AS salesStatus, "
+            "tracking_view_status(payload, 'carrier') AS carrierStatus, "
+            "palletways_statuses(payload) AS palletwaysStatuses, "
             "json_extract(payload, '$.palletwaysSheetMatched') AS palletwaysSheetMatched, "
             f"SUM(CASE WHEN {depot_clause} THEN 1 ELSE 0 END) AS palletwaysDepotCount, COUNT(*) AS count "
-            "FROM deliveries WHERE " + clause + " GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15",
+            "FROM deliveries WHERE " + clause + " GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
             [datetime.now(ZoneInfo('Europe/London')).date().isoformat(), *values])]

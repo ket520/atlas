@@ -16,7 +16,7 @@ from sales_activity import store_name
 
 class PurchaseStoreTests(unittest.TestCase):
     def test_company_switches_hide_store_even_with_different_carrier(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'stores.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'stores.sqlite3'):
             with delivery_data.connect() as db:
                 for order, code, order_type in [('1', 'WILKO', 'eBay'), ('2', 'WAYFAIR', 'eBay'),
                     ('3', 'AMAZON', 'Sales'), ('4', '', 'HR_Replacement'), ('5', 'AMAZON', 'Amazon')]:
@@ -29,7 +29,7 @@ class PurchaseStoreTests(unittest.TestCase):
             self.assertEqual([row['order'] for row in result['deliveries']], ['5'])
 
     def test_willesden_filter_uses_ah_even_when_saved_store_label_is_empty(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'stores.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'stores.sqlite3'):
             delivery = {'id': '648326', 'order': '648326', 'carrier': 'AMZ', 'st': 'Scheduled',
                         'storeCode': 'EBAY_WB', 'purchaseStore': '',
                         'salesActivityDetails': {'Order Type': 'eBay', 'Order Analysis': 'N/A'}}
@@ -103,7 +103,7 @@ class PurchaseStoreTests(unittest.TestCase):
         sheet = Mock()
         sheet.get_all_values.return_value = [headers, *values]
         rows = worksheet_to_records(sheet)
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'stores.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'stores.sqlite3'):
             delivery_data.archive(rows)
             first = delivery_data.query_records(store='Amazon', limit=1)
             second = delivery_data.query_records(store='Amazon', limit=1, offset=1)

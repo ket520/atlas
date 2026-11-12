@@ -6,6 +6,18 @@ from unittest.mock import patch
 
 import atlas_postgres_provider as provider
 import delivery_data
+import google_sheets
+
+
+class GoogleSheetsDisabledTests(unittest.TestCase):
+    def test_disabled_source_never_authenticates_or_connects(self):
+        with patch.dict(os.environ, {"ATLAS_GOOGLE_SHEETS_ENABLED": "false"}), patch.object(
+            google_sheets, "gspread"
+        ) as client, patch.object(google_sheets, "_DirectSpreadsheet") as direct:
+            with self.assertRaisesRegex(RuntimeError, "Google Sheets is disabled"):
+                google_sheets.get_spreadsheet()
+            client.authorize.assert_not_called()
+            direct.assert_not_called()
 
 
 class Response(io.BytesIO):
@@ -17,6 +29,16 @@ class Response(io.BytesIO):
 
 
 class AtlasPostgresProviderTests(unittest.TestCase):
+    def test_api_store_uses_named_fields_instead_of_column_position(self):
+        record = {"order_no": "1", "cells": {
+            "Delivery method": "XDP", "Order Type": "B&Q - Neshome",
+            "Order Analysis": "B&Q - Neshome", "Product SKU": "ESHH03S", "Item Quantity": "1.0000",
+        }}
+        delivery = delivery_data.row_to_delivery(provider._row(record))
+        self.assertEqual(delivery['storeCode'], 'B&Q')
+        self.assertEqual(delivery['purchaseStore'], 'B&Q')
+        self.assertEqual(delivery['items'][0]['quantity'], '1.0000')
+
     def test_nested_response_is_mapped_to_sales_activity_row_shape(self):
         payload = {"data": {"orders": [{
             "id": "db-1",
@@ -54,7 +76,7 @@ class AtlasPostgresProviderTests(unittest.TestCase):
                 rows = provider.read_sales_activity()
         self.assertEqual([row["Order no"] for row in rows], ["OW-1", "OW-2"])
         self.assertTrue(calls[0][1].startswith("Basic "))
-        self.assertTrue(calls[0][0].endswith("limit=1&offset=0"))
+        self.assertTrue(calls[0][0].endswith("limit=1&offset=0&include=palletways_booking"))
         self.assertEqual(calls[0][2], 20.0)
 
     def test_real_starpark_items_response_preserves_cells_and_offset(self):
@@ -83,8 +105,8 @@ class AtlasPostgresProviderTests(unittest.TestCase):
                 rows = provider.read_sales_activity()
         self.assertEqual([row["Order no"] for row in rows], ["OW-1", "OW-2", "OW-3"])
         self.assertEqual(json.loads(rows[0]["Custom object"]), {"source": "db"})
-        self.assertTrue(calls[0].endswith("limit=2&offset=0"))
-        self.assertTrue(calls[1].endswith("limit=2&offset=2"))
+        self.assertTrue(calls[0].endswith("limit=2&offset=0&include=palletways_booking"))
+        self.assertTrue(calls[1].endswith("limit=2&offset=2&include=palletways_booking"))
 
     def test_connection_check_reads_health_and_two_orders_without_service_token(self):
         calls = []

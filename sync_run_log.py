@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import threading
 import time
+from atlas_config import google_sheets_enabled
 
 TAB = '_Sync_Run_Log'
 _lock = threading.Lock()
@@ -32,6 +33,8 @@ def parse_rows(values):
 
 def read_snapshot():
     global _snapshot, _checked
+    if not google_sheets_enabled():
+        return {'rows': [], 'updatedAt': None, 'unavailable': False, 'disabled': True}
     with _lock:
         if _snapshot is not None and time.monotonic() - _checked < 300:
             return _snapshot

@@ -41,6 +41,10 @@ def global_tracking_status(delivery):
         delivery = json.loads(delivery)
     stored = delivery.get('st') or delivery.get('status')
     carrier = delivery.get('carrier')
+    if carrier == 'Palletways' and 'palletwaysShipments' in delivery:
+        from palletways_shipments import delivery_stage
+        stage = delivery_stage(delivery)
+        return PALLETWAYS_GLOBAL.get(stage.upper(), canonical_status(stage))
     details = delivery.get('salesActivityDetails') or {}
     category = str(details.get('Order Category') or delivery.get('orderCategory') or
                    delivery.get('orderRelationKind') or delivery.get('relatedKind') or '').strip().lower()

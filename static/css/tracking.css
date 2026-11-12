@@ -728,6 +728,110 @@ body[data-page="Guidance"] :is(.guidance-intro, .guidance-workflow, .guidance-re
   font-size: 14px;
   font-weight: 700;}
 
+.qd-purchase-items {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.tracking-shipment-status + .tracking-shipment-status,
+.tracking-shipment-number + .tracking-shipment-number {
+  margin-top: 8px;
+}
+
+.tracking-shipment-number {
+  display: flex;
+}
+
+.qd-palletways-shipment {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ln, #dfe2f1);
+}
+
+.qd-palletways-shipment > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.qd-palletways-shipment dl {
+  margin: 10px 0 0;
+}
+
+.qd-palletways-shipment dl > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 2fr);
+  gap: 8px;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.qd-palletways-shipment dt {
+  color: var(--mut);
+}
+
+.qd-palletways-shipment dd {
+  margin: 0;
+}
+
+.qd-palletways-api-section {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+
+.qd-palletways-api-section summary {
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.qd-palletways-api-section dl > div {
+  display: block;
+}
+
+.qd-palletways-record + .qd-palletways-record {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ln, #dfe2f1);
+}
+
+.qd-product-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: #a7b9d5;
+  text-underline-offset: 3px;
+}
+
+.qd-product-link:hover,
+.qd-product-link:focus-visible {
+  color: var(--accent, #245bd6);
+  text-decoration-color: currentColor;
+}
+
+.qd-purchase-items th,
+.qd-purchase-items td {
+  padding: 3px 0;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.qd-purchase-items th {
+  padding-bottom: 6px;
+  font-size: 14px;
+}
+
+.qd-purchase-items th:last-child,
+.qd-purchase-items td:last-child {
+  width: 76px;
+  padding-left: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .tracking-sku-list li {
   margin: 0 0 3px;
   overflow-wrap: anywhere;}
@@ -2431,6 +2535,19 @@ body[data-order-kind="refund"] .current-table tbody tr.tracking-searched-row > t
 .dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dt { color: #838ba1; font-size: 12px; font-weight: 500; line-height: 1.5; }
 .dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dd { width: 100%; color: var(--atlas-space); font-size: 14px; font-weight: 600; line-height: 1.6; }
 .dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-provider .qd-facts dd .qd-customer-copy { margin-left: 5px; }
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-palletways-details .qd-facts {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-palletways-details .qd-facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: start;
+  gap: 12px;
+}
+.dr.qd.qd-tracking-view[data-qd-tab="details"] .qd-palletways-details .qd-facts :is(dt, dd) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .dr.qd.qd-tracking-view.qd-details-enter[data-qd-tab="details"] :is(.qd-summary, .qd-provider, .qd-stopstart-details) { animation: qd-details-reveal 240ms ease-out both; }
 @keyframes qd-details-reveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 420px) {

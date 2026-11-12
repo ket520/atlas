@@ -45,7 +45,7 @@ class XdpActivityTests(unittest.TestCase):
         sheet.worksheet.assert_called_once_with('XDP Activity')
 
     def test_activity_survives_refresh_and_bad_xml_without_changing_status(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             ow = [{'Order no': '655824', 'Delivery method': 'XDP', 'Tracking No': 'ZDBJSD020303', 'Status': 'P'}]
             delivery_data.archive(ow)
             rows = [{'order': '655824', 'status': 'EXCEPTION', 'activityXml': event('1', '16-10-2026', '10:41:00', 'DELIVERED')}]
@@ -67,7 +67,7 @@ class XdpActivityTests(unittest.TestCase):
             self.assertEqual(len(delivery_data.detail('655824')['xdpEvents']), 3)
 
     def test_exact_order_reference_matches_when_ow_tracking_is_marketplace_reference(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             ow = [{'Order no': '655824', 'Delivery method': 'XDP', 'Tracking No': 'BQS-59501', 'Status': 'P'}]
             delivery_data.archive(ow)
             xml = event('1438901074', '16-10-2026', '10:41:00', 'DELIVERED', 'ScanX Status: &quot;Delivered&quot;')

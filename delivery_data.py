@@ -10,8 +10,12 @@ from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
+from atlas_config import GOOGLE_SHEET_SOURCES, google_sheets_enabled, setting
 from sales_activity import product_items, sku_value, store_code, store_name
 from tracking_status import global_tracking_status
+from status_views import status_value, status_view
+from palletways_shipments import normalize_shipments, shipment_statuses
+from palletways_booking import matches_payload
 from van_cancellations import ow_cancelled_van
 
 ROOT = Path(__file__).resolve().parent
@@ -35,17 +39,7 @@ LOGGER = logging.getLogger("atlas.delivery_data")
 
 
 def configured_delivery_source():
-    value = os.environ.get("ATLAS_DELIVERY_SOURCE")
-    if value is not None:
-        return value.strip().lower()
-    for filename in (".env.local", ".env"):
-        path = ROOT / filename
-        if not path.exists():
-            continue
-        for line in path.read_text(encoding="utf-8-sig").splitlines():
-            if line.strip().startswith("ATLAS_DELIVERY_SOURCE="):
-                return line.split("=", 1)[1].strip().strip("\"'").lower()
-    return "google_sheets"
+    return setting("ATLAS_DELIVERY_SOURCE", "google_sheets").lower()
 
 
 def configured_db_path():
@@ -1060,7 +1054,7 @@ def row_to_delivery(row):
     if postcode and re.sub(r"\s+", "", postcode).casefold() not in re.sub(r"\s+", "", address).casefold():
         full_address = ", ".join(part for part in (address, postcode) if part)
     raw_status = clean(row.get("Status"))
-    return {
+    delivery = {
         "id": order,
         "order": order,
         "orderRef": clean(row.get("Order reference")),
@@ -1103,6 +1097,9 @@ def row_to_delivery(row):
         "src": "OW",
         "logs": [],
     }
+    if carrier == 'Palletways' and 'palletways_shipments' in row:
+        delivery['palletwaysShipments'] = normalize_shipments(row['palletways_shipments'])
+    return delivery
 
 
 @contextmanager
@@ -1111,6 +1108,9 @@ def connect():
     db_path.parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(db_path, timeout=20)
     db.row_factory = sqlite3.Row
+    db.create_function('tracking_view_status', 2, status_value, deterministic=True)
+    db.create_function('palletways_statuses', 1, lambda payload: json.dumps(shipment_statuses(json.loads(payload))), deterministic=True)
+    db.create_function('palletways_booking_match', 3, matches_payload, deterministic=True)
     db.create_function('global_tracking_status', 1, global_tracking_status, deterministic=True)
     db.create_function('ow_cancelled_van', 1, lambda payload: int(ow_cancelled_van(payload)), deterministic=True)
     db.create_function('purchase_store', 1, lambda payload: purchase_store(json.loads(payload)), deterministic=True)
@@ -1207,6 +1207,10 @@ def archive(rows, observed_at=None):
         delivery['orderRelationKind'] = ('Replacement' if link[1] == 'order' else 'Credit/Refund') if link else ''
         delivery['originalOrder'] = link[0] if link else ''
         delivery["items"] = product_items(group["rows"])
+        if delivery['carrier'] == 'Palletways' and any('palletways_shipments' in row for row in group['rows']):
+            delivery['palletwaysShipments'] = normalize_shipments([
+                shipment for row in group['rows'] for shipment in normalize_shipments(row.get('palletways_shipments'))
+            ])
         delivery['productSkuItems'] = list(dict.fromkeys(item['sku'] for row in group['rows']
             for item in product_items([{'Product SKU': row.get('Product SKU')}])) )
         delivery["skuItems"] = ", ".join(dict.fromkeys(item["sku"] for item in delivery["items"]))
@@ -1833,60 +1837,79 @@ def sync(force=False):
         count = archive(read_sales_activity_source(), now.isoformat())
         source_updated_at = dict((cached or {}).get("sourceUpdatedAt", {}))
         source_updated_at["ow"] = datetime.now(timezone.utc).isoformat()
-        try:
-            from google_sheets import read_stopstart
-            from stopstart import archive as archive_stopstart
+        sheets_enabled = google_sheets_enabled()
+        if not sheets_enabled:
+            for source in GOOGLE_SHEET_SOURCES:
+                source_updated_at.pop(source, None)
+        if sheets_enabled:
+            try:
+                from google_sheets import read_stopstart
+                from stopstart import archive as archive_stopstart
 
-            stopstart_count = archive_stopstart(read_stopstart(), now.isoformat())
-            source_updated_at["stopstart"] = datetime.now(timezone.utc).isoformat()
-            stopstart_error = False
-        except Exception:
-            stopstart_count = 0
-            stopstart_error = True
-        try:
-            from google_sheets import read_xdp_statuses
-            from xdp_sheet import archive as archive_xdp
+                stopstart_count = archive_stopstart(read_stopstart(), now.isoformat())
+                source_updated_at["stopstart"] = datetime.now(timezone.utc).isoformat()
+                stopstart_error = False
+            except Exception:
+                stopstart_count = 0
+                stopstart_error = True
+        else:
+            stopstart_count, stopstart_error = 0, False
+        if sheets_enabled:
+            try:
+                from google_sheets import read_xdp_statuses
+                from xdp_sheet import archive as archive_xdp
 
-            xdp_count = archive_xdp(read_xdp_statuses())
-            source_updated_at["xdp"] = datetime.now(timezone.utc).isoformat()
-            xdp_error = False
-        except Exception:
-            xdp_count, xdp_error = 0, True
-        try:
-            from google_sheets import read_xdp_activity
-            from xdp_sheet import archive_activity
+                xdp_count = archive_xdp(read_xdp_statuses())
+                source_updated_at["xdp"] = datetime.now(timezone.utc).isoformat()
+                xdp_error = False
+            except Exception:
+                xdp_count, xdp_error = 0, True
+        else:
+            xdp_count, xdp_error = 0, False
+        if sheets_enabled:
+            try:
+                from google_sheets import read_xdp_activity
+                from xdp_sheet import archive_activity
 
-            xdp_activity_count = archive_activity(read_xdp_activity())
-            source_updated_at['xdpActivity'] = datetime.now(timezone.utc).isoformat()
-            xdp_activity_error = False
-        except Exception:
-            xdp_activity_count, xdp_activity_error = 0, True
+                xdp_activity_count = archive_activity(read_xdp_activity())
+                source_updated_at['xdpActivity'] = datetime.now(timezone.utc).isoformat()
+                xdp_activity_error = False
+            except Exception:
+                xdp_activity_count, xdp_activity_error = 0, True
+        else:
+            xdp_activity_count, xdp_activity_error = 0, False
         amazon_error_message = None
-        try:
-            from google_sheets import read_amazon_shipping
+        if sheets_enabled:
+            try:
+                from google_sheets import read_amazon_shipping
 
-            amazon_count = archive_amazon_shipping(read_amazon_shipping(), now.isoformat())
-            source_updated_at["amazonShipping"] = datetime.now(timezone.utc).isoformat()
-            amazon_error = False
-        except Exception as error:
-            amazon_count = 0
-            amazon_error = True
-            kind = type(error).__name__
-            if kind == "ImportError":
-                amazon_error_message = "Restart the server to load the Amazon Shipping sheet reader."
-            elif kind in {"WorksheetNotFound", "RuntimeError"}:
-                amazon_error_message = "Amazon Shipping tab was not found in the Sales Activity workbook. Check the tab name."
-            else:
-                amazon_error_message = f"Amazon Shipping sheet read failed ({kind}). Check Google Sheets access and the server's internet connection."
-        try:
-            from google_sheets import read_palletways_tracking
-            from palletways_sheet import archive_statuses
+                amazon_count = archive_amazon_shipping(read_amazon_shipping(), now.isoformat())
+                source_updated_at["amazonShipping"] = datetime.now(timezone.utc).isoformat()
+                amazon_error = False
+            except Exception as error:
+                amazon_count = 0
+                amazon_error = True
+                kind = type(error).__name__
+                if kind == "ImportError":
+                    amazon_error_message = "Restart the server to load the Amazon Shipping sheet reader."
+                elif kind in {"WorksheetNotFound", "RuntimeError"}:
+                    amazon_error_message = "Amazon Shipping tab was not found in the Sales Activity workbook. Check the tab name."
+                else:
+                    amazon_error_message = f"Amazon Shipping sheet read failed ({kind}). Check Google Sheets access and the server's internet connection."
+        else:
+            amazon_count, amazon_error = 0, False
+        if sheets_enabled:
+            try:
+                from google_sheets import read_palletways_tracking
+                from palletways_sheet import archive_statuses
 
-            palletways_sheet_count = archive_statuses(read_palletways_tracking())
-            source_updated_at["palletwaysSheet"] = datetime.now(timezone.utc).isoformat()
-            palletways_sheet_error = False
-        except Exception:
-            palletways_sheet_count, palletways_sheet_error = 0, True
+                palletways_sheet_count = archive_statuses(read_palletways_tracking())
+                source_updated_at["palletwaysSheet"] = datetime.now(timezone.utc).isoformat()
+                palletways_sheet_error = False
+            except Exception:
+                palletways_sheet_count, palletways_sheet_error = 0, True
+        else:
+            palletways_sheet_count, palletways_sheet_error = 0, False
         palletways_error = False
 
         try:
@@ -1917,16 +1940,19 @@ def sync(force=False):
         except Exception:
             palletways_count = 0
             palletways_error = True
-        try:
-            from google_sheets import read_courier_issues
-            from carrier_issues import archive_courier_issues
+        if sheets_enabled:
+            try:
+                from google_sheets import read_courier_issues
+                from carrier_issues import archive_courier_issues
 
-            issue_counts = archive_courier_issues(read_courier_issues(), now.isoformat())
-            source_updated_at["courierIssues"] = datetime.now(timezone.utc).isoformat()
-            courier_issues_error = False
-        except Exception:
-            issue_counts = {"matchedRows": 0, "matchedOrders": 0}
-            courier_issues_error = True
+                issue_counts = archive_courier_issues(read_courier_issues(), now.isoformat())
+                source_updated_at["courierIssues"] = datetime.now(timezone.utc).isoformat()
+                courier_issues_error = False
+            except Exception:
+                issue_counts = {"matchedRows": 0, "matchedOrders": 0}
+                courier_issues_error = True
+        else:
+            issue_counts, courier_issues_error = {'matchedRows': 0, 'matchedOrders': 0}, False
         try:
             from routine_dashboard import read_booking_rows
 
@@ -1943,19 +1969,23 @@ def sync(force=False):
         except Exception:
             optimoroute_count = 0
             optimoroute_error = True
-        try:
-            from routine_live import read_live_snapshot
-            routine_snapshot = read_live_snapshot()
-            routine_live_count = archive_routine_live(routine_snapshot['statuses'], datetime.now(timezone.utc).isoformat(),
-                                                     booking_rows=routine_snapshot['bookings'])
-            source_updated_at['routineLive'] = datetime.now(timezone.utc).isoformat()
-            routine_live_error = False
-        except Exception:
-            # A failed read is not a successful empty snapshot: retain saved overrides.
-            routine_live_count, routine_live_error = 0, True
+        if sheets_enabled:
+            try:
+                from routine_live import read_live_snapshot
+                routine_snapshot = read_live_snapshot()
+                routine_live_count = archive_routine_live(routine_snapshot['statuses'], datetime.now(timezone.utc).isoformat(),
+                                                         booking_rows=routine_snapshot['bookings'])
+                source_updated_at['routineLive'] = datetime.now(timezone.utc).isoformat()
+                routine_live_error = False
+            except Exception:
+                # A failed read is not a successful empty snapshot: retain saved overrides.
+                routine_live_count, routine_live_error = 0, True
+        else:
+            routine_live_count, routine_live_error = 0, False
         payload = {
             "indexVersion": INDEX_VERSION,
             "deliverySource": configured_delivery_source(),
+            "disabledSources": [] if sheets_enabled else list(GOOGLE_SHEET_SOURCES),
             "syncedAt": now.isoformat(),
             "sourceUpdatedAt": source_updated_at,
             "imported": count,
@@ -2032,7 +2062,10 @@ def cached_or_schedule_sync(force=False):
             _background_thread.start()
             running = True
         error = _background_status["error"]
-    return {**(cached or {}), "syncing": running, "stale": bool(error), "message": error}
+    disabled = [] if google_sheets_enabled() else list(GOOGLE_SHEET_SOURCES)
+    timestamps = {key: value for key, value in (cached or {}).get('sourceUpdatedAt', {}).items() if key not in disabled}
+    return {**(cached or {}), "syncing": running, "stale": bool(error), "message": error,
+            "disabledSources": disabled, "sourceUpdatedAt": timestamps}
 
 
 def current_or_sync(force=False):
@@ -2133,6 +2166,7 @@ def query_records(
     order_kind='',
     exclude_refunds=False,
     global_status=False,
+    status_view_scope='',
 ):
     limit = max(1, min(int(limit), 100))
     offset = max(0, int(offset))
@@ -2180,7 +2214,16 @@ def query_records(
             values.append(scope)
     if scope_clauses:
         clauses.append('(' + ' OR '.join(scope_clauses) + ')')
-    if search:
+    exact_order = False
+    if search and order_kind != 'refund':
+        with connect() as db:
+            exact_order = db.execute(
+                "SELECT 1 FROM deliveries WHERE order_id=? LIMIT 1", (clean(search),)
+            ).fetchone() is not None
+    if exact_order:
+        clauses.append("order_id=?")
+        values.append(clean(search))
+    elif search:
         pattern = (
             "%"
             + clean(search).lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -2218,22 +2261,21 @@ def query_records(
         clauses.append("json_extract(payload, '$.deliveryMethodRaw') IN (" + ",".join("?" for _ in methods) + ")")
         values.extend(methods)
     if carrier == "Palletways":
-        for field, selected in (("palletwaysSheetBookedIn", booked_in),
-                                ("palletwaysSheetBookInRequest", book_in_request)):
+        for field, selected in (("booked_in", booked_in),
+                                ("book_in_request", book_in_request)):
             selected = clean(selected).lower()
             if selected:
-                allowed = {"yes", "no", "not-yet"} if field == "palletwaysSheetBookedIn" else {"yes", "no"}
+                allowed = {"yes", "not-yet", "not-applicable", "unknown"} if field == "booked_in" else {"yes", "no", "unknown"}
                 if selected not in allowed:
-                    raise ValueError("Choose Yes, No or Not Yet for Booked In; Yes or No for Book In Request.")
-                clauses.append(f"lower(trim(coalesce(json_extract(payload, '$.{field}'), '')))=?")
-                values.append("no" if selected == "not-yet" else selected)
-                if field == "palletwaysSheetBookedIn" and selected in {"no", "not-yet"}:
-                    method = "lower(trim(coalesce(json_extract(payload, '$.deliveryMethodRaw'), '')))"
-                    clauses.append(f"{method}{'=' if selected == 'no' else '!='}?")
-                    values.append("palletways next day")
+                    raise ValueError('Invalid Palletways booking filter.')
+        if booked_in or book_in_request:
+            clauses.append('palletways_booking_match(payload, ?, ?)=1')
+            values.extend((clean(booked_in).lower(), clean(book_in_request).lower()))
     statuses = list(dict.fromkeys(value for value in (status if isinstance(status, (list, tuple)) else [status]) if value))
     if statuses:
-        if order_kind == 'refund':
+        if status_view_scope and not issue_cases and not order_kind:
+            status_expression = "tracking_view_status(payload, 'carrier')" if carrier else "tracking_view_status(payload, 'sales')"
+        elif order_kind == 'refund':
             status_expression = ("CASE upper(trim(json_extract(payload, '$.rawStatus'))) "
                 "WHEN 'C' THEN 'refund:complete' WHEN 'COMPLETED' THEN 'refund:complete' "
                 "WHEN 'X' THEN 'refund:cancelled' WHEN 'CANCELLED' THEN 'refund:cancelled' ELSE 'refund:not-yet' END")
@@ -2261,7 +2303,10 @@ def query_records(
                 "WHEN nullif(trim(json_extract(payload, '$.palletwaysSheetStatus')), '') IS NOT NULL THEN 'palletways:' || trim(json_extract(payload, '$.palletwaysSheetStatus')) WHEN coalesce(json_extract(payload, '$.palletwaysSheetMatched'),0)=0 THEN trim(coalesce(json_extract(payload, '$.rawStatus'), '')) ELSE '' END")
         else:
             status_expression = ("json_extract(payload, '$.st')")
-        clauses.append(status_expression + " IN (" + ",".join("?" for _ in statuses) + ")")
+        if status_view_scope and carrier == 'Palletways' and not issue_cases and not order_kind:
+            clauses.append("EXISTS (SELECT 1 FROM json_each(palletways_statuses(payload)) WHERE value IN (" + ','.join('?' for _ in statuses) + '))')
+        else:
+            clauses.append(status_expression + " IN (" + ",".join("?" for _ in statuses) + ")")
         values.extend(statuses)
     if issue_cases:
         clauses.append(
@@ -2322,6 +2367,7 @@ def query_records(
             deliveries = []
             for row in rows:
                 delivery = json.loads(row["payload"])
+                delivery['statusView'] = status_view(delivery)
                 if issue_cases or (global_status and not carrier and not order_kind):
                     delivery['overallStatus'] = global_tracking_status(delivery)
                 if row['palletways_classification']:
@@ -2382,8 +2428,11 @@ def summary():
             "json_extract(payload, '$.palletwaysSheetMatched') AS palletwaysSheetMatched, "
             "global_tracking_status(payload) AS overallStatus, "
             "json_extract(payload, '$.rawStatus') AS rawStatus, "
+            "tracking_view_status(payload, 'sales') AS salesStatus, "
+            "tracking_view_status(payload, 'carrier') AS carrierStatus, "
+            "palletways_statuses(payload) AS palletwaysStatuses, "
             f"SUM(CASE WHEN {depot_clause} THEN 1 ELSE 0 END) AS palletwaysDepotCount, "
-            "COUNT(*) AS count FROM deliveries GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15", (datetime.now(ZoneInfo('Europe/London')).date().isoformat(),)
+            "COUNT(*) AS count FROM deliveries GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18", (datetime.now(ZoneInfo('Europe/London')).date().isoformat(),)
         )]
         all_count = db.execute("SELECT COUNT(*) FROM deliveries").fetchone()[0]
         order_date_ranges = {
@@ -2656,4 +2705,6 @@ def detail(order_id):
             delivery["logs"].sort(key=lambda event: event["at"])
         except Exception:
             pass
-    return apply_routine_live_status(delivery)
+    delivery = apply_routine_live_status(delivery)
+    delivery['statusView'] = status_view(delivery)
+    return delivery

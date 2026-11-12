@@ -67,6 +67,9 @@ def archive_statuses(rows):
 
 def tracking_for_order(order, force=False):
     global _rows, _read_at
+    from atlas_config import google_sheets_enabled
+    if not google_sheets_enabled():
+        raise RuntimeError('Google Sheets is disconnected; sheet-based Palletways lookup is disabled.')
     order = str(order).strip()
     if not re.fullmatch(r"\d{1,20}", order):
         raise ValueError("Invalid order number.")

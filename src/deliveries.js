@@ -95,27 +95,15 @@ try {
 
 function palletwaysNumberCell(delivery) {
   const tracking = palletwaysNumberType === 'tracking';
+  const shipments = palletwaysApiShipments(delivery);
+  if (shipments.length) return shipments.map(shipment => {
+    const value = tracking ? shipment.tracking_id : shipment.consignment_number;
+    return `<span class="tracking-order-number tracking-shipment-number"><span>${esc(value || '—')}</span>${value ? `<button type="button" class="qd-customer-copy" ${tracking ? 'data-copy-palletways-tracking' : 'data-copy-consignment-number'}="${esc(value)}" aria-label="Copy ${tracking ? 'tracking' : 'consignment'} number ${esc(value)}">${ico('copy', 13, 1.8)}</button>` : ''}</span>`;
+  }).join('');
   const value = tracking
     ? delivery.palletwaysSheetTrackingNumber
     : delivery.palletwaysSheetConsignmentNumber;
   return `<span class="tracking-order-number"><span>${esc(value || '\u2014')}</span>${value ? `<button type="button" class="qd-customer-copy" ${tracking ? 'data-copy-palletways-tracking' : 'data-copy-consignment-number'}="${esc(value)}" aria-label="Copy ${tracking ? 'tracking' : 'consignment'} number ${esc(value)}" title="Copy ${tracking ? 'tracking' : 'consignment'} number">${ico('copy', 13, 1.8)}</button>` : ''}</span>`;
-}
-
-function palletwaysBookedInFilterValue(delivery) {
-  const booked = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
-  if (booked !== 'no') return booked;
-  return String(delivery.deliveryMethodRaw || '').trim().toLowerCase() === 'palletways next day' ? 'no' : 'not-yet';
-}
-
-function palletwaysBookedInCell(delivery) {
-  const booked = String(delivery.palletwaysSheetBookedIn || '').trim().toLowerCase();
-  if (booked === 'no') {
-    return palletwaysBookedInFilterValue(delivery) === 'no' ? 'N/A' : 'Not Yet';
-  }
-  if (booked !== 'yes') return '\u2014';
-  const date = String(delivery.palletwaysSheetBookInDate || '').trim();
-  const time = String(delivery.palletwaysSheetBookInTime || '').trim();
-  return `<span class="tracking-cell-line">${esc(date || '\u2014')}</span>${time ? `<small class="tracking-cell-line mut">${esc(time)}</small>` : ''}`;
 }
 
 function palletwaysNumberHeading() {
@@ -336,6 +324,9 @@ function trackingFilterFacets() {
     creditRefund: isCreditRefundRecord(delivery),
     palletwaysDepotCount: palletwaysDepotEligible(delivery) ? 1 : 0,
     rawStatus: delivery.rawStatus,
+    salesStatus: delivery.statusView?.sales || delivery.rawStatus || 'Status unavailable',
+    carrierStatus: delivery.statusView?.carrier || 'Status unavailable',
+    palletwaysStatuses: JSON.stringify(delivery.statusView?.carrierStatuses || ['Status unavailable']),
     orderType: delivery.salesActivityDetails?.['Order Type'],
     purchaseStore: purchaseChannel(delivery),
     palletwaysClassification: delivery.palletwaysDetails?.classification,
@@ -451,6 +442,7 @@ function trackingLevelCounts() {
     carriers[carrier] = (carriers[carrier] || 0) + item.count;
   });
   const statuses = {};
+  let statusTotal = 0;
   scoped
     .filter(
       (item) =>
@@ -459,7 +451,13 @@ function trackingLevelCounts() {
         (!fclassification.length || fclassification.includes(item.classification)),
     )
     .forEach((item) => {
+      statusTotal += item.count;
+      if (usesSourceTrackingStatus() && fsrc === 'Palletways') {
+        [...new Set(palletwaysFacetStatuses(item))].forEach(value => statuses[value] = (statuses[value] || 0) + item.count);
+        return;
+      }
       const status =
+        usesSourceTrackingStatus() ? trackingFacetStatus(item) :
         trackingOrderKind() === 'refund' ? refundStatusValue(item) : fsrc === 'AMZ' && item.amazonStatus
           ? `amazon:${item.amazonStatus}`
           : fsrc === 'Stopstart' && item.stopstartStatus
@@ -475,6 +473,7 @@ function trackingLevelCounts() {
     facets,
     carriers,
     statuses,
+    statusTotal,
     scopeTotal: scoped.reduce((sum, item) => sum + item.count, 0),
   };
 }
@@ -617,6 +616,7 @@ function deliveryMatchesFilters(delivery) {
     delivery.phone,
   ];
   const status =
+    usesSourceTrackingStatus() ? trackingDisplayStatus(delivery).label :
     trackingOrderKind() === 'refund' && isCreditRefundRecord(delivery) ? refundStatusValue(delivery) : fsrc === 'AMZ' && (delivery.amazonSheetStatus || delivery.amazonStatus)
       ? `amazon:${delivery.amazonSheetStatus || delivery.amazonStatus}`
       : fsrc === 'Stopstart' && delivery.stopstartStatus
@@ -627,7 +627,9 @@ function deliveryMatchesFilters(delivery) {
             ? palletwaysFilterStatus(delivery.palletwaysSheetStatus, palletwaysOwFallback(delivery))
             : usesGlobalTrackingStatus() ? overallTrackingStatus(delivery) : trackingStatus(delivery.st);
   return (
-    filterIncludes(fs, status) &&
+    (usesSourceTrackingStatus() && fsrc === 'Palletways'
+      ? !filterValues(fs).length || filterValues(fs).some(value => palletwaysFacetStatuses(delivery).includes(value))
+      : filterIncludes(fs, status)) &&
     trackingMatchesScope({
       carrier: delivery.carrier,
       status: trackingStatus(delivery.st),
@@ -637,14 +639,8 @@ function deliveryMatchesFilters(delivery) {
     (!fmethod || delivery.type === fmethod) &&
     matchesDeliveryCarrier(delivery.carrier, fsrc) &&
     (!fclassification.length || fclassification.includes(delivery.deliveryMethodRaw)) &&
-    (fsrc !== 'Palletways' ||
-      !fbookedIn ||
-      palletwaysBookedInFilterValue(delivery) === fbookedIn) &&
-    (fsrc !== 'Palletways' ||
-      !fbookInRequest ||
-      String(delivery.palletwaysSheetBookInRequest || '')
-        .trim()
-        .toLowerCase() === fbookInRequest) &&
+    (fsrc !== 'Palletways' || (!fbookedIn && !fbookInRequest) ||
+      palletwaysBookingMatchesFilters(delivery, fbookedIn, fbookInRequest)) &&
     (!fd || (delivery.date && delivery.date >= fd)) &&
     (!ft || (delivery.date && delivery.date <= ft)) &&
     (!search ||
@@ -677,6 +673,7 @@ async function loadTrackingPage(reset = true) {
     hide_wilko: TrackingVisibility.wilkoEnabled() ? 1 : '',
     hide_palletways_b2b: TrackingVisibility.palletwaysB2bEnabled() ? 1 : '',
     tracking_related: trackingOrderKind() ? '' : 1,
+    status_view: usesSourceTrackingStatus() ? 1 : '',
     order_kind: trackingOrderKind(),
     exclude_refunds: page === 'Deliveries' ? 1 : '',
     dashboard_widget: dashboardWidgetFilter,
@@ -858,6 +855,27 @@ document.addEventListener('click', (event) => {
   failedRows();
   });
 });
+
+function itemQuantityLabel(value) {
+  const quantity = String(value ?? '').trim();
+  if (!/^\d+(?:\.\d+)?$/.test(quantity)) return '—';
+  return quantity.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+}
+
+function deliverySkuQuantityMarkup(delivery) {
+  const items = Array.isArray(delivery.items) ? delivery.items.filter((item) => item?.sku) : [];
+  const rows = items.length ? items : String(delivery.skuItems || '')
+    .split(/[,;|\r\n]+/)
+    .map((sku) => ({sku: sku.trim()}))
+    .filter((item) => item.sku);
+  if (!rows.length) return '<span class="mut">—</span>';
+  return `<table class="qd-purchase-items">
+    <thead><tr><th scope="col">SKU of items</th><th scope="col">Quantity</th></tr></thead>
+    <tbody>${rows.map((item) => {
+      return `<tr><td>${deliveryProductLink(delivery, item.sku, item)}</td><td>${esc(itemQuantityLabel(item.quantity))}</td></tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
 
 function deliverySkuMarkup(delivery) {
   const skus = String(delivery.skuItems || '')
@@ -1153,14 +1171,14 @@ function deliveryListRow(delivery, related = false) {
     `
     }
     <td>${esc(delivery.carrier ? carName(delivery.carrier) : '\u2014')}${delivery.deliveryMethodRaw ? `<small class="tracking-cell-line mut">${esc(delivery.deliveryMethodRaw)}</small>` : ''}</td>
-    <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''} title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && !delivery.st && !isCreditRefundRecord(delivery) ? '\u2014' : stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${depotDelayLabel(delivery) ? `<small class="tracking-cell-line status-followup-warning">${esc(depotDelayLabel(delivery))}</small>` : ''}${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
+    <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''} title="Status source: ${esc(statusSourceDisplay(delivery))}">${related && !delivery.st && !isCreditRefundRecord(delivery) ? '\u2014' : trackingStatusMarkup(delivery)}<small class="tracking-cell-line mut">${esc(statusSourceDisplay(delivery))}</small>${depotDelayLabel(delivery) ? `<small class="tracking-cell-line status-followup-warning">${esc(depotDelayLabel(delivery))}</small>` : ''}${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
     ${
       trackingOrderKind() === 'refund'
         ? (fsrc === 'Stopstart' ? `<td>${specialInstructionsMarkup(delivery.specialInstructions || delivery.instructions)}</td>` : '')
         : fsrc === 'Palletways'
         ? `
-    <td class="tracking-booked-in-cell" title="Palletways sheet: Z (Booked In), BT (Book In Date), BU (Book In Time)">${palletwaysBookedInCell(delivery)}</td>
-    <td title="Palletways sheet column AA">${esc(delivery.palletwaysSheetBookInRequest || '\u2014')}</td>
+    <td class="tracking-booked-in-cell">${palletwaysBookingCell(delivery, 'booked_in')}</td>
+    <td>${palletwaysBookingCell(delivery, 'book_in_request')}</td>
     `
         : fsrc === 'Stopstart'
           ? `<td>${specialInstructionsMarkup(delivery.specialInstructions || delivery.instructions)}</td>`
@@ -1904,7 +1922,7 @@ function failedRows() {
       <td>${esc(failedDate ? hd(String(failedDate).slice(0, 10)) : '—')}</td>
       <td>${esc(deliveryReason(delivery.reason).label || delivery.carrierIssueReason || '—')}${!delivery.reason && delivery.carrierIssueReason ? `<small class="tracking-cell-line mut">Source: Courier Issues · ${esc(delivery.carrier === 'Own van' ? 'Van' : delivery.carrier)}</small>` : ''}</td>
       <td>${esc(carName(delivery.carrier))}${delivery.deliveryMethodRaw ? `<small class="tracking-cell-line mut">${esc(delivery.deliveryMethodRaw)}</small>` : ''}</td>
-      <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''}>${stat(carrierBadgeStatus(delivery), carrierStatusLabel(delivery))}<small class="tracking-cell-line failed-history-note">${esc(statusSourceDisplay(delivery))}</small>${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
+      <td class="tracking-status-cell" ${delivery.carrier === 'XDP' && !isCreditRefundRecord(delivery) ? `data-xdp-status="${esc(String(delivery.xdpStatus || '').trim().toUpperCase().replace(/[_\s]+/g, ' '))}"` : ''} ${delivery.carrier === 'AMZ' && !isCreditRefundRecord(delivery) ? `data-amazon-status="${esc(String(delivery.amazonSheetStatus || delivery.amazonStatus || '').trim().toUpperCase())}"` : ''}>${trackingStatusMarkup(delivery)}<small class="tracking-cell-line failed-history-note">${esc(statusSourceDisplay(delivery))}</small>${followUpNotice?.kind === 'missing-row' ? `<small class="tracking-cell-line status-followup-warning">${esc(followUpNotice.text)}</small>` : ''}</td>
     </tr>`;
         })
         .join('')

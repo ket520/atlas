@@ -7,6 +7,7 @@ import time
 import threading
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
+from atlas_config import google_sheets_enabled
 
 try:
     import gspread
@@ -29,6 +30,8 @@ _sheets_local = threading.local()
 
 
 def get_spreadsheet(spreadsheet_id=SHEET_ID):
+    if not google_sheets_enabled():
+        raise RuntimeError("Google Sheets is disabled. Configure the Atlas API data source.")
     if gspread is None:
         return _DirectSpreadsheet(spreadsheet_id)
     # Reuse authentication and workbook metadata across a sync's source reads.

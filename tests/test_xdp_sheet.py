@@ -10,7 +10,7 @@ import xdp_sheet
 
 class XdpSheetTests(unittest.TestCase):
     def test_failure_statuses_join_failed_page_and_update_dynamically(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             source = [{'Order no': str(658883 + i), 'Delivery method': 'XDP', 'Status': 'Completed'} for i in range(4)]
             delivery_data.archive(source)
             rows = [{'order': str(658883 + i), 'status': status} for i, status in enumerate(['DAMAGE', 'DELETE', 'NOT RECEIVED', 'IN TRANSIT'])]
@@ -36,7 +36,7 @@ class XdpSheetTests(unittest.TestCase):
         with patch.object(google_sheets, 'get_spreadsheet', return_value=spreadsheet):
             rows = google_sheets.read_xdp_statuses()
         self.assertEqual(rows[0]['consignmentNo'], 'ZDBJSD020303')
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([{'Order no': '123', 'Delivery method': 'XDP', 'Tracking No': 'OW-TRACKING'}])
             xdp_sheet.archive(rows)
             self.assertEqual(delivery_data.detail('123')['xdpConsignmentNo'], 'ZDBJSD020303')
@@ -52,7 +52,7 @@ class XdpSheetTests(unittest.TestCase):
         ]
         with patch.object(google_sheets, 'get_spreadsheet', return_value=spreadsheet):
             rows = google_sheets.read_xdp_statuses()
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             source = [{'Order no': order, 'Delivery method': 'XDP', 'Tracking No': 'TRACK'} for order in ['123', '456', '789']]
             delivery_data.archive(source)
             xdp_sheet.archive(rows)
@@ -67,7 +67,7 @@ class XdpSheetTests(unittest.TestCase):
             self.assertNotIn('xdpConsignmentNo', delivery_data.detail('123'))
 
     def test_ow_completed_cannot_confirm_xdp_delivery(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([{'Order no': '658505', 'Delivery method': 'XDP', 'Status': 'Completed'}])
             saved = delivery_data.detail('658505')
             self.assertEqual((saved['st'], saved['statusSource']), ('Awaiting', 'XDP fallback'))
@@ -91,7 +91,7 @@ class XdpSheetTests(unittest.TestCase):
         self.assertEqual(rows[0]['parcelBarcode'], '001234567890\nZDBJSD020172-2')
         self.assertEqual(xdp_sheet.document_urls(cell), [one, two])
         self.assertEqual(xdp_sheet.document_urls('https://xdp.sysx.co.uk/pod/view//'), [])
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             ow = [{'Order no': '123', 'Delivery method': 'XDP', 'Tracking No': 'TRACK'}]
             delivery_data.archive(ow)
             xdp_sheet.archive(rows)
@@ -135,7 +135,7 @@ class XdpSheetTests(unittest.TestCase):
         spreadsheet.worksheet.assert_called_once_with("XDP")
 
     def test_specific_status_and_fallback_do_not_change_shared_categories(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             rows = [{"Order no": order, "Delivery method": "XDP", "Tracking No": order, "Status": "P"} for order in ("123", "456", "789")]
             delivery_data.archive(rows)
             xdp_sheet.archive([{"order": "123", "status": "EXCEPTION"}, {"trackingId": "456", "status": "DELIVERED"}])

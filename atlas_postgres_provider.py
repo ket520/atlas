@@ -7,12 +7,14 @@ directly and it never runs unless ``ATLAS_DELIVERY_SOURCE=postgresql``.
 
 import base64
 import json
-import os
 import sys
-from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+from atlas_config import setting as _env
+from sales_activity import api_store_code
+from palletways_shipments import normalize_shipments
 
 
 DEFAULT_BASE_URL = "https://api.starparkgroup.com"
@@ -25,22 +27,9 @@ DEFAULT_MAX_PAGES = 1000
 class AtlasProviderError(RuntimeError):
     """A safe, user-facing provider failure without credentials in the message."""
 
-
-ROOT = Path(__file__).resolve().parent
-
-
-def _env(name, default=""):
-    value = os.environ.get(name)
-    if value is not None:
-        return value.strip()
-    for filename in (".env.local", ".env"):
-        path = ROOT / filename
-        if not path.exists():
-            continue
-        for line in path.read_text(encoding="utf-8-sig").splitlines():
-            if line.strip().startswith(name + "="):
-                return line.split("=", 1)[1].strip().strip("\"'")
-    return default
+    def __init__(self, message, status_code=None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _path(value, path):
@@ -85,7 +74,7 @@ def _get_json(path, params=None):
         with urlopen(request, timeout=timeout) as response:
             raw = response.read()
     except HTTPError as error:
-        raise AtlasProviderError(f"Starpark request failed (HTTP {error.code}).") from None
+        raise AtlasProviderError(f"Starpark request failed (HTTP {error.code}).", status_code=error.code) from None
     except (URLError, TimeoutError, OSError):
         raise AtlasProviderError("Starpark request failed or timed out.") from None
     if not raw:
@@ -212,10 +201,17 @@ def _row(record):
     for key, value in merged.items():
         if key in row:
             continue
-        if isinstance(value, (dict, list)):
+        if key == 'palletways_shipments':
+            try:
+                row[key] = normalize_shipments(value)
+            except (ValueError, TypeError):
+                raise AtlasProviderError('Starpark returned invalid Palletways shipments.') from None
+        elif isinstance(value, (dict, list)):
             row[key] = json.dumps(value, separators=(",", ":"))
         elif value is not None:
             row[key] = str(value)
+
+    row['Atlas Store Code'] = api_store_code(row)
 
     if not row["Order no"] or not row["Delivery method"]:
         raise AtlasProviderError(
@@ -250,6 +246,7 @@ def read_sales_activity():
             {
                 "limit": page_size,
                 "offset": offset,
+                "include": "palletways_booking",
             },
         )
 

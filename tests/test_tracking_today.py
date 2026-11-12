@@ -30,7 +30,7 @@ class TrackingTodayTests(unittest.TestCase):
             self.assertFalse(delivery_data.tracking_today({'carrier': 'XDP', 'st': 'Awaiting', 'xdpStatus': status, 'date': '2026-10-22'}, '2026-10-22'))
 
     def test_sql_query_facets_counts_and_pagination_agree(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.db'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.db'):
             day = datetime.now(ZoneInfo('Europe/London')).date().isoformat()
             rows = [{'carrier': 'Stopstart', 'st': 'Unscheduled', 'stopstartStatus': 'Expected Today'},
                     {'carrier': 'XDP', 'st': 'Awaiting', 'xdpStatus': 'NEXT STOP'},

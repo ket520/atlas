@@ -32,7 +32,7 @@ class PreviewHandler(Handler):
         super().do_GET()
 
 
-with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'claims.sqlite3'):
+with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'claims.sqlite3'):
     server = ThreadingHTTPServer(('127.0.0.1', 0), PreviewHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

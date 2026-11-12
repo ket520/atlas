@@ -10,7 +10,7 @@ class OrderWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.db = patch.object(delivery_data, 'DB_PATH', Path(self.directory.name) / 'test.sqlite3')
+        self.db = patch.object(delivery_data, 'configured_db_path', return_value=Path(self.directory.name) / 'test.sqlite3')
         self.db.start()
         self.addCleanup(self.db.stop)
         delivery_data.archive([

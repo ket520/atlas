@@ -14,7 +14,7 @@ import server
 
 class DeliveryDataTests(unittest.TestCase):
     def test_amazon_courier_filters_preserve_raw_states_and_ow_fallback(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             delivery_data.archive([
                 {"Order no": str(index), "Delivery method": "AMA XL", "Tracking No": tracking, "Status": "C"}
                 for index, tracking in enumerate(["READY", "TRANSIT", "NEW", "MISSING"], 1)
@@ -39,7 +39,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(set(orders("Delivered", courier_status=True)), {"1", "2", "3", "4"})
 
     def test_tracking_filter_levels_and_counts_cover_all_pages(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             delivery_data.archive([
                 {"Order no": str(index), "Delivery method": method, "Status": status,
                  "Tracking No": "UK1234567890"}
@@ -64,7 +64,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(sum(item["count"] for item in facets if item["today"] and item["carrier"] == "AMZ"), 2)
 
     def test_amazon_missing_tracking_is_unscheduled_but_missing_sheet_match_uses_ow(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             rows = [
                 {"Order no": "NO-ID", "Delivery method": "AMA XL", "Tracking No": " ", "Status": "Completed"},
                 {"Order no": "UNMATCHED-ID", "Delivery method": "AMA Letter", "Tracking No": "UK1234567890", "Status": "Completed"},
@@ -84,7 +84,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(delivery_data.detail("NO-ID")["rawStatus"], "Completed")
 
     def test_amazon_ready_for_receive_overrides_ow_completed_and_filters_as_scheduled(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             row = {"Order no": "655347", "Delivery method": "AMA Standard", "Tracking No": "UK4958383629", "Status": "Completed"}
             delivery_data.archive([row])
             delivery_data.archive_amazon_shipping([{"trackingId": row["Tracking No"], "status": "READY_FOR_RECEIVE"}])
@@ -99,7 +99,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(delivery_data.query_records(status="Delivered")["total"], 0)
 
     def test_amazon_undeliverable_drives_failed_list_counts_and_survives_ow_refresh(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             row = {"Order no": "FAILED-AMZ", "Delivery method": "AMA Letter", "Tracking No": "UK1234567890", "Status": "Completed"}
             delivery_data.archive([row])
             delivery_data.archive_amazon_shipping([{"trackingId": row["Tracking No"], "status": "UNDELIVERABLE"}])
@@ -116,7 +116,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(delivery_data.query_records(status="Delivered")["total"], 0)
 
     def test_amazon_lost_overrides_ow_and_remains_filterable_after_refresh(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             row = {"Order no": "LOST-ORDER", "Delivery method": "AMA XL", "Tracking No": "UK1234567890", "Status": "Completed"}
             delivery_data.archive([row])
             delivery_data.archive_amazon_shipping([{"trackingId": row["Tracking No"], "status": "LOST"}])
@@ -134,7 +134,7 @@ class DeliveryDataTests(unittest.TestCase):
         self.assertEqual(delivery_data.amazon_scheduled_time("13/12/2026 19:00 (UTC)"), "2026-12-13T19:00:00+00:00")
         self.assertEqual(delivery_data.amazon_scheduled_time("13/10/2026 23:30 (UTC)"), "2026-10-14T00:30:00+01:00")
         self.assertEqual(delivery_data.amazon_scheduled_time("invalid"), "")
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             row = {"Order no": "648771", "Delivery method": "AMA Standard", "Tracking No": "UK4954910337", "Status": "Completed", "Product SKU": "CS02SQBM"}
             delivery_data.archive([row])
             delivery_data.archive_amazon_shipping([{"trackingId": "UK4954910337", "status": "IN_TRANSIT", "scheduledAt": "13/10/2026 19:00 (UTC)"}])
@@ -149,7 +149,7 @@ class DeliveryDataTests(unittest.TestCase):
         self.assertEqual(delivery_data.row_sku_items({"Parent SKU": "PARENT", "Product SKU": "PRODUCT"}), "PARENT")
 
     def test_uk4954910337_in_transit_overrides_ow_completed(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             delivery_data.archive([{"Order no": "648771", "Delivery method": "AMA Standard", "Tracking No": "UK4954910337", "Status": "Completed"}])
             delivery_data.archive_amazon_shipping([{"trackingId": "UK4954910337", "status": "IN_TRANSIT"}])
             result = delivery_data.query_records(search="UK4954910337", status="Scheduled")
@@ -158,7 +158,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertEqual(delivery_data.query_records(search="UK4954910337", status="Delivered")["total"], 0)
 
     def test_amazon_sheet_status_overrides_ow_and_drives_filters_for_all_sizes(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             rows = [
                 {"Order no": str(i), "Delivery method": method, "Tracking No": f"UK{i:010d}", "Status": "C"}
                 for i, method in enumerate(["AMA Large", "AMA Letter", "AMA XL", "Amazon Shipping One-Day Tracked", "XDP"], 1)
@@ -187,7 +187,7 @@ class DeliveryDataTests(unittest.TestCase):
             self.assertNotIn("amazonStatus", delivery_data.detail("1"))
 
     def test_amazon_changed_tracking_and_unknown_or_conflicting_status_use_ow(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"):
             row = {"Order no": "1", "Delivery method": "AMA Standard", "Tracking No": "UK1111111111", "Status": "C"}
             delivery_data.archive([row])
             delivery_data.archive_amazon_shipping([{"trackingId": row["Tracking No"], "status": "IN_TRANSIT"}])
@@ -202,7 +202,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_saved_hold_orders_migrate_and_filter_without_live_sheet(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
             patch.object(delivery_data, "_statuses_refreshed", False),
             patch.object(delivery_data, "sync", side_effect=RuntimeError("Offline")),
         ):
@@ -272,7 +272,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_combined_van_and_self_delivery_filter_preserves_paging_and_failed_scope(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive([
                 {"Order no": "101", "Delivery method": "Own van", "Status": "Failed Delivery"},
@@ -299,7 +299,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_delivery_classifications_are_scoped_to_courier_and_paged_on_server(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive([
                 {"Order no": "101", "Delivery method": "XDP", "Status": "Scheduled"},
@@ -374,7 +374,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_ow_cancelled_order_is_not_a_failed_delivery(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "101", "Delivery method": "Own van", "Status": "X"}]
@@ -386,7 +386,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_xdp_fallback_is_awaiting_instead_of_ow_status(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "102", "Delivery method": "XDP", "Status": "S"}]
@@ -398,7 +398,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_status_source_uses_carrier_when_mapped_and_ow_otherwise(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -428,7 +428,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_optimoroute_details_and_pod_note_survive_ow_refresh(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             row = {
                 "Order no": "101",
@@ -477,7 +477,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_live_palletways_columns_match_ow_customer_ref(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "651709", "Delivery method": "Palletways", "Status": "C"}]
@@ -525,7 +525,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_verified_palletways_tracking_corrects_stale_sheet(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "651768", "Delivery method": "Palletways", "Status": "C"}]
@@ -549,7 +549,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_missing_palletways_match_does_not_mean_unscheduled(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "652198", "Delivery method": "Palletways", "Status": "W"}]
@@ -567,7 +567,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_booking_status_comes_only_from_unique_routine_order(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -603,7 +603,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_routine_dates_and_out_of_stock_codes(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -625,7 +625,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_routine_composite_order_ids_and_other_statuses(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -666,7 +666,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_ow_is_primary_and_palletways_followups_join_by_order_number(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             row = {
                 "Order no": "651124",
@@ -705,7 +705,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_unrelated_or_unsupported_rows_do_not_join(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive([{"Order no": "101", "Delivery method": "Standard Van Delivery"}])
             self.assertEqual(
@@ -719,7 +719,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_ow_status_never_overrides_carrier_status(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -778,7 +778,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_visible_old_own_van_order_gets_optimo_status(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -812,7 +812,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_confirmed_missing_optimo_order_is_unscheduled(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             row = {
                 "Order no": "101",
@@ -832,7 +832,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_status_filter_rechecks_after_optimoroute_updates_a_row(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -873,7 +873,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_detail_preserves_every_pod_photo_and_signature(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [{"Order no": "101", "Order reference": "V-101", "Delivery method": "Own van"}]
@@ -918,7 +918,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_search_covers_orders_beyond_first_page(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             rows = [
                 {
@@ -940,7 +940,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_today_tracking_scope_uses_current_date_and_delivery_status(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [
@@ -982,7 +982,7 @@ class DeliveryDataTests(unittest.TestCase):
     def test_http_tracking_returns_25_and_searches_all_saved_orders(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(delivery_data, "DB_PATH", Path(directory) / "test.sqlite3"),
+            patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / "test.sqlite3"),
         ):
             delivery_data.archive(
                 [

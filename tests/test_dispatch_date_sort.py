@@ -10,7 +10,7 @@ import delivery_data
 class DispatchDateSortTests(unittest.TestCase):
     def test_depot_widget_respects_explicit_created_sort(self):
         from datetime import datetime, timedelta, timezone
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([{'Order no': str(i), 'Delivery method': 'Palletways', 'Status': 'P'} for i in (1, 2)])
             with delivery_data.connect() as db:
                 for order, days, created in [('1', 8, '2026-11-02'), ('2', 5, '2026-11-01')]:
@@ -24,7 +24,7 @@ class DispatchDateSortTests(unittest.TestCase):
             self.assertEqual([r['order'] for r in delivery_data.query_records(dashboard_widget='palletways-depot-3days', date_sort='created_asc', limit=1)['deliveries']], ['2'])
 
     def test_created_date_sorts_before_paging_and_keeps_missing_dates_last(self):
-        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'DB_PATH', Path(directory) / 'test.sqlite3'):
+        with tempfile.TemporaryDirectory() as directory, patch.object(delivery_data, 'configured_db_path', return_value=Path(directory) / 'test.sqlite3'):
             delivery_data.archive([{'Order no': str(i), 'Delivery method': 'Palletways', 'Status': 'P'} for i in range(1, 5)])
             with delivery_data.connect() as db:
                 for order, day, timestamp in [('1', '2026-11-02', '2026-11-02T08:00:00'),
